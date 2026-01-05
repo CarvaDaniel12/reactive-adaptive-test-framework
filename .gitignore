@@ -12,6 +12,11 @@ Cargo.lock
 .env
 .env.local
 .env.*.local
+*.env
+
+# Configuration files with credentials
+qa-intelligent-pms/configs/*.yaml
+!qa-intelligent-pms/configs/*.yaml.example
 
 # IDE
 .idea/
@@ -45,3 +50,8 @@ coverage/
 # BMAD outputs that may contain sensitive data
 # Keep the structure but ignore generated secrets
 _bmad-output/**/*.secret
+
+# Data files that may contain sensitive information
+qa-intelligent-pms/data/
+qa-intelligent-pms/logs/
+qa-intelligent-pms/cache/

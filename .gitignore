@@ -18,6 +18,11 @@ Cargo.lock
 qa-intelligent-pms/configs/*.yaml
 !qa-intelligent-pms/configs/*.yaml.example
 
+# User configuration files (should be in system config dir, but protect if copied here)
+**/config.yaml
+**/user_config.yaml
+!**/config.yaml.example
+
 # IDE
 .idea/
 *.swp

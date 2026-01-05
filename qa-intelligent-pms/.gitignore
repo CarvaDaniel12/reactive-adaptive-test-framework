@@ -36,3 +36,21 @@ frontend/.vite/
 *.profraw
 coverage/
 lcov.info
+
+# Python environment artifacts
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python*.configurado
+.env.*
+# Except example files
+!.env.example
+
+# Additional sensitive files
+.env.configurado
+configs/testmo_config.yaml
+configs/jira_config.yaml
+configs/postman_config.yaml
+configs/splunk_config.yaml

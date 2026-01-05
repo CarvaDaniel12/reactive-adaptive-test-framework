@@ -13,10 +13,24 @@ Cargo.lock
 .env.local
 .env.*.local
 *.env
+.env.*
+*.configurado
+!.env.example
 
 # Configuration files with credentials
 qa-intelligent-pms/configs/*.yaml
 !qa-intelligent-pms/configs/*.yaml.example
+!qa-intelligent-pms/configs/component_mappings.yaml
+# Explicitly ignore sensitive config files
+qa-intelligent-pms/configs/testmo_config.yaml
+qa-intelligent-pms/configs/jira_config.yaml
+qa-intelligent-pms/configs/postman_config.yaml
+qa-intelligent-pms/configs/splunk_config.yaml
+
+# User configuration files (should be in system config dir, but protect if copied here)
+**/config.yaml
+**/user_config.yaml
+!**/config.yaml.example
 
 # IDE
 .idea/

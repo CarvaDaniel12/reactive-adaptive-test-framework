@@ -1,0 +1,254 @@
+# Sprint Status - Rust Improvements Epic
+# generated: 2026-01-07
+# last_updated: 2026-01-07T12:00:00Z
+# project: estrategia preventiva-reativa
+# project_key: qa-intelligent-pms
+# tracking_system: file-system
+# epic_document: _bmad-output/planning-artifacts/epics-rust-improvements.md
+
+# STATUS DEFINITIONS:
+# ==================
+# Story Status:
+#   - backlog: Story defined but not started
+#   - ready-for-dev: Story file created, ready for implementation
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review
+#   - done: Story completed and merged
+#
+# Sprint Status:
+#   - planned: Sprint not yet started
+#   - active: Sprint in progress
+#   - completed: All stories in sprint done
+
+epic:
+  id: 14
+  name: "Rust Implementation Improvements"
+  status: "ready-for-dev"
+  priority: "P0"
+  total_stories: 8
+  completed_stories: 0
+  documented_stories: 8
+  estimated_days: 13.5
+
+sprints:
+  - id: 1
+    name: "Reliability & Debugging"
+    status: "planned"
+    focus: "Graceful shutdown and request tracing"
+    estimated_days: 1.5
+    stories:
+      - id: "14.1"
+        name: "Graceful Shutdown and Signal Handling"
+        status: "ready-for-dev"
+        priority: "P0"
+        estimated_days: 1
+        assignee: null
+        files_to_modify:
+          - "crates/qa-pms-api/src/main.rs"
+          - "crates/qa-pms-api/src/app.rs"
+        dependencies: []
+
+      - id: "14.2"
+        name: "Request ID Middleware for Correlation"
+        status: "ready-for-dev"
+        priority: "P0"
+        estimated_days: 0.5
+        assignee: null
+        files_to_create:
+          - "crates/qa-pms-api/src/middleware/request_id.rs"
+        files_to_modify:
+          - "crates/qa-pms-api/src/middleware/mod.rs"
+          - "crates/qa-pms-api/src/app.rs"
+        dependencies: []
+
+  - id: 2
+    name: "Observability - Metrics"
+    status: "planned"
+    focus: "Prometheus metrics integration"
+    estimated_days: 2
+    stories:
+      - id: "14.3"
+        name: "Prometheus Metrics Integration"
+        status: "ready-for-dev"
+        priority: "P0"
+        estimated_days: 2
+        assignee: null
+        new_dependencies:
+          - 'axum-prometheus = "0.7"'
+        files_to_modify:
+          - "Cargo.toml"
+          - "crates/qa-pms-api/Cargo.toml"
+          - "crates/qa-pms-api/src/app.rs"
+          - "crates/qa-pms-api/src/routes/mod.rs"
+        dependencies:
+          - "14.1"
+          - "14.2"
+
+  - id: 3
+    name: "Performance - Caching"
+    status: "planned"
+    focus: "In-memory cache layer"
+    estimated_days: 2
+    stories:
+      - id: "14.4"
+        name: "In-Memory Cache Layer with Moka"
+        status: "ready-for-dev"
+        priority: "P1"
+        estimated_days: 2
+        assignee: null
+        new_dependencies:
+          - 'moka = { version = "0.12", features = ["future"] }'
+        files_to_create:
+          - "crates/qa-pms-core/src/cache.rs"
+        files_to_modify:
+          - "Cargo.toml"
+          - "crates/qa-pms-core/Cargo.toml"
+          - "crates/qa-pms-core/src/lib.rs"
+          - "crates/qa-pms-api/src/app.rs"
+          - "crates/qa-pms-api/src/routes/tickets.rs"
+          - "crates/qa-pms-api/src/routes/search.rs"
+        dependencies:
+          - "14.3"
+
+  - id: 4
+    name: "Security - Rate Limiting"
+    status: "planned"
+    focus: "API rate limiting protection"
+    estimated_days: 1
+    stories:
+      - id: "14.5"
+        name: "Rate Limiting with Tower Governor"
+        status: "ready-for-dev"
+        priority: "P1"
+        estimated_days: 1
+        assignee: null
+        new_dependencies:
+          - 'tower-governor = "0.4"'
+        files_to_modify:
+          - "Cargo.toml"
+          - "crates/qa-pms-api/Cargo.toml"
+          - "crates/qa-pms-api/src/app.rs"
+          - "crates/qa-pms-api/src/main.rs"
+        dependencies:
+          - "14.3"
+
+  - id: 5
+    name: "Observability - Tracing"
+    status: "planned"
+    focus: "OpenTelemetry distributed tracing"
+    estimated_days: 2
+    stories:
+      - id: "14.6"
+        name: "OpenTelemetry Distributed Tracing"
+        status: "ready-for-dev"
+        priority: "P1"
+        estimated_days: 2
+        assignee: null
+        new_dependencies:
+          - 'tracing-opentelemetry = "0.22"'
+          - 'opentelemetry = { version = "0.21", features = ["rt-tokio"] }'
+          - 'opentelemetry-otlp = { version = "0.14", features = ["tonic"] }'
+          - 'opentelemetry_sdk = { version = "0.21", features = ["rt-tokio"] }'
+        files_to_create:
+          - "crates/qa-pms-api/src/telemetry.rs"
+        files_to_modify:
+          - "Cargo.toml"
+          - "crates/qa-pms-api/Cargo.toml"
+          - "crates/qa-pms-api/src/main.rs"
+        dependencies:
+          - "14.2"
+          - "14.3"
+
+  - id: 6
+    name: "Usability - CLI"
+    status: "planned"
+    focus: "Admin CLI tool"
+    estimated_days: 2
+    stories:
+      - id: "14.7"
+        name: "CLI Admin Tool"
+        status: "ready-for-dev"
+        priority: "P2"
+        estimated_days: 2
+        assignee: null
+        new_dependencies:
+          - 'clap = { version = "4.4", features = ["derive", "env"] }'
+        files_to_create:
+          - "crates/qa-pms-api/src/cli.rs"
+          - "crates/qa-pms-api/src/commands/mod.rs"
+          - "crates/qa-pms-api/src/commands/migrate.rs"
+          - "crates/qa-pms-api/src/commands/health.rs"
+          - "crates/qa-pms-api/src/commands/config.rs"
+        files_to_modify:
+          - "crates/qa-pms-api/Cargo.toml"
+          - "crates/qa-pms-api/src/main.rs"
+        dependencies:
+          - "14.1"
+
+  - id: 7
+    name: "Quality - Integration Tests"
+    status: "planned"
+    focus: "Testcontainers integration tests"
+    estimated_days: 3
+    stories:
+      - id: "14.8"
+        name: "Integration Tests with Testcontainers"
+        status: "ready-for-dev"
+        priority: "P2"
+        estimated_days: 3
+        assignee: null
+        new_dependencies:
+          - 'testcontainers = "0.15"  # dev-dependency'
+        files_to_create:
+          - "crates/qa-pms-api/tests/common/mod.rs"
+          - "crates/qa-pms-api/tests/common/fixtures.rs"
+          - "crates/qa-pms-api/tests/integration/workflow_test.rs"
+          - "crates/qa-pms-api/tests/integration/time_tracking_test.rs"
+          - "crates/qa-pms-api/tests/integration/pattern_detection_test.rs"
+        dependencies:
+          - "14.4"
+          - "14.6"
+
+# ⚠️ MANDATORY: Context7 Usage Requirement
+# ========================================
+# ALL implementations in Epic 14 MUST use Context7 MCP before writing code:
+# 1. Resolve library ID for each dependency
+# 2. Query Context7 for implementation patterns and examples
+# 3. Verify best practices and common pitfalls
+# 4. Implement using verified patterns from Context7
+#
+# Context7 Library References (verify before implementation):
+# ===========================================================
+# Story 14.1: /tokio-rs/tokio - Signal handling, graceful shutdown
+# Story 14.2: /tokio-rs/axum - Middleware creation, tracing integration
+# Story 14.3: /ptrskay3/axum-prometheus - PrometheusMetricLayerBuilder, metrics endpoint
+# Story 14.4: /websites/rs_moka - Async cache with TTL, time_to_live, time_to_idle
+# Story 14.5: /benwis/tower-governor - Rate limiting with SmartIpKeyExtractor
+# Story 14.6: /tokio-rs/tracing-opentelemetry - OTLP exporter, distributed context propagation
+# Story 14.7: /clap-rs/clap - CLI argument parsing, derive API
+# Story 14.8: /testcontainers/testcontainers-rs - PostgreSQL container setup, async patterns
+
+# Implementation Notes:
+# ====================
+# 1. All 8 stories documented with complete technical specifications
+# 2. ⚠️ MANDATORY: Each story MUST use Context7 before implementation
+# 3. Each story includes Context7 Requirements section with specific queries to make
+# 4. Code examples should be verified against Context7 documentation
+# 5. Dependencies are pinned to stable, well-documented versions
+# 6. Stories are ordered by dependency - earlier stories enable later ones
+# 7. Each sprint has a clear focus area for easier review
+# 8. Estimated days are conservative to account for testing and documentation
+#
+# Context7 Workflow (MANDATORY for each story):
+# =============================================
+# Step 1: Resolve library ID (e.g., /tokio-rs/axum)
+# Step 2: Query Context7 for specific implementation patterns
+# Step 3: Review best practices and anti-patterns
+# Step 4: Implement using verified patterns
+# Step 5: Verify code matches Context7 recommendations
+#
+# Status Update (2026-01-07):
+# ========================
+# - All 8 story documents have been created in _bmad-output/implementation-artifacts/
+# - Epic 14 is now ready for implementation development
+# - Sprint 1 (Stories 14.1, 14.2) can begin immediately

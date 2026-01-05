@@ -396,10 +396,7 @@ pub async fn test_jira(
     }
 
     // Test the connection based on auth method
-    if has_api_token {
-        let email = req.email.as_ref().unwrap();
-        let api_token = req.api_token.as_ref().unwrap();
-
+    if let (Some(email), Some(api_token)) = (&req.email, &req.api_token) {
         info!(url = %req.instance_url, email = %email, "Testing Jira connection with API Token");
 
         // Actually test the connection
@@ -761,8 +758,10 @@ mod tests {
 
         state.jira = Some(JiraTestRequest {
             instance_url: "https://test.atlassian.net".to_string(),
-            client_id: "test".to_string(),
-            client_secret: "secret".to_string(),
+            email: Some("test@example.com".to_string()),
+            api_token: Some("test-token".to_string()),
+            client_id: None,
+            client_secret: None,
             cloud_id: None,
             access_token: None,
         });
@@ -788,10 +787,12 @@ mod tests {
         // Profile + Jira is complete
         state.jira = Some(JiraTestRequest {
             instance_url: "https://test.atlassian.net".to_string(),
-            client_id: "test".to_string(),
-            client_secret: "secret".to_string(),
-            cloud_id: Some("test-cloud-id".to_string()),
-            access_token: Some("test-token".to_string()),
+            email: Some("test@example.com".to_string()),
+            api_token: Some("test-token".to_string()),
+            client_id: None,
+            client_secret: None,
+            cloud_id: None,
+            access_token: None,
         });
         assert!(state.is_complete());
     }

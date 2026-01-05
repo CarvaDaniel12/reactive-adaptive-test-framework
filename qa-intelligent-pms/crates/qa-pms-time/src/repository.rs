@@ -13,13 +13,13 @@ pub async fn start_session(
     step_index: i32,
 ) -> Result<TimeSession, sqlx::Error> {
     sqlx::query_as::<_, TimeSession>(
-        r#"
+        r"
         INSERT INTO time_sessions (workflow_instance_id, step_index, started_at, is_active)
         VALUES ($1, $2, NOW(), true)
         ON CONFLICT (workflow_instance_id, step_index) 
         DO UPDATE SET started_at = NOW(), is_active = true, updated_at = NOW()
         RETURNING *
-        "#,
+        ",
     )
     .bind(workflow_instance_id)
     .bind(step_index)
@@ -40,12 +40,12 @@ pub async fn end_session(pool: &PgPool, session_id: Uuid) -> Result<TimeSession,
     let total_seconds = elapsed - paused_seconds;
 
     sqlx::query_as::<_, TimeSession>(
-        r#"
+        r"
         UPDATE time_sessions
         SET ended_at = NOW(), is_active = false, total_seconds = $2, updated_at = NOW()
         WHERE id = $1
         RETURNING *
-        "#,
+        ",
     )
     .bind(session_id)
     .bind(total_seconds.max(0))
@@ -57,10 +57,10 @@ pub async fn end_session(pool: &PgPool, session_id: Uuid) -> Result<TimeSession,
 pub async fn pause_session(pool: &PgPool, session_id: Uuid) -> Result<TimePauseEvent, sqlx::Error> {
     // Update session paused_at
     sqlx::query(
-        r#"
+        r"
         UPDATE time_sessions SET paused_at = NOW(), updated_at = NOW()
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(session_id)
     .execute(pool)
@@ -68,11 +68,11 @@ pub async fn pause_session(pool: &PgPool, session_id: Uuid) -> Result<TimePauseE
 
     // Create pause event
     sqlx::query_as::<_, TimePauseEvent>(
-        r#"
+        r"
         INSERT INTO time_pause_events (session_id, paused_at)
         VALUES ($1, NOW())
         RETURNING *
-        "#,
+        ",
     )
     .bind(session_id)
     .fetch_one(pool)
@@ -83,10 +83,10 @@ pub async fn pause_session(pool: &PgPool, session_id: Uuid) -> Result<TimePauseE
 pub async fn resume_session(pool: &PgPool, session_id: Uuid) -> Result<(), sqlx::Error> {
     // Update session resumed_at
     sqlx::query(
-        r#"
+        r"
         UPDATE time_sessions SET resumed_at = NOW(), paused_at = NULL, updated_at = NOW()
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(session_id)
     .execute(pool)
@@ -94,12 +94,12 @@ pub async fn resume_session(pool: &PgPool, session_id: Uuid) -> Result<(), sqlx:
 
     // Update the latest pause event
     sqlx::query(
-        r#"
+        r"
         UPDATE time_pause_events 
         SET resumed_at = NOW(), 
             duration_seconds = EXTRACT(EPOCH FROM (NOW() - paused_at))::INT
         WHERE session_id = $1 AND resumed_at IS NULL
-        "#,
+        ",
     )
     .bind(session_id)
     .execute(pool)
@@ -111,7 +111,7 @@ pub async fn resume_session(pool: &PgPool, session_id: Uuid) -> Result<(), sqlx:
 /// Get a time session by ID.
 pub async fn get_session(pool: &PgPool, session_id: Uuid) -> Result<TimeSession, sqlx::Error> {
     sqlx::query_as::<_, TimeSession>(
-        r#"SELECT * FROM time_sessions WHERE id = $1"#,
+        r"SELECT * FROM time_sessions WHERE id = $1",
     )
     .bind(session_id)
     .fetch_one(pool)
@@ -124,12 +124,12 @@ pub async fn get_active_session(
     workflow_instance_id: Uuid,
 ) -> Result<Option<TimeSession>, sqlx::Error> {
     sqlx::query_as::<_, TimeSession>(
-        r#"
+        r"
         SELECT * FROM time_sessions 
         WHERE workflow_instance_id = $1 AND is_active = true
         ORDER BY started_at DESC
         LIMIT 1
-        "#,
+        ",
     )
     .bind(workflow_instance_id)
     .fetch_optional(pool)
@@ -143,10 +143,10 @@ pub async fn get_session_for_step(
     step_index: i32,
 ) -> Result<Option<TimeSession>, sqlx::Error> {
     sqlx::query_as::<_, TimeSession>(
-        r#"
+        r"
         SELECT * FROM time_sessions 
         WHERE workflow_instance_id = $1 AND step_index = $2
-        "#,
+        ",
     )
     .bind(workflow_instance_id)
     .bind(step_index)
@@ -160,11 +160,11 @@ pub async fn get_workflow_sessions(
     workflow_instance_id: Uuid,
 ) -> Result<Vec<TimeSession>, sqlx::Error> {
     sqlx::query_as::<_, TimeSession>(
-        r#"
+        r"
         SELECT * FROM time_sessions 
         WHERE workflow_instance_id = $1
         ORDER BY step_index
-        "#,
+        ",
     )
     .bind(workflow_instance_id)
     .fetch_all(pool)
@@ -174,11 +174,11 @@ pub async fn get_workflow_sessions(
 /// Get total paused time for a session.
 pub async fn get_total_paused_time(pool: &PgPool, session_id: Uuid) -> Result<i32, sqlx::Error> {
     let result: (Option<i64>,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COALESCE(SUM(duration_seconds), 0) as total
         FROM time_pause_events
         WHERE session_id = $1 AND duration_seconds IS NOT NULL
-        "#,
+        ",
     )
     .bind(session_id)
     .fetch_one(pool)
@@ -194,10 +194,10 @@ pub async fn get_estimate(
     step_index: i32,
 ) -> Result<Option<TimeEstimate>, sqlx::Error> {
     sqlx::query_as::<_, TimeEstimate>(
-        r#"
+        r"
         SELECT * FROM time_estimates 
         WHERE template_id = $1 AND step_index = $2
-        "#,
+        ",
     )
     .bind(template_id)
     .bind(step_index)
@@ -213,13 +213,13 @@ pub async fn set_estimate(
     estimated_seconds: i32,
 ) -> Result<TimeEstimate, sqlx::Error> {
     sqlx::query_as::<_, TimeEstimate>(
-        r#"
+        r"
         INSERT INTO time_estimates (template_id, step_index, estimated_seconds)
         VALUES ($1, $2, $3)
         ON CONFLICT (template_id, step_index)
         DO UPDATE SET estimated_seconds = $3, updated_at = NOW()
         RETURNING *
-        "#,
+        ",
     )
     .bind(template_id)
     .bind(step_index)

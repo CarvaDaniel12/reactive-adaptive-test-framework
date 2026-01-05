@@ -10,3 +10,6 @@ rust_decimal = { version = "1.33", features = ["serde", "serde-with-str", "db-po
 serde = { workspace = true }
 sqlx = { workspace = true }
 uuid = { workspace = true }
+
+[lints]
+workspace = true

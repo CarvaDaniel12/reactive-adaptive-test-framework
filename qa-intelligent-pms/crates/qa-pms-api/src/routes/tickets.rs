@@ -920,17 +920,11 @@ fn humanize_bytes(bytes: u64) -> String {
 async fn get_jira_client(state: &AppState) -> Result<JiraTicketsClient, ApiError> {
     // First, check if we have Jira settings from environment (API Token)
     if let Some(jira_settings) = state.settings.jira.as_ref() {
-        if jira_settings.has_api_token() {
-            let email = jira_settings.email.as_ref().unwrap();
-            let api_token = jira_settings
-                .api_token
-                .as_ref()
-                .unwrap()
-                .expose_secret();
+        if let (Some(email), Some(api_token)) = (&jira_settings.email, &jira_settings.api_token) {
             return Ok(JiraTicketsClient::with_api_token(
                 jira_settings.instance_url.clone(),
                 email.clone(),
-                api_token.clone(),
+                api_token.expose_secret().clone(),
             ));
         }
     }

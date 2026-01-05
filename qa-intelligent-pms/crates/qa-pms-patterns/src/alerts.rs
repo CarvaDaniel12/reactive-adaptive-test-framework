@@ -1,7 +1,7 @@
 //! Alert service for generating and managing alerts.
 
 use crate::repository::PatternRepository;
-use crate::types::*;
+use crate::types::{DetectedPattern, Alert, NewAlert};
 
 /// Alert service for generating alerts from patterns.
 pub struct AlertService {
@@ -10,7 +10,7 @@ pub struct AlertService {
 
 impl AlertService {
     /// Create a new alert service.
-    pub fn new(repo: PatternRepository) -> Self {
+    pub const fn new(repo: PatternRepository) -> Self {
         Self { repo }
     }
 

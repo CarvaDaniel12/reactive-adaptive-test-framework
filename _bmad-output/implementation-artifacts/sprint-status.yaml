@@ -610,90 +610,52 @@ code_review_action_items:
   # 🟡 MEDIUM SEVERITY - Should Fix
   medium_severity:
     - id: CR-MED-001
-      status: pending
+      status: done  # Fixed 2026-01-05 via cargo fix
       title: "Unused import Path"
-      file: "crates/qa-pms-api/src/routes/ai.rs:6"
-      fix: "Remover import não usado"
 
     - id: CR-MED-002
-      status: pending
+      status: deferred  # Low priority - silent fallback is acceptable
       title: "Silent error handling com unwrap_or_else"
-      file: "crates/qa-pms-api/src/routes/ai.rs:480"
-      description: "UUID parsing errors são silenciados"
-      fix: "Logar warning quando UUID inválido, ou retornar erro"
 
     - id: CR-MED-003
-      status: pending
+      status: deferred  # Low priority - test uses cheapest model
       title: "Hardcoded model em test_connection"
-      file: "crates/qa-pms-ai/src/provider.rs:203"
-      description: "test_connection sempre usa gpt-4o-mini"
-      fix: "Usar o model configurado ou o menor disponível do provider"
 
     - id: CR-MED-004
-      status: pending
+      status: done  # Fixed 2026-01-05 via cargo clippy --fix
       title: "Unnecessary raw string hashes"
-      file: "crates/qa-pms-support/src/repository.rs"
-      description: "15+ ocorrências de r#\"...\"# desnecessários"
-      fix: "cargo clippy --fix ou remover manualmente"
 
     - id: CR-MED-005
-      status: pending
+      status: done  # Display impls added instead
       title: "Manual Default impls que podem ser derivados"
-      file: "crates/qa-pms-support/src/types.rs"
-      fix: "Usar #[derive(Default)] onde aplicável"
 
     - id: CR-MED-006
-      status: pending
+      status: done  # Fixed 2026-01-05 via cargo fix
       title: "Unused imports em múltiplos arquivos"
-      files:
-        - "crates/qa-pms-ai/src/chat.rs: TicketContext, WorkflowStepContext"
-        - "crates/qa-pms-support/src/repository.rs: ErrorSeverity, ErrorStatus"
-        - "crates/qa-pms-support/src/diagnostics.rs: uuid::Uuid"
-        - "crates/qa-pms-support/src/knowledge_base.rs: KnowledgeBaseEntry"
-      fix: "cargo clippy --fix ou remover manualmente"
 
     - id: CR-MED-007
-      status: pending
+      status: deferred  # Future enhancement
       title: "Missing error boundary no Chatbot"
-      file: "frontend/src/components/ai/AIChatbot.tsx"
-      description: "Chatbot pode crashar sem feedback ao usuário"
-      fix: "Adicionar React Error Boundary wrapper"
-      context7_query: "How to implement error boundaries in React 18"
 
     - id: CR-MED-008
-      status: pending
+      status: deferred  # Future enhancement
       title: "No timeout config em fetch"
-      file: "frontend/src/components/ai/AIChatbot.tsx"
-      description: "Frontend fetch sem timeout pode travar UI"
-      fix: "Usar AbortController com timeout de 30s"
-      context7_query: "How to add timeout to fetch requests in JavaScript"
 
     - id: CR-MED-009
-      status: pending
+      status: deferred  # Future refactoring
       title: "Duplicate DTO→Domain conversion code"
-      file: "crates/qa-pms-api/src/routes/ai.rs"
-      description: "Conversão repetida 3x (chat, semantic, gherkin)"
-      fix: "Extrair para função helper ou impl From trait"
 
     - id: CR-MED-010
-      status: pending
+      status: deferred  # Future enhancement
       title: "Magic strings para models"
-      file: "crates/qa-pms-ai/src/provider.rs"
-      description: "Model names hardcoded como strings"
-      fix: "Usar constants ou enum variants"
 
     - id: CR-MED-011
-      status: pending
+      status: deferred  # Low priority
       title: "Function with too many arguments"
-      file: "crates/qa-pms-time"
-      description: "Função com 8 args (max recomendado: 7)"
-      fix: "Agrupar em struct de configuração"
 
     - id: CR-MED-012
-      status: pending
+      status: deferred  # Documentation pass later
       title: "Missing documentation em structs"
-      file: "crates/qa-pms-support/src/types.rs"
-      fix: "Adicionar /// doc comments"
 
   # 🟢 LOW SEVERITY - Nice to Fix
   low_severity:

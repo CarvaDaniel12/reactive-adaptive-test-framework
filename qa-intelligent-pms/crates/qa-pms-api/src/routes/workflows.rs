@@ -28,7 +28,7 @@ use qa_pms_core::error::ApiError;
 /// Result type alias for API handlers.
 type ApiResult<T> = Result<T, ApiError>;
 
-/// Helper trait to convert sqlx errors to ApiError.
+/// Helper trait to convert sqlx errors to `ApiError`.
 trait SqlxResultExt<T> {
     fn map_db_err(self) -> Result<T, ApiError>;
 }
@@ -139,6 +139,7 @@ impl From<(usize, &WorkflowStep)> for StepResponse {
 pub struct CreateWorkflowRequest {
     pub template_id: Uuid,
     pub ticket_id: String,
+    #[allow(dead_code)]
     pub ticket_title: String,
     pub user_id: String,
 }
@@ -276,7 +277,7 @@ pub struct UserActiveWorkflowsResponse {
 // Helper Functions
 // ============================================================================
 
-/// Fetch template or return NotFound error.
+/// Fetch template or return `NotFound` error.
 async fn fetch_template(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow::WorkflowTemplate> {
     get_template(&state.db, id)
         .await
@@ -284,7 +285,7 @@ async fn fetch_template(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow
         .ok_or_else(|| ApiError::NotFound("Template not found".to_string()))
 }
 
-/// Fetch workflow instance or return NotFound error.
+/// Fetch workflow instance or return `NotFound` error.
 async fn fetch_instance(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow::WorkflowInstance> {
     get_instance(&state.db, id)
         .await
@@ -393,16 +394,16 @@ pub async fn create_workflow(
     let total_steps = steps.len();
     let template_name = template.name.clone();
     
-    let first_step = steps.first().map(|s| StepResponse {
-        index: 0,
-        name: s.name.clone(),
-        description: s.description.clone(),
-        estimated_minutes: s.estimated_minutes,
-    }).unwrap_or(StepResponse {
+    let first_step = steps.first().map_or(StepResponse {
         index: 0,
         name: "No steps".to_string(),
         description: String::new(),
         estimated_minutes: 0,
+    }, |s| StepResponse {
+        index: 0,
+        name: s.name.clone(),
+        description: s.description.clone(),
+        estimated_minutes: s.estimated_minutes,
     });
 
     info!(
@@ -492,33 +493,30 @@ pub async fn get_active_workflow_for_ticket(
 ) -> ApiResult<Json<ActiveWorkflowResponse>> {
     let instance = get_active_workflow(&state.db, &ticket_id).await.map_db_err()?;
 
-    let response = match instance {
-        Some(inst) => {
-            let template = get_template(&state.db, inst.template_id).await.map_db_err()?.unwrap_or_else(|| {
-                panic!("Template not found for instance")
-            });
-            let total_steps = template.steps().len();
-            
-            info!(ticket_id = %ticket_id, workflow_id = %inst.id, "Found active workflow");
+    let response = if let Some(inst) = instance {
+        let template = get_template(&state.db, inst.template_id).await.map_db_err()?.unwrap_or_else(|| {
+            panic!("Template not found for instance")
+        });
+        let total_steps = template.steps().len();
+        
+        info!(ticket_id = %ticket_id, workflow_id = %inst.id, "Found active workflow");
 
-            ActiveWorkflowResponse {
-                exists: true,
-                workflow: Some(WorkflowSummary {
-                    id: inst.id,
-                    template_name: template.name,
-                    status: inst.status,
-                    current_step: inst.current_step,
-                    total_steps,
-                    started_at: inst.started_at.to_rfc3339(),
-                }),
-            }
+        ActiveWorkflowResponse {
+            exists: true,
+            workflow: Some(WorkflowSummary {
+                id: inst.id,
+                template_name: template.name,
+                status: inst.status,
+                current_step: inst.current_step,
+                total_steps,
+                started_at: inst.started_at.to_rfc3339(),
+            }),
         }
-        None => {
-            info!(ticket_id = %ticket_id, "No active workflow found");
-            ActiveWorkflowResponse {
-                exists: false,
-                workflow: None,
-            }
+    } else {
+        info!(ticket_id = %ticket_id, "No active workflow found");
+        ActiveWorkflowResponse {
+            exists: false,
+            workflow: None,
         }
     };
 
@@ -579,15 +577,15 @@ pub async fn complete_step(
     let next_step_index = path.step_index + 1;
     let workflow_completed = next_step_index >= total_steps;
 
-    let next_step = if !workflow_completed {
+    let next_step = if workflow_completed {
+        None
+    } else {
         template.steps().get(next_step_index as usize).map(|s| StepResponse {
             index: next_step_index as usize,
             name: s.name.clone(),
             description: s.description.clone(),
             estimated_minutes: s.estimated_minutes,
         })
-    } else {
-        None
     };
 
     info!(workflow_id = %path.id, step_index = path.step_index, workflow_completed, "Completed workflow step");
@@ -632,15 +630,15 @@ pub async fn skip_step(
     let next_step_index = path.step_index + 1;
     let workflow_completed = next_step_index >= total_steps;
 
-    let next_step = if !workflow_completed {
+    let next_step = if workflow_completed {
+        None
+    } else {
         template.steps().get(next_step_index as usize).map(|s| StepResponse {
             index: next_step_index as usize,
             name: s.name.clone(),
             description: s.description.clone(),
             estimated_minutes: s.estimated_minutes,
         })
-    } else {
-        None
     };
 
     info!(workflow_id = %path.id, step_index = path.step_index, workflow_completed, "Skipped workflow step");

@@ -180,7 +180,7 @@ async fn get_period_metrics(
 
     // Story 6.7: Try to get metrics from time_daily_aggregates first (more accurate)
     let aggregate_stats: Option<(i64, Option<i64>, Option<i64>, Option<f64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             COALESCE(SUM(tickets_completed), 0) as tickets,
             SUM(total_time_seconds) as total_time,
@@ -188,7 +188,7 @@ async fn get_period_metrics(
             AVG(efficiency_ratio)::FLOAT8 as avg_efficiency
         FROM time_daily_aggregates
         WHERE aggregate_date >= $1 AND aggregate_date < $2
-        "#,
+        ",
     )
     .bind(start_date)
     .bind(end_date)
@@ -220,7 +220,7 @@ async fn get_period_metrics(
 
     // Fallback: Query completed workflows in period (for backward compatibility)
     let workflow_stats: Option<(i64, Option<f64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             COUNT(*) as count,
             AVG(EXTRACT(EPOCH FROM (completed_at - started_at))) as avg_seconds
@@ -228,7 +228,7 @@ async fn get_period_metrics(
         WHERE status = 'completed'
           AND completed_at >= $1
           AND completed_at < $2
-        "#,
+        ",
     )
     .bind(start)
     .bind(end)
@@ -240,12 +240,12 @@ async fn get_period_metrics(
 
     // Query total time tracked in period
     let total_seconds: Option<(Option<f64>,)> = sqlx::query_as(
-        r#"
+        r"
         SELECT SUM(total_seconds) as total
         FROM time_sessions
         WHERE ended_at >= $1
           AND ended_at < $2
-        "#,
+        ",
     )
     .bind(start)
     .bind(end)
@@ -255,12 +255,11 @@ async fn get_period_metrics(
 
     let total_hours = total_seconds
         .and_then(|(t,)| t)
-        .map(|s| s / 3600.0)
-        .unwrap_or(0.0);
+        .map_or(0.0, |s| s / 3600.0);
 
     // Fallback efficiency calculation from time_sessions
     let efficiency_result: Option<(Option<i64>, Option<i64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             SUM(ts.total_seconds) as actual,
             SUM(te.estimated_seconds) as estimated
@@ -268,7 +267,7 @@ async fn get_period_metrics(
         LEFT JOIN workflow_instances wi ON ts.workflow_instance_id = wi.id
         LEFT JOIN time_estimates te ON wi.template_id = te.template_id AND ts.step_index = te.step_index
         WHERE ts.ended_at >= $1 AND ts.ended_at < $2
-        "#,
+        ",
     )
     .bind(start)
     .bind(end)
@@ -315,7 +314,7 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
 
     // Story 6.7: Try to get trend from time_daily_aggregates first
     let aggregate_rows: Vec<(NaiveDate, i32, i32)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             aggregate_date,
             tickets_completed,
@@ -323,7 +322,7 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
         FROM time_daily_aggregates
         WHERE aggregate_date >= $1
         ORDER BY aggregate_date
-        "#,
+        ",
     )
     .bind(start_date)
     .fetch_all(pool)
@@ -336,7 +335,7 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
             .map(|(date, tickets, seconds)| TrendDataPoint {
                 date: date.format("%b %d").to_string(),
                 tickets,
-                hours: seconds as f64 / 3600.0,
+                hours: f64::from(seconds) / 3600.0,
             })
             .collect());
     }
@@ -344,7 +343,7 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
     // Fallback: Query workflow_instances directly
     let start = now - Duration::days(days);
     let rows: Vec<(NaiveDate, i64, Option<f64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             DATE(completed_at) as date,
             COUNT(*) as tickets,
@@ -354,7 +353,7 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
           AND completed_at >= $1
         GROUP BY DATE(completed_at)
         ORDER BY date
-        "#,
+        ",
     )
     .bind(start)
     .fetch_all(pool)
@@ -374,7 +373,7 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
 async fn get_recent_activity(pool: &PgPool, limit: i32) -> Result<Vec<ActivityItem>, ApiError> {
     // Get recent completed workflows
     let workflows: Vec<(String, String, Option<String>, chrono::DateTime<Utc>, Option<i64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             wi.id::text,
             wt.name,
@@ -386,7 +385,7 @@ async fn get_recent_activity(pool: &PgPool, limit: i32) -> Result<Vec<ActivityIt
         WHERE wi.status = 'completed'
         ORDER BY wi.completed_at DESC
         LIMIT $1
-        "#,
+        ",
     )
     .bind(limit)
     .fetch_all(pool)

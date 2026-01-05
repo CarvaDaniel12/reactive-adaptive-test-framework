@@ -33,7 +33,7 @@ pub enum JiraAuth {
 /// - Response time within acceptable limits
 pub struct JiraHealthCheck {
     http_client: Client,
-    /// Jira instance URL (e.g., "https://company.atlassian.net")
+    /// Jira instance URL (e.g., "<https://company.atlassian.net>")
     instance_url: String,
     /// Authentication credentials
     auth: JiraAuth,
@@ -45,9 +45,9 @@ impl JiraHealthCheck {
     /// This is the recommended method for most use cases.
     ///
     /// # Arguments
-    /// * `instance_url` - Jira Cloud URL (e.g., "https://company.atlassian.net")
+    /// * `instance_url` - Jira Cloud URL (e.g., "<https://company.atlassian.net>")
     /// * `email` - User email address
-    /// * `api_token` - API token from https://id.atlassian.com/manage-profile/security/api-tokens
+    /// * `api_token` - API token from <https://id.atlassian.com/manage-profile/security/api-tokens>
     #[must_use]
     pub fn with_api_token(instance_url: String, email: String, api_token: String) -> Self {
         let http_client = Client::builder()
@@ -112,7 +112,7 @@ impl JiraHealthCheck {
 
 #[async_trait]
 impl HealthCheck for JiraHealthCheck {
-    fn integration_name(&self) -> &str {
+    fn integration_name(&self) -> &'static str {
         "jira"
     }
 
@@ -165,7 +165,7 @@ impl HealthCheck for JiraHealthCheck {
                 if e.is_timeout() {
                     HealthCheckResult::offline(
                         "jira",
-                        &format!("Request timeout (>{}s)", REQUEST_TIMEOUT_SECS),
+                        &format!("Request timeout (>{REQUEST_TIMEOUT_SECS}s)"),
                     )
                 } else if e.is_connect() {
                     HealthCheckResult::offline("jira", "Connection failed - check URL and network")

@@ -10,8 +10,10 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "VARCHAR", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ErrorStatus {
     /// New error, not yet investigated
+    #[default]
     New,
     /// Currently being investigated
     Investigating,
@@ -21,11 +23,6 @@ pub enum ErrorStatus {
     Dismissed,
 }
 
-impl Default for ErrorStatus {
-    fn default() -> Self {
-        Self::New
-    }
-}
 
 impl std::fmt::Display for ErrorStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -42,10 +39,12 @@ impl std::fmt::Display for ErrorStatus {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "VARCHAR", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ErrorSeverity {
     /// Low severity - informational
     Low,
     /// Medium severity - needs attention
+    #[default]
     Medium,
     /// High severity - urgent
     High,
@@ -53,11 +52,6 @@ pub enum ErrorSeverity {
     Critical,
 }
 
-impl Default for ErrorSeverity {
-    fn default() -> Self {
-        Self::Medium
-    }
-}
 
 impl std::fmt::Display for ErrorSeverity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -74,6 +68,7 @@ impl std::fmt::Display for ErrorSeverity {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "VARCHAR", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ErrorSource {
     /// Frontend error (browser)
     Frontend,
@@ -84,14 +79,10 @@ pub enum ErrorSource {
     /// Database error
     Database,
     /// Unknown source
+    #[default]
     Unknown,
 }
 
-impl Default for ErrorSource {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
 
 impl std::fmt::Display for ErrorSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -395,11 +386,11 @@ pub struct Pagination {
     pub per_page: i32,
 }
 
-fn default_page() -> i32 {
+const fn default_page() -> i32 {
     1
 }
 
-fn default_per_page() -> i32 {
+const fn default_per_page() -> i32 {
     20
 }
 
@@ -445,8 +436,9 @@ pub struct PaginatedResponse<T: Serialize> {
 
 impl<T: Serialize> PaginatedResponse<T> {
     /// Create a new paginated response.
+    #[must_use] 
     pub fn new(items: Vec<T>, total: i64, page: i32, per_page: i32) -> Self {
-        let total_pages = ((total as f64) / (per_page as f64)).ceil() as i32;
+        let total_pages = ((total as f64) / f64::from(per_page)).ceil() as i32;
         Self {
             items,
             total,

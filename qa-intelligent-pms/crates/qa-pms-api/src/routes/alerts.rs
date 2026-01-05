@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -97,7 +97,7 @@ pub async fn get_alerts(
 ) -> ApiResult<Json<AlertsResponse>> {
     // Query alerts from database
     let rows: Vec<AlertRow> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             id, pattern_id, alert_type, severity, title, message,
             affected_tickets, suggested_actions, is_read, is_dismissed, created_at
@@ -111,7 +111,7 @@ pub async fn get_alerts(
             END,
             created_at DESC
         LIMIT 50
-        "#,
+        ",
     )
     .fetch_all(&state.db)
     .await
@@ -220,7 +220,7 @@ pub async fn get_patterns(
     State(state): State<AppState>,
 ) -> ApiResult<Json<PatternsResponse>> {
     let rows: Vec<PatternRow> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             id, pattern_type, severity, title, description,
             affected_tickets, common_factor, average_excess_percent,
@@ -228,7 +228,7 @@ pub async fn get_patterns(
         FROM detected_patterns
         ORDER BY detected_at DESC
         LIMIT 50
-        "#,
+        ",
     )
     .fetch_all(&state.db)
     .await
@@ -256,14 +256,14 @@ pub async fn get_pattern(
     Path(id): Path<Uuid>,
 ) -> ApiResult<Json<PatternResponse>> {
     let row: Option<PatternRow> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             id, pattern_type, severity, title, description,
             affected_tickets, common_factor, average_excess_percent,
             confidence_score, suggested_actions, detected_at
         FROM detected_patterns
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(id)
     .fetch_optional(&state.db)

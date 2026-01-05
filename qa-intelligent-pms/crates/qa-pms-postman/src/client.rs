@@ -174,7 +174,7 @@ impl PostmanClient {
         workspace_id: Option<&str>,
     ) -> Result<Vec<CollectionSummary>, PostmanError> {
         let endpoint = match workspace_id {
-            Some(id) => format!("/collections?workspace={}", id),
+            Some(id) => format!("/collections?workspace={id}"),
             None => "/collections".to_string(),
         };
 
@@ -198,7 +198,7 @@ impl PostmanClient {
     /// # Errors
     /// Returns error if the collection is not found or API call fails.
     pub async fn get_collection(&self, collection_id: &str) -> Result<Collection, PostmanError> {
-        let endpoint = format!("/collections/{}", collection_id);
+        let endpoint = format!("/collections/{collection_id}");
         debug!(collection_id = %collection_id, "Getting collection details");
         let response: CollectionResponse = self.request(&endpoint).await?;
         Ok(response.collection)
@@ -245,7 +245,7 @@ impl PostmanClient {
                     Ok(full_collection) => {
                         // Search within requests
                         let request_matches = search_requests(&full_collection, keywords);
-                        let total_score = name_score + (request_matches.len() as f32 * 0.1);
+                        let total_score = (request_matches.len() as f32).mul_add(0.1, name_score);
 
                         if total_score > 0.0 || keywords.is_empty() {
                             results.push(SearchResult {

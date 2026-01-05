@@ -60,7 +60,7 @@ pub struct QueryTemplateService {
 impl QueryTemplateService {
     /// Create a new template service.
     #[must_use]
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 
@@ -73,13 +73,13 @@ impl QueryTemplateService {
     ) -> Result<Vec<QueryTemplate>, SplunkError> {
         let rows: Vec<QueryTemplateRow> = if let Some(cat) = category {
             sqlx::query_as(
-                r#"
+                r"
                 SELECT id, name, description, query, category, is_system, created_by, created_at, updated_at
                 FROM splunk_query_templates
                 WHERE category = $1
                   AND (is_system = true OR created_by = $2 OR $2 IS NULL)
                 ORDER BY is_system DESC, name ASC
-                "#,
+                ",
             )
             .bind(cat.to_string())
             .bind(user_id)
@@ -87,12 +87,12 @@ impl QueryTemplateService {
             .await?
         } else {
             sqlx::query_as(
-                r#"
+                r"
                 SELECT id, name, description, query, category, is_system, created_by, created_at, updated_at
                 FROM splunk_query_templates
                 WHERE is_system = true OR created_by = $1 OR $1 IS NULL
                 ORDER BY is_system DESC, category, name ASC
-                "#,
+                ",
             )
             .bind(user_id)
             .fetch_all(&self.pool)
@@ -106,11 +106,11 @@ impl QueryTemplateService {
     #[instrument(skip(self))]
     pub async fn get_template(&self, id: Uuid) -> Result<QueryTemplate, SplunkError> {
         let row: Option<QueryTemplateRow> = sqlx::query_as(
-            r#"
+            r"
             SELECT id, name, description, query, category, is_system, created_by, created_at, updated_at
             FROM splunk_query_templates
             WHERE id = $1
-            "#,
+            ",
         )
         .bind(id)
         .fetch_optional(&self.pool)
@@ -138,11 +138,11 @@ impl QueryTemplateService {
         let id = Uuid::new_v4();
 
         let row: QueryTemplateRow = sqlx::query_as(
-            r#"
+            r"
             INSERT INTO splunk_query_templates (id, name, description, query, category, is_system, created_by, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, false, $6, $7, $7)
             RETURNING id, name, description, query, category, is_system, created_by, created_at, updated_at
-            "#,
+            ",
         )
         .bind(id)
         .bind(&input.name)
@@ -190,12 +190,12 @@ impl QueryTemplateService {
         let category = input.category.unwrap_or(existing.category);
 
         let row: QueryTemplateRow = sqlx::query_as(
-            r#"
+            r"
             UPDATE splunk_query_templates
             SET name = $2, description = $3, query = $4, category = $5, updated_at = $6
             WHERE id = $1
             RETURNING id, name, description, query, category, is_system, created_by, created_at, updated_at
-            "#,
+            ",
         )
         .bind(id)
         .bind(&name)
@@ -314,9 +314,9 @@ impl QueryTemplateService {
             (
                 "Error Logs by Date Range",
                 "Search for error logs within a time range",
-                r#"index=* level=ERROR earliest=-24h@h latest=now
+                r"index=* level=ERROR earliest=-24h@h latest=now
 | table _time, host, source, message
-| sort -_time"#,
+| sort -_time",
                 TemplateCategory::Errors,
             ),
             (
@@ -346,9 +346,9 @@ impl QueryTemplateService {
             (
                 "Slow Requests",
                 "Find requests that took longer than expected",
-                r#"index=* sourcetype=access_combined response_time>1000
+                r"index=* sourcetype=access_combined response_time>1000
 | table _time, endpoint, response_time, status_code
-| sort -response_time"#,
+| sort -response_time",
                 TemplateCategory::Performance,
             ),
             (
@@ -380,11 +380,11 @@ impl QueryTemplateService {
 
             if existing.map_or(true, |(count,)| count == 0) {
                 sqlx::query(
-                    r#"
+                    r"
                     INSERT INTO splunk_query_templates (id, name, description, query, category, is_system, created_at, updated_at)
                     VALUES ($1, $2, $3, $4, $5, true, $6, $6)
                     ON CONFLICT DO NOTHING
-                    "#,
+                    ",
                 )
                 .bind(Uuid::new_v4())
                 .bind(name)

@@ -27,6 +27,7 @@ impl Default for HealthStore {
 
 impl HealthStore {
     /// Create a new health store with default 2-minute alert threshold.
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             state: Arc::new(RwLock::new(HashMap::new())),
@@ -35,6 +36,7 @@ impl HealthStore {
     }
 
     /// Create a health store with custom alert threshold.
+    #[must_use] 
     pub fn with_alert_threshold(minutes: i64) -> Self {
         Self {
             state: Arc::new(RwLock::new(HashMap::new())),

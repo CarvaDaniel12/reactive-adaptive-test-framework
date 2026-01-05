@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::error::SupportError;
 use crate::repository::SupportRepository;
 use crate::types::{
-    ErrorLog, KnowledgeBaseEntry, SuggestionSource, TroubleshootingSuggestion,
+    ErrorLog, SuggestionSource, TroubleshootingSuggestion,
 };
 
 /// Service for knowledge base and troubleshooting suggestions.
@@ -16,6 +16,7 @@ pub struct KnowledgeBaseService {
 
 impl KnowledgeBaseService {
     /// Create a new knowledge base service.
+    #[must_use] 
     pub fn new(pool: PgPool) -> Self {
         let repo = SupportRepository::new(pool);
         Self { repo }
@@ -173,6 +174,7 @@ impl KnowledgeBaseService {
     }
 
     /// Get default knowledge base entries for seeding.
+    #[must_use] 
     pub fn get_default_entries() -> Vec<crate::types::CreateKbEntryInput> {
         vec![
             crate::types::CreateKbEntryInput {

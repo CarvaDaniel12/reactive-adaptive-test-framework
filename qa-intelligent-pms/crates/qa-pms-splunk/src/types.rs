@@ -15,7 +15,7 @@ pub struct QueryTemplate {
     pub name: String,
     /// Template description.
     pub description: Option<String>,
-    /// SPL query with placeholders (e.g., {TICKET_KEY}, {USER_ID}).
+    /// SPL query with placeholders (e.g., {`TICKET_KEY`}, {`USER_ID`}).
     pub query: String,
     /// Category for grouping templates.
     pub category: TemplateCategory,
@@ -106,7 +106,7 @@ pub struct PreparedQuery {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Placeholder {
-    /// Placeholder key (e.g., "TICKET_KEY").
+    /// Placeholder key (e.g., "`TICKET_KEY`").
     pub key: String,
     /// Human-readable label.
     pub label: String,

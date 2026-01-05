@@ -62,7 +62,7 @@ impl KeywordExtractor {
     /// * `min_length` - Minimum word length to consider
     /// * `max_keywords` - Maximum number of keywords to return
     #[must_use]
-    pub fn new(min_length: usize, max_keywords: usize) -> Self {
+    pub const fn new(min_length: usize, max_keywords: usize) -> Self {
         Self {
             min_length,
             max_keywords,
@@ -135,12 +135,12 @@ impl KeywordExtractor {
         }
 
         // Must not be a stop word
-        if STOP_WORDS.contains(&word.as_ref()) {
+        if STOP_WORDS.contains(&word) {
             return false;
         }
 
         // Must not be purely numeric
-        if word.chars().all(|c| c.is_numeric()) {
+        if word.chars().all(char::is_numeric) {
             return false;
         }
 

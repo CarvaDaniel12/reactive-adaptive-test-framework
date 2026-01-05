@@ -69,6 +69,7 @@ impl HealthScheduler {
 
     /// Add multiple health checks.
     #[must_use]
+    #[allow(dead_code)]
     pub fn add_checks(mut self, checks: Vec<Arc<dyn HealthCheck>>) -> Self {
         self.checks.extend(checks);
         self

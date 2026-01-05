@@ -169,7 +169,7 @@ pub struct ExecuteQueryRequest {
     pub limit: i32,
 }
 
-fn default_limit() -> i32 {
+const fn default_limit() -> i32 {
     100
 }
 
@@ -540,10 +540,10 @@ pub async fn execute_query(
 
     // Save to query history
     let _ = sqlx::query(
-        r#"
+        r"
         INSERT INTO splunk_query_history (id, user_id, query, time_start, time_end, index_name, execution_time_ms, result_count)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        "#,
+        ",
     )
     .bind(Uuid::new_v4())
     .bind(user_id)
@@ -595,7 +595,7 @@ pub async fn get_query_history(
     let user_id = Uuid::new_v4();
 
     let entries: Vec<QueryHistoryEntry> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             h.id,
             h.query,
@@ -610,7 +610,7 @@ pub async fn get_query_history(
         WHERE h.user_id = $1
         ORDER BY h.created_at DESC
         LIMIT 50
-        "#,
+        ",
     )
     .bind(user_id)
     .fetch_all(&state.db)

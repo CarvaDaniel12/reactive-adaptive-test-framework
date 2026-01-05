@@ -22,7 +22,7 @@ use qa_pms_core::error::ApiError;
 /// Result type alias for API handlers.
 type ApiResult<T> = Result<T, ApiError>;
 
-/// Helper trait to convert sqlx errors to ApiError.
+/// Helper trait to convert sqlx errors to `ApiError`.
 trait SqlxResultExt<T> {
     fn map_db_err(self) -> Result<T, ApiError>;
 }
@@ -56,6 +56,7 @@ pub struct GenerateReportRequest {
 /// Report content structure.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
+#[derive(Default)]
 pub struct ReportContent {
     pub steps: Vec<ReportStep>,
     pub notes: Vec<String>,
@@ -63,16 +64,6 @@ pub struct ReportContent {
     pub strategies: Vec<String>,
 }
 
-impl Default for ReportContent {
-    fn default() -> Self {
-        Self {
-            steps: vec![],
-            notes: vec![],
-            tests_covered: vec![],
-            strategies: vec![],
-        }
-    }
-}
 
 /// Step in report.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -217,10 +208,10 @@ pub async fn generate_report(
     // Save report to database
     let report_id = Uuid::new_v4();
     sqlx::query(
-        r#"
+        r"
         INSERT INTO workflow_reports (id, workflow_instance_id, ticket_id, ticket_title, template_name, content, total_time_seconds)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        "#,
+        ",
     )
     .bind(report_id)
     .bind(request.workflow_instance_id)
@@ -270,10 +261,10 @@ pub async fn get_report(
 ) -> ApiResult<Json<ReportResponse>> {
     fetch_report(
         &state.db,
-        r#"
+        r"
         SELECT id, workflow_instance_id, ticket_id, ticket_title, template_name, content, total_time_seconds, generated_at
         FROM workflow_reports WHERE id = $1
-        "#,
+        ",
         id,
     )
     .await
@@ -300,12 +291,12 @@ pub async fn get_report_by_workflow(
 ) -> ApiResult<Json<ReportResponse>> {
     fetch_report(
         &state.db,
-        r#"
+        r"
         SELECT id, workflow_instance_id, ticket_id, ticket_title, template_name, content, total_time_seconds, generated_at
         FROM workflow_reports WHERE workflow_instance_id = $1
         ORDER BY generated_at DESC
         LIMIT 1
-        "#,
+        ",
         workflow_id,
     )
     .await

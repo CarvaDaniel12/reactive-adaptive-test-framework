@@ -5,8 +5,7 @@ use tracing::debug;
 use crate::error::AIError;
 use crate::provider::AIClient;
 use crate::types::{
-    ChatContext, ChatInput, ChatMessage, ChatResponse, MessageRole, TicketContext,
-    WorkflowStepContext,
+    ChatContext, ChatInput, ChatMessage, ChatResponse, MessageRole,
 };
 
 /// Chat service for the mini-chatbot.
@@ -16,7 +15,8 @@ pub struct ChatService {
 
 impl ChatService {
     /// Create a new chat service.
-    pub fn new(client: AIClient) -> Self {
+    #[must_use] 
+    pub const fn new(client: AIClient) -> Self {
         Self { client }
     }
 
@@ -79,7 +79,7 @@ impl ChatService {
                     } else {
                         desc.clone()
                     };
-                    system.push_str(&format!("  - Description: {}\n", truncated));
+                    system.push_str(&format!("  - Description: {truncated}\n"));
                 }
             }
 
@@ -96,7 +96,7 @@ impl ChatService {
             if !ctx.recent_actions.is_empty() {
                 system.push_str("- Recent actions:\n");
                 for action in ctx.recent_actions.iter().take(5) {
-                    system.push_str(&format!("  - {}\n", action));
+                    system.push_str(&format!("  - {action}\n"));
                 }
             }
         }
@@ -105,6 +105,7 @@ impl ChatService {
     }
 
     /// Get suggested questions based on context.
+    #[must_use] 
     pub fn get_suggested_questions(context: &Option<ChatContext>) -> Vec<String> {
         let mut suggestions = vec![
             "What should I do next?".to_string(),

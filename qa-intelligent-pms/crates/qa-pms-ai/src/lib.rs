@@ -3,7 +3,7 @@
 //! AI companion with BYOK (Bring Your Own Key) support.
 //!
 //! This crate provides:
-//! - AI provider abstraction (Anthropic, OpenAI, Deepseek, z.ai, Custom)
+//! - AI provider abstraction (Anthropic, `OpenAI`, Deepseek, z.ai, Custom)
 //! - Semantic search enhancement
 //! - Gherkin test suggestions
 //! - Mini-chatbot functionality

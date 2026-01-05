@@ -11,7 +11,7 @@ use uuid::Uuid;
 pub enum ProviderType {
     /// Anthropic (Claude)
     Anthropic,
-    /// OpenAI (GPT)
+    /// `OpenAI` (GPT)
     OpenAi,
     /// Deepseek
     Deepseek,
@@ -24,11 +24,11 @@ pub enum ProviderType {
 impl std::fmt::Display for ProviderType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ProviderType::Anthropic => write!(f, "Anthropic"),
-            ProviderType::OpenAi => write!(f, "OpenAI"),
-            ProviderType::Deepseek => write!(f, "Deepseek"),
-            ProviderType::Zai => write!(f, "z.ai"),
-            ProviderType::Custom => write!(f, "Custom"),
+            Self::Anthropic => write!(f, "Anthropic"),
+            Self::OpenAi => write!(f, "OpenAI"),
+            Self::Deepseek => write!(f, "Deepseek"),
+            Self::Zai => write!(f, "z.ai"),
+            Self::Custom => write!(f, "Custom"),
         }
     }
 }
@@ -315,6 +315,7 @@ pub struct AIStatus {
 
 impl AIStatus {
     /// Create a status indicating AI is not configured.
+    #[must_use] 
     pub fn not_configured() -> Self {
         Self {
             available: false,
@@ -325,6 +326,7 @@ impl AIStatus {
     }
 
     /// Create a status indicating AI is available.
+    #[must_use] 
     pub fn available(provider: ProviderType, model: String) -> Self {
         let message = format!("AI enabled with {} ({})", provider, &model);
         Self {

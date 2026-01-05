@@ -373,8 +373,7 @@ pub async fn get_ticket(
     // Detect Gherkin syntax in description
     let has_gherkin = description_raw
         .as_ref()
-        .map(|d| detect_gherkin(d))
-        .unwrap_or(false);
+        .is_some_and(|d| detect_gherkin(d));
 
     // Convert comments (latest 10)
     let comments: Vec<CommentInfo> = ticket
@@ -614,7 +613,7 @@ pub async fn transition_ticket(
     Ok((
         StatusCode::OK,
         Json(TransitionResponse {
-            message: format!("Ticket {} transitioned to {}", key, new_status),
+            message: format!("Ticket {key} transitioned to {new_status}"),
             new_status,
         }),
     ))
@@ -623,10 +622,10 @@ pub async fn transition_ticket(
 /// Get priority color based on priority name.
 fn get_priority_color(priority: Option<&str>) -> String {
     match priority {
-        Some("Highest") | Some("Blocker") => "error".to_string(),
-        Some("High") | Some("Critical") => "warning".to_string(),
+        Some("Highest" | "Blocker") => "error".to_string(),
+        Some("High" | "Critical") => "warning".to_string(),
         Some("Medium") => "primary".to_string(),
-        Some("Low") | Some("Lowest") | Some("Minor") | Some("Trivial") => "neutral".to_string(),
+        Some("Low" | "Lowest" | "Minor" | "Trivial") => "neutral".to_string(),
         _ => "neutral".to_string(),
     }
 }
@@ -768,7 +767,7 @@ fn convert_adf_to_html(node: &serde_json::Value, output: &mut String) {
                     let level = obj
                         .get("attrs")
                         .and_then(|a| a.get("level"))
-                        .and_then(|l| l.as_u64())
+                        .and_then(serde_json::Value::as_u64)
                         .unwrap_or(1)
                         .min(6);
                     output.push_str(&format!("<h{level}>"));
@@ -910,7 +909,7 @@ fn humanize_bytes(bytes: u64) -> String {
     } else if bytes >= KB {
         format!("{:.1} KB", bytes as f64 / KB as f64)
     } else {
-        format!("{} B", bytes)
+        format!("{bytes} B")
     }
 }
 

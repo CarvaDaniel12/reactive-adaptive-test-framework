@@ -24,7 +24,7 @@ impl TestmoHealthCheck {
     /// Create a new Testmo health check.
     ///
     /// # Arguments
-    /// * `base_url` - Testmo instance URL (e.g., "https://company.testmo.net")
+    /// * `base_url` - Testmo instance URL (e.g., "<https://company.testmo.net>")
     /// * `api_key` - Testmo API key
     #[must_use]
     pub fn new(base_url: String, api_key: String) -> Self {
@@ -51,7 +51,7 @@ impl TestmoHealthCheck {
 
 #[async_trait]
 impl HealthCheck for TestmoHealthCheck {
-    fn integration_name(&self) -> &str {
+    fn integration_name(&self) -> &'static str {
         "testmo"
     }
 
@@ -91,7 +91,7 @@ impl HealthCheck for TestmoHealthCheck {
                 if e.is_timeout() {
                     HealthCheckResult::offline(
                         "testmo",
-                        &format!("Request timeout (>{}s)", REQUEST_TIMEOUT_SECS),
+                        &format!("Request timeout (>{REQUEST_TIMEOUT_SECS}s)"),
                     )
                 } else if e.is_connect() {
                     HealthCheckResult::offline("testmo", "Connection failed - check URL and network")

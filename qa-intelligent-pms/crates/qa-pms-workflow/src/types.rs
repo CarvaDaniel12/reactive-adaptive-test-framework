@@ -40,7 +40,7 @@ impl WorkflowStatus {
 
     /// Convert to database string.
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Active => "active",
             Self::Paused => "paused",
@@ -79,7 +79,7 @@ impl StepStatus {
 
     /// Convert to database string.
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Pending => "pending",
             Self::InProgress => "in_progress",

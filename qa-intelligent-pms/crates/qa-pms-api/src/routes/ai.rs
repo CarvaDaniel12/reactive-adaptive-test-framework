@@ -6,7 +6,7 @@
 //! - API keys encrypted with AES-256-GCM before storage
 //! - Input validation for API keys
 //!
-//! TODO: Add rate limiting when tower_governor/axum version compatibility is resolved
+//! TODO: Add rate limiting when `tower_governor/axum` version compatibility is resolved
 
 use axum::{
     extract::State,
@@ -36,7 +36,7 @@ const MIN_API_KEY_LENGTH: usize = 20;
 
 /// Create the AI router.
 ///
-/// TODO: Add rate limiting when tower_governor/axum version compatibility is resolved
+/// TODO: Add rate limiting when `tower_governor/axum` version compatibility is resolved
 pub fn router() -> Router<AppState> {
     Router::new()
         // Configuration
@@ -344,8 +344,7 @@ fn validate_api_key(api_key: &str, provider: ProviderType) -> Result<(), ApiErro
     // Check minimum length
     if api_key.len() < MIN_API_KEY_LENGTH {
         return Err(ApiError::Validation(format!(
-            "API key too short (minimum {} characters)",
-            MIN_API_KEY_LENGTH
+            "API key too short (minimum {MIN_API_KEY_LENGTH} characters)"
         )));
     }
 
@@ -376,7 +375,7 @@ fn validate_api_key(api_key: &str, provider: ProviderType) -> Result<(), ApiErro
 /// Get encryption key from settings.
 fn get_encryption_key(state: &AppState) -> Result<Encryptor, ApiError> {
     let key = state.settings.encryption_key.expose_secret();
-    Encryptor::from_hex_key(key).map_err(|e| ApiError::Internal(e))
+    Encryptor::from_hex_key(key).map_err(ApiError::Internal)
 }
 
 /// Configure AI provider.
@@ -402,7 +401,7 @@ pub async fn configure_ai(
     // Validate by testing connection
     let client = create_client(provider, &req.api_key, &req.model_id, req.custom_base_url.clone())?;
     let test_result = client.test_connection().await.map_err(|e| {
-        ApiError::Validation(format!("Connection test failed: {}", e))
+        ApiError::Validation(format!("Connection test failed: {e}"))
     })?;
 
     if !test_result.success {
@@ -415,14 +414,14 @@ pub async fn configure_ai(
     // CR-HIGH-001: Encrypt API key before storage
     let encryptor = get_encryption_key(&state)?;
     let encrypted_key = encryptor.encrypt(&req.api_key).map_err(|e| {
-        ApiError::Internal(anyhow::anyhow!("Failed to encrypt API key: {}", e))
+        ApiError::Internal(anyhow::anyhow!("Failed to encrypt API key: {e}"))
     })?;
 
     info!(provider = %req.provider, model = %req.model_id, "Storing encrypted AI configuration");
 
     // Store configuration with encrypted API key
     sqlx::query(
-        r#"
+        r"
         INSERT INTO ai_configs (user_id, enabled, provider, model_id, api_key_encrypted, custom_base_url, validated_at)
         VALUES (NULL, TRUE, $1, $2, $3, $4, NOW())
         ON CONFLICT (user_id) DO UPDATE SET
@@ -433,7 +432,7 @@ pub async fn configure_ai(
             custom_base_url = $4,
             validated_at = NOW(),
             updated_at = NOW()
-        "#,
+        ",
     )
     .bind(&req.provider)
     .bind(&req.model_id)
@@ -465,7 +464,7 @@ pub async fn test_connection(
     let client = create_client(provider, &req.api_key, &req.model_id, req.custom_base_url)?;
 
     let result = client.test_connection().await.map_err(|e| {
-        ApiError::Validation(format!("Connection test failed: {}", e))
+        ApiError::Validation(format!("Connection test failed: {e}"))
     })?;
 
     Ok(Json(result))
@@ -510,9 +509,8 @@ async fn get_decrypted_api_key(state: &AppState) -> Result<(String, String, Stri
         let encryptor = get_encryption_key(state)?;
         encryptor
             .decrypt(&encrypted)
-            .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {}", e)))?
-            .expose_secret()
-            .to_string()
+            .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {e}")))?
+            .expose_secret().clone()
     } else {
         // Fallback to env var for backwards compatibility
         std::env::var("AI_API_KEY").unwrap_or_default()
@@ -564,9 +562,7 @@ pub async fn chat(
                 _ => qa_pms_ai::MessageRole::User,
             },
             content: m.content,
-            timestamp: chrono::DateTime::parse_from_rfc3339(&m.timestamp)
-                .map(|dt| dt.with_timezone(&chrono::Utc))
-                .unwrap_or_else(|_| chrono::Utc::now()),
+            timestamp: chrono::DateTime::parse_from_rfc3339(&m.timestamp).map_or_else(|_| chrono::Utc::now(), |dt| dt.with_timezone(&chrono::Utc)),
         })
         .collect();
 
@@ -596,7 +592,7 @@ pub async fn chat(
     };
 
     let response = chat_service.chat(input).await.map_err(|e| {
-        ApiError::Internal(anyhow::anyhow!("Chat failed: {}", e))
+        ApiError::Internal(anyhow::anyhow!("Chat failed: {e}"))
     })?;
 
     Ok(Json(ChatResponseDto {
@@ -782,7 +778,7 @@ fn parse_provider(s: &str) -> Result<ProviderType, ApiError> {
         "deepseek" => Ok(ProviderType::Deepseek),
         "zai" | "z.ai" => Ok(ProviderType::Zai),
         "custom" => Ok(ProviderType::Custom),
-        _ => Err(ApiError::Validation(format!("Unknown provider: {}", s))),
+        _ => Err(ApiError::Validation(format!("Unknown provider: {s}"))),
     }
 }
 
@@ -792,7 +788,7 @@ fn create_client(
     model: &str,
     custom_base_url: Option<String>,
 ) -> Result<AIClient, ApiError> {
-    let secret_key = secrecy::SecretString::new(api_key.to_string().into());
+    let secret_key = secrecy::SecretString::new(api_key.to_string());
     AIClient::from_config(provider, secret_key, model.to_string(), custom_base_url)
-        .map_err(|e| ApiError::Validation(format!("Failed to create AI client: {}", e)))
+        .map_err(|e| ApiError::Validation(format!("Failed to create AI client: {e}")))
 }

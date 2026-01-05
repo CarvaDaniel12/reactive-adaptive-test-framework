@@ -13,7 +13,8 @@ pub struct SemanticSearchService {
 
 impl SemanticSearchService {
     /// Create a new semantic search service.
-    pub fn new(client: AIClient) -> Self {
+    #[must_use] 
+    pub const fn new(client: AIClient) -> Self {
         Self { client }
     }
 
@@ -48,11 +49,11 @@ impl SemanticSearchService {
         let mut prompt = format!("Analyze this ticket for test search:\n\nTitle: {}\n", input.title);
 
         if let Some(desc) = &input.description {
-            prompt.push_str(&format!("\nDescription:\n{}\n", desc));
+            prompt.push_str(&format!("\nDescription:\n{desc}\n"));
         }
 
         if let Some(ac) = &input.acceptance_criteria {
-            prompt.push_str(&format!("\nAcceptance Criteria:\n{}\n", ac));
+            prompt.push_str(&format!("\nAcceptance Criteria:\n{ac}\n"));
         }
 
         prompt.push_str("\nProvide your analysis in the following JSON format:\n");
@@ -126,6 +127,7 @@ impl SemanticSearchService {
     }
 
     /// Perform a fallback keyword-based search (when AI is unavailable).
+    #[must_use] 
     pub fn fallback_search(input: &SemanticSearchInput) -> SemanticSearchResult {
         let mut queries = Vec::new();
         let mut key_concepts = Vec::new();

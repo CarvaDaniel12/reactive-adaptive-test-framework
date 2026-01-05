@@ -85,11 +85,11 @@ pub enum JiraAuthMethod {
 /// 2. **OAuth 2.0**: Set `client_id`, `client_secret`, `redirect_uri` - for advanced apps
 #[derive(Debug, Clone)]
 pub struct JiraSettings {
-    /// Jira Cloud instance URL (e.g., "https://company.atlassian.net")
+    /// Jira Cloud instance URL (e.g., "<https://company.atlassian.net>")
     pub instance_url: String,
     /// User email for API Token auth
     pub email: Option<String>,
-    /// API Token for Basic Auth (generated at https://id.atlassian.com/manage-profile/security/api-tokens)
+    /// API Token for Basic Auth (generated at <https://id.atlassian.com/manage-profile/security/api-tokens>)
     pub api_token: Option<SecretString>,
     /// OAuth 2.0 Client ID (alternative to API Token)
     pub client_id: Option<String>,
@@ -102,7 +102,7 @@ pub struct JiraSettings {
 impl JiraSettings {
     /// Get the configured authentication method.
     #[must_use]
-    pub fn auth_method(&self) -> JiraAuthMethod {
+    pub const fn auth_method(&self) -> JiraAuthMethod {
         if self.email.is_some() && self.api_token.is_some() {
             JiraAuthMethod::ApiToken
         } else {
@@ -112,7 +112,7 @@ impl JiraSettings {
 
     /// Check if API Token auth is configured.
     #[must_use]
-    pub fn has_api_token(&self) -> bool {
+    pub const fn has_api_token(&self) -> bool {
         self.email.is_some() && self.api_token.is_some()
     }
 }

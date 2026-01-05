@@ -70,7 +70,7 @@ pub struct JiraTestRequest {
     /// User email for API Token auth
     #[serde(default)]
     pub email: Option<String>,
-    /// API Token from https://id.atlassian.com/manage-profile/security/api-tokens
+    /// API Token from <https://id.atlassian.com/manage-profile/security/api-tokens>
     #[serde(default)]
     pub api_token: Option<String>,
 
@@ -91,12 +91,13 @@ pub struct JiraTestRequest {
 
 impl JiraTestRequest {
     /// Check if API Token auth is configured.
-    pub fn has_api_token(&self) -> bool {
+    pub const fn has_api_token(&self) -> bool {
         self.email.is_some() && self.api_token.is_some()
     }
 
     /// Check if OAuth auth is configured.
-    pub fn has_oauth(&self) -> bool {
+    #[allow(dead_code)]
+    pub const fn has_oauth(&self) -> bool {
         self.cloud_id.is_some() && self.access_token.is_some()
     }
 }

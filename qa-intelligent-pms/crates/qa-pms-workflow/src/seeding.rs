@@ -12,6 +12,7 @@ use crate::types::WorkflowStep;
 // ============================================================================
 
 /// Bug Fix workflow template steps.
+#[must_use] 
 pub fn bug_fix_template_steps() -> Vec<WorkflowStep> {
     vec![
         WorkflowStep {
@@ -43,6 +44,7 @@ pub fn bug_fix_template_steps() -> Vec<WorkflowStep> {
 }
 
 /// Feature Test workflow template steps.
+#[must_use] 
 pub fn feature_test_template_steps() -> Vec<WorkflowStep> {
     vec![
         WorkflowStep {
@@ -74,6 +76,7 @@ pub fn feature_test_template_steps() -> Vec<WorkflowStep> {
 }
 
 /// Regression Test workflow template steps.
+#[must_use] 
 pub fn regression_template_steps() -> Vec<WorkflowStep> {
     vec![
         WorkflowStep {
@@ -161,10 +164,10 @@ pub async fn seed_default_templates(pool: &PgPool) -> Result<SeedingResult, sqlx
         let steps_json = serde_json::to_value(&steps).expect("Failed to serialize steps");
 
         sqlx::query(
-            r#"
+            r"
             INSERT INTO workflow_templates (name, description, ticket_type, steps_json, is_default)
             VALUES ($1, $2, $3, $4, true)
-            "#,
+            ",
         )
         .bind(template.name)
         .bind(template.description)
@@ -192,7 +195,7 @@ pub struct SeedingResult {
 impl SeedingResult {
     /// Total templates processed.
     #[must_use]
-    pub fn total(&self) -> usize {
+    pub const fn total(&self) -> usize {
         self.created + self.skipped
     }
 }

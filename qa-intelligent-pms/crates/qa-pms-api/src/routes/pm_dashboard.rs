@@ -97,9 +97,9 @@ pub struct BugsMetrics {
 pub struct EconomyMetrics {
     /// Hours saved (when actual < estimated)
     pub hours_saved: f64,
-    /// Cost saved (hours * hourly_rate)
+    /// Cost saved (hours * `hourly_rate`)
     pub cost_saved: f64,
-    /// Bug prevention value (bugs_prevented * avg_fix_cost)
+    /// Bug prevention value (`bugs_prevented` * `avg_fix_cost`)
     pub bug_prevention_value: f64,
     /// Total economy estimate
     pub total_economy: f64,
@@ -239,7 +239,7 @@ async fn get_pm_summary(pool: &PgPool, days: i64) -> Result<PMSummary, ApiError>
 
     // Get workflow stats
     let stats: Option<(i64, i64, Option<f64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             COUNT(DISTINCT ticket_key) as tickets,
             COUNT(*) as workflows,
@@ -247,7 +247,7 @@ async fn get_pm_summary(pool: &PgPool, days: i64) -> Result<PMSummary, ApiError>
         FROM workflow_instances
         WHERE status = 'completed'
           AND completed_at >= $1
-        "#,
+        ",
     )
     .bind(start)
     .fetch_optional(pool)
@@ -258,13 +258,13 @@ async fn get_pm_summary(pool: &PgPool, days: i64) -> Result<PMSummary, ApiError>
 
     // Count active users (users with completed workflows in period)
     let (active_users,): (i64,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COUNT(DISTINCT user_id)
         FROM workflow_instances
         WHERE status = 'completed'
           AND completed_at >= $1
           AND user_id IS NOT NULL
-        "#,
+        ",
     )
     .bind(start)
     .fetch_one(pool)
@@ -285,18 +285,18 @@ async fn get_bugs_metrics(pool: &PgPool, days: i64) -> Result<BugsMetrics, ApiEr
     let prev_period_start = period_start - Duration::days(days);
 
     // Bugs discovered: Count workflow step notes containing bug-related keywords
-    let bug_keywords = vec!["bug", "defect", "issue", "error", "fail", "broken", "crash"];
+    let bug_keywords = ["bug", "defect", "issue", "error", "fail", "broken", "crash"];
     let keyword_pattern = bug_keywords.join("|");
 
     let (current_discovered,): (i64,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COUNT(*)
         FROM workflow_step_results wsr
         JOIN workflow_instances wi ON wsr.instance_id = wi.id
         WHERE wi.completed_at >= $1
           AND wi.completed_at < $2
           AND wsr.notes ~* $3
-        "#,
+        ",
     )
     .bind(period_start)
     .bind(now)
@@ -306,14 +306,14 @@ async fn get_bugs_metrics(pool: &PgPool, days: i64) -> Result<BugsMetrics, ApiEr
     .map_internal("Failed to count discovered bugs")?;
 
     let (prev_discovered,): (i64,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COUNT(*)
         FROM workflow_step_results wsr
         JOIN workflow_instances wi ON wsr.instance_id = wi.id
         WHERE wi.completed_at >= $1
           AND wi.completed_at < $2
           AND wsr.notes ~* $3
-        "#,
+        ",
     )
     .bind(prev_period_start)
     .bind(period_start)
@@ -324,13 +324,13 @@ async fn get_bugs_metrics(pool: &PgPool, days: i64) -> Result<BugsMetrics, ApiEr
 
     // Bugs prevented: Count pattern detection alerts (proactive detection)
     let (current_prevented,): (i64,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COUNT(*)
         FROM alerts
         WHERE created_at >= $1
           AND created_at < $2
           AND severity IN ('warning', 'critical')
-        "#,
+        ",
     )
     .bind(period_start)
     .bind(now)
@@ -339,13 +339,13 @@ async fn get_bugs_metrics(pool: &PgPool, days: i64) -> Result<BugsMetrics, ApiEr
     .map_internal("Failed to count prevented bugs")?;
 
     let (prev_prevented,): (i64,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COUNT(*)
         FROM alerts
         WHERE created_at >= $1
           AND created_at < $2
           AND severity IN ('warning', 'critical')
-        "#,
+        ",
     )
     .bind(prev_period_start)
     .bind(period_start)
@@ -394,7 +394,7 @@ async fn get_economy_metrics(pool: &PgPool, days: i64) -> Result<EconomyMetrics,
 
     // Calculate hours saved (when actual < estimated)
     let time_stats: Option<(Option<i64>, Option<i64>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             SUM(ts.total_seconds) as actual,
             SUM(te.estimated_seconds) as estimated
@@ -402,7 +402,7 @@ async fn get_economy_metrics(pool: &PgPool, days: i64) -> Result<EconomyMetrics,
         JOIN workflow_instances wi ON ts.workflow_instance_id = wi.id
         LEFT JOIN time_estimates te ON wi.template_id = te.template_id AND ts.step_index = te.step_index
         WHERE ts.ended_at >= $1
-        "#,
+        ",
     )
     .bind(start)
     .fetch_optional(pool)
@@ -418,12 +418,12 @@ async fn get_economy_metrics(pool: &PgPool, days: i64) -> Result<EconomyMetrics,
 
     // Get bugs prevented count
     let (bugs_prevented,): (i64,) = sqlx::query_as(
-        r#"
+        r"
         SELECT COUNT(*)
         FROM alerts
         WHERE created_at >= $1
           AND severity IN ('warning', 'critical')
-        "#,
+        ",
     )
     .bind(start)
     .fetch_one(pool)
@@ -452,7 +452,7 @@ async fn get_component_health(pool: &PgPool, days: i64) -> Result<Vec<ComponentH
     // Extract components from ticket keys (e.g., "PMP-1234" -> "PMP")
     // and from workflow notes mentioning components
     let current_stats: Vec<(String, i64, i64, Option<NaiveDate>)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             COALESCE(SPLIT_PART(wi.ticket_key, '-', 1), 'Unknown') as component,
             COUNT(*) FILTER (WHERE wsr.notes ~* 'bug|error|fail|issue') as bug_count,
@@ -465,7 +465,7 @@ async fn get_component_health(pool: &PgPool, days: i64) -> Result<Vec<ComponentH
         GROUP BY SPLIT_PART(wi.ticket_key, '-', 1)
         ORDER BY bug_count DESC
         LIMIT 10
-        "#,
+        ",
     )
     .bind(period_start)
     .fetch_all(pool)
@@ -474,7 +474,7 @@ async fn get_component_health(pool: &PgPool, days: i64) -> Result<Vec<ComponentH
 
     // Get previous period stats for trend calculation
     let prev_stats: Vec<(String, i64)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             COALESCE(SPLIT_PART(wi.ticket_key, '-', 1), 'Unknown') as component,
             COUNT(*) FILTER (WHERE wsr.notes ~* 'bug|error|fail|issue') as bug_count
@@ -484,7 +484,7 @@ async fn get_component_health(pool: &PgPool, days: i64) -> Result<Vec<ComponentH
           AND wi.completed_at < $2
           AND wi.status = 'completed'
         GROUP BY SPLIT_PART(wi.ticket_key, '-', 1)
-        "#,
+        ",
     )
     .bind(prev_period_start)
     .bind(period_start)
@@ -531,7 +531,7 @@ async fn get_problematic_endpoints(pool: &PgPool, days: i64) -> Result<Vec<Probl
 
     // Extract endpoints from workflow notes (looking for API paths like /api/v1/...)
     let endpoint_stats: Vec<(String, i64, Vec<String>, Vec<String>)> = sqlx::query_as(
-        r#"
+        r"
         WITH endpoint_mentions AS (
             SELECT 
                 regexp_matches(wsr.notes, '/api/[a-zA-Z0-9/_-]+', 'g') as endpoint_match,
@@ -551,7 +551,7 @@ async fn get_problematic_endpoints(pool: &PgPool, days: i64) -> Result<Vec<Probl
         GROUP BY endpoint_match[1]
         ORDER BY issue_count DESC
         LIMIT 10
-        "#,
+        ",
     )
     .bind(start)
     .fetch_all(pool)

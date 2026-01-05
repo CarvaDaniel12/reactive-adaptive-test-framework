@@ -43,7 +43,7 @@ impl PostmanHealthCheck {
 
 #[async_trait]
 impl HealthCheck for PostmanHealthCheck {
-    fn integration_name(&self) -> &str {
+    fn integration_name(&self) -> &'static str {
         "postman"
     }
 
@@ -86,7 +86,7 @@ impl HealthCheck for PostmanHealthCheck {
                 if e.is_timeout() {
                     HealthCheckResult::offline(
                         "postman",
-                        &format!("Request timeout (>{}s)", REQUEST_TIMEOUT_SECS),
+                        &format!("Request timeout (>{REQUEST_TIMEOUT_SECS}s)"),
                     )
                 } else if e.is_connect() {
                     HealthCheckResult::offline("postman", "Connection failed - check network")

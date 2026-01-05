@@ -36,7 +36,7 @@ impl TestmoClient {
     /// Create a new Testmo client.
     ///
     /// # Arguments
-    /// * `base_url` - Testmo instance URL (e.g., "https://company.testmo.net")
+    /// * `base_url` - Testmo instance URL (e.g., "<https://company.testmo.net>")
     /// * `api_key` - Testmo API key for authentication
     ///
     /// # Panics
@@ -195,7 +195,7 @@ impl TestmoClient {
     /// # Errors
     /// Returns error if the API call fails or response cannot be parsed.
     pub async fn list_test_suites(&self, project_id: i64) -> Result<Vec<TestSuite>, TestmoError> {
-        let endpoint = format!("/projects/{}/suites", project_id);
+        let endpoint = format!("/projects/{project_id}/suites");
         debug!(project_id = project_id, "Listing Testmo test suites");
         let response: TestSuitesResponse = self.request(&endpoint).await?;
         debug!(count = response.data.len(), "Retrieved test suites");
@@ -222,8 +222,8 @@ impl TestmoClient {
         suite_id: Option<i64>,
     ) -> Result<Vec<TestCase>, TestmoError> {
         let endpoint = match suite_id {
-            Some(id) => format!("/projects/{}/cases?suite_id={}", project_id, id),
-            None => format!("/projects/{}/cases", project_id),
+            Some(id) => format!("/projects/{project_id}/cases?suite_id={id}"),
+            None => format!("/projects/{project_id}/cases"),
         };
 
         debug!(
@@ -252,7 +252,7 @@ impl TestmoClient {
         project_id: i64,
         case_id: i64,
     ) -> Result<TestCase, TestmoError> {
-        let endpoint = format!("/projects/{}/cases/{}", project_id, case_id);
+        let endpoint = format!("/projects/{project_id}/cases/{case_id}");
         debug!(
             project_id = project_id,
             case_id = case_id,
@@ -359,7 +359,7 @@ impl TestmoClient {
         name: &str,
         case_ids: &[i64],
     ) -> Result<TestRun, TestmoError> {
-        let endpoint = format!("/projects/{}/runs", project_id);
+        let endpoint = format!("/projects/{project_id}/runs");
 
         debug!(
             project_id = project_id,

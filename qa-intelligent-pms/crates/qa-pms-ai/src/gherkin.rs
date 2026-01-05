@@ -15,7 +15,8 @@ pub struct GherkinAnalyzer {
 
 impl GherkinAnalyzer {
     /// Create a new Gherkin analyzer.
-    pub fn new(client: AIClient) -> Self {
+    #[must_use] 
+    pub const fn new(client: AIClient) -> Self {
         Self { client }
     }
 
@@ -177,17 +178,17 @@ impl GherkinAnalyzer {
 
         // Setup steps from Given
         for given in &scenario.given {
-            steps.push(format!("Setup: {}", given));
+            steps.push(format!("Setup: {given}"));
         }
 
         // Action steps from When
         for when in &scenario.when {
-            steps.push(format!("Action: {}", when));
+            steps.push(format!("Action: {when}"));
         }
 
         // Verification steps from Then
         for then in &scenario.then {
-            steps.push(format!("Verify: {}", then));
+            steps.push(format!("Verify: {then}"));
         }
 
         steps
@@ -196,7 +197,7 @@ impl GherkinAnalyzer {
     /// Extract suggestions from content.
     fn extract_suggestions(&self, content: &str, keyword: &str) -> Vec<String> {
         let mut suggestions = Vec::new();
-        let content_lower = content.to_lowercase();
+        let _content_lower = content.to_lowercase();
 
         // Find sections containing the keyword
         for line in content.lines() {
@@ -217,6 +218,7 @@ impl GherkinAnalyzer {
     }
 
     /// Perform a fallback analysis (when AI is unavailable).
+    #[must_use] 
     pub fn fallback_analysis(input: &GherkinInput) -> GherkinAnalysisResult {
         let mut scenarios = Vec::new();
         let mut edge_cases = Vec::new();

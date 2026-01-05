@@ -403,7 +403,7 @@ impl UserConfig {
                     .jira
                     .email_encrypted
                     .as_ref()
-                    .map_or(true, |s| s.is_empty())
+                    .map_or(true, std::string::String::is_empty)
                 {
                     errors.push(ValidationError {
                         field: "jira.email".to_string(),
@@ -417,7 +417,7 @@ impl UserConfig {
                     .jira
                     .api_token_encrypted
                     .as_ref()
-                    .map_or(true, |s| s.is_empty())
+                    .map_or(true, std::string::String::is_empty)
                 {
                     errors.push(ValidationError {
                         field: "jira.apiToken".to_string(),
@@ -433,7 +433,7 @@ impl UserConfig {
                     .jira
                     .client_id_encrypted
                     .as_ref()
-                    .map_or(true, |s| s.is_empty())
+                    .map_or(true, std::string::String::is_empty)
                 {
                     errors.push(ValidationError {
                         field: "jira.clientId".to_string(),
@@ -447,7 +447,7 @@ impl UserConfig {
                     .jira
                     .client_secret_encrypted
                     .as_ref()
-                    .map_or(true, |s| s.is_empty())
+                    .map_or(true, std::string::String::is_empty)
                 {
                     errors.push(ValidationError {
                         field: "jira.clientSecret".to_string(),

@@ -114,7 +114,7 @@ async fn create_test_run(
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
-                    message: format!("Failed to create test run: {}", e),
+                    message: format!("Failed to create test run: {e}"),
                 }),
             )
         })?;
@@ -150,7 +150,7 @@ async fn create_test_run(
 /// Format: QA-{ticket-key}-{YYYY-MM-DD}
 fn generate_run_name(ticket_key: &str) -> String {
     let date = Utc::now().format("%Y-%m-%d");
-    format!("QA-{}-{}", ticket_key, date)
+    format!("QA-{ticket_key}-{date}")
 }
 
 #[cfg(test)]

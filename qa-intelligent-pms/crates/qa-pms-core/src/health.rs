@@ -14,20 +14,17 @@ use std::time::Duration;
 /// Health status of an integration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum HealthStatus {
     /// Integration is fully operational
     Online,
     /// Integration is working but with degraded performance
     Degraded,
     /// Integration is not responding
+    #[default]
     Offline,
 }
 
-impl Default for HealthStatus {
-    fn default() -> Self {
-        Self::Offline
-    }
-}
 
 /// Result of a single health check.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,6 +44,7 @@ pub struct HealthCheckResult {
 
 impl HealthCheckResult {
     /// Create an online result with response time.
+    #[must_use] 
     pub fn online(integration: &str, response_time: Duration) -> Self {
         Self {
             integration: integration.to_string(),
@@ -58,6 +56,7 @@ impl HealthCheckResult {
     }
 
     /// Create a degraded result (working but slow or with warnings).
+    #[must_use] 
     pub fn degraded(integration: &str, response_time: Duration, message: &str) -> Self {
         Self {
             integration: integration.to_string(),
@@ -69,6 +68,7 @@ impl HealthCheckResult {
     }
 
     /// Create an offline result with error message.
+    #[must_use] 
     pub fn offline(integration: &str, error: &str) -> Self {
         Self {
             integration: integration.to_string(),
@@ -106,6 +106,7 @@ pub struct IntegrationHealth {
 
 impl IntegrationHealth {
     /// Create a new health state for an integration.
+    #[must_use] 
     pub fn new(integration: &str) -> Self {
         Self {
             integration: integration.to_string(),
@@ -120,11 +121,13 @@ impl IntegrationHealth {
     }
 
     /// Check if the integration is currently down.
+    #[must_use] 
     pub fn is_offline(&self) -> bool {
         self.status == HealthStatus::Offline
     }
 
     /// Get downtime duration if currently offline.
+    #[must_use] 
     pub fn downtime_duration(&self) -> Option<chrono::Duration> {
         self.downtime_start.map(|start| Utc::now() - start)
     }

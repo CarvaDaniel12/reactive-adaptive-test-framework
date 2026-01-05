@@ -48,13 +48,14 @@ pub enum AIError {
 
 impl AIError {
     /// Check if this error should trigger a fallback to non-AI behavior.
-    pub fn should_fallback(&self) -> bool {
+    #[must_use] 
+    pub const fn should_fallback(&self) -> bool {
         matches!(
             self,
-            AIError::NotConfigured
-                | AIError::InvalidApiKey(_)
-                | AIError::RateLimited
-                | AIError::NetworkError(_)
+            Self::NotConfigured
+                | Self::InvalidApiKey(_)
+                | Self::RateLimited
+                | Self::NetworkError(_)
         )
     }
 }

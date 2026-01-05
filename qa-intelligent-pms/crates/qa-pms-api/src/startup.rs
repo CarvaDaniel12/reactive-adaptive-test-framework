@@ -149,54 +149,50 @@ impl StartupValidator {
             .map(|(result, criticality, name)| {
                 let is_critical = criticality == IntegrationCriticality::Critical;
 
-                match result {
-                    Ok(health_result) => {
-                        let success = matches!(
-                            health_result.status,
-                            HealthStatus::Online | HealthStatus::Degraded
+                if let Ok(health_result) = result {
+                    let success = matches!(
+                        health_result.status,
+                        HealthStatus::Online | HealthStatus::Degraded
+                    );
+
+                    if success {
+                        info!(
+                            integration = %name,
+                            response_time_ms = ?health_result.response_time_ms,
+                            "Startup validation passed"
                         );
-
-                        if success {
-                            info!(
-                                integration = %name,
-                                response_time_ms = ?health_result.response_time_ms,
-                                "Startup validation passed"
-                            );
-                        } else {
-                            warn!(
-                                integration = %name,
-                                error = ?health_result.error_message,
-                                critical = is_critical,
-                                "Startup validation failed"
-                            );
-                        }
-
-                        ValidationResult {
-                            integration: name,
-                            success,
-                            error_message: health_result.error_message,
-                            response_time_ms: health_result.response_time_ms,
-                            is_critical,
-                        }
-                    }
-                    Err(_) => {
+                    } else {
                         warn!(
                             integration = %name,
-                            timeout_secs = VALIDATION_TIMEOUT_SECS,
+                            error = ?health_result.error_message,
                             critical = is_critical,
-                            "Startup validation timed out"
+                            "Startup validation failed"
                         );
+                    }
 
-                        ValidationResult {
-                            integration: name,
-                            success: false,
-                            error_message: Some(format!(
-                                "Validation timed out (>{}s)",
-                                VALIDATION_TIMEOUT_SECS
-                            )),
-                            response_time_ms: None,
-                            is_critical,
-                        }
+                    ValidationResult {
+                        integration: name,
+                        success,
+                        error_message: health_result.error_message,
+                        response_time_ms: health_result.response_time_ms,
+                        is_critical,
+                    }
+                } else {
+                    warn!(
+                        integration = %name,
+                        timeout_secs = VALIDATION_TIMEOUT_SECS,
+                        critical = is_critical,
+                        "Startup validation timed out"
+                    );
+
+                    ValidationResult {
+                        integration: name,
+                        success: false,
+                        error_message: Some(format!(
+                            "Validation timed out (>{VALIDATION_TIMEOUT_SECS}s)"
+                        )),
+                        response_time_ms: None,
+                        is_critical,
                     }
                 }
             })

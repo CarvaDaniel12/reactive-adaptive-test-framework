@@ -99,7 +99,7 @@ pub struct CollectionItem {
     /// Request details (if this is a request item).
     pub request: Option<RequestInfo>,
     /// Nested items (if this is a folder).
-    pub item: Option<Vec<CollectionItem>>,
+    pub item: Option<Vec<Self>>,
 }
 
 /// Request information.
@@ -148,7 +148,7 @@ impl RequestUrl {
                         .as_ref()
                         .map(|p| p.join("/"))
                         .unwrap_or_default();
-                    format!("{}/{}", host_str, path_str)
+                    format!("{host_str}/{path_str}")
                 }
             }
         }

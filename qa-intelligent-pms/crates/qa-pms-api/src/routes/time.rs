@@ -29,7 +29,7 @@ use qa_pms_core::error::ApiError;
 /// Result type alias for API handlers.
 type ApiResult<T> = Result<T, ApiError>;
 
-/// Helper trait to convert sqlx errors to ApiError.
+/// Helper trait to convert sqlx errors to `ApiError`.
 trait SqlxResultExt<T> {
     fn map_db_err(self) -> Result<T, ApiError>;
 }
@@ -276,7 +276,7 @@ pub struct HistoryQuery {
     pub days: i32,
 }
 
-fn default_days() -> i32 {
+const fn default_days() -> i32 {
     30
 }
 
@@ -389,11 +389,11 @@ impl From<UserAverage> for UserAverageResponse {
             ticket_type: a.ticket_type,
             sample_count: a.sample_count,
             avg_seconds: a.avg_seconds,
-            avg_minutes: a.avg_seconds as f64 / 60.0,
+            avg_minutes: f64::from(a.avg_seconds) / 60.0,
             min_seconds: a.min_seconds,
             max_seconds: a.max_seconds,
             rolling_avg_seconds: a.rolling_avg_seconds,
-            rolling_avg_minutes: a.rolling_avg_seconds as f64 / 60.0,
+            rolling_avg_minutes: f64::from(a.rolling_avg_seconds) / 60.0,
         }
     }
 }

@@ -3,7 +3,6 @@
 use chrono::Utc;
 use sqlx::PgPool;
 use std::time::Instant;
-use uuid::Uuid;
 
 use crate::error::SupportError;
 use crate::repository::SupportRepository;
@@ -17,6 +16,7 @@ pub struct DiagnosticsService {
 
 impl DiagnosticsService {
     /// Create a new diagnostics service.
+    #[must_use] 
     pub fn new(pool: PgPool) -> Self {
         let repo = SupportRepository::new(pool.clone());
         Self { pool, repo }
@@ -44,7 +44,7 @@ impl DiagnosticsService {
         let summary = if overall_healthy {
             "All integrations are healthy".to_string()
         } else {
-            format!("{} integration(s) have issues", failed_count)
+            format!("{failed_count} integration(s) have issues")
         };
 
         Ok(DiagnosticsReport {
@@ -63,8 +63,7 @@ impl DiagnosticsService {
             "postman" => Ok(self.check_postman().await),
             "testmo" => Ok(self.check_testmo().await),
             _ => Err(SupportError::InvalidInput(format!(
-                "Unknown integration: {}",
-                integration
+                "Unknown integration: {integration}"
             ))),
         }
     }
@@ -97,7 +96,7 @@ impl DiagnosticsService {
             Err(e) => DiagnosticResult {
                 integration: "Database".to_string(),
                 passed: false,
-                message: format!("Database connection failed: {}", e),
+                message: format!("Database connection failed: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
                 suggestions: vec![
@@ -132,12 +131,12 @@ impl DiagnosticsService {
             Ok((count,)) if count > 0 => {
                 // Credentials exist, check token validity
                 let token_valid: Result<Option<(bool,)>, _> = sqlx::query_as(
-                    r#"
+                    r"
                     SELECT (expires_at > NOW()) as valid
                     FROM integration_credentials
                     WHERE integration_type = 'jira'
                     LIMIT 1
-                    "#
+                    "
                 )
                 .fetch_optional(&self.pool)
                 .await;
@@ -192,7 +191,7 @@ impl DiagnosticsService {
             Err(e) => DiagnosticResult {
                 integration: "Jira".to_string(),
                 passed: false,
-                message: format!("Failed to check Jira configuration: {}", e),
+                message: format!("Failed to check Jira configuration: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
                 suggestions: vec![
@@ -250,7 +249,7 @@ impl DiagnosticsService {
             Err(e) => DiagnosticResult {
                 integration: "Postman".to_string(),
                 passed: false,
-                message: format!("Failed to check Postman configuration: {}", e),
+                message: format!("Failed to check Postman configuration: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
                 suggestions: vec![
@@ -308,7 +307,7 @@ impl DiagnosticsService {
             Err(e) => DiagnosticResult {
                 integration: "Testmo".to_string(),
                 passed: false,
-                message: format!("Failed to check Testmo configuration: {}", e),
+                message: format!("Failed to check Testmo configuration: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
                 suggestions: vec![

@@ -4,7 +4,7 @@
 
 use axum::{
     extract::{Path, Query, State},
-    routing::{get, post, put, delete},
+    routing::{get, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -14,8 +14,7 @@ use uuid::Uuid;
 use qa_pms_core::ApiError;
 use qa_pms_support::{
     CreateErrorLogInput, CreateKbEntryInput, DiagnosticsService, ErrorLog, ErrorLogFilter,
-    ErrorLogSort, ErrorStatus, KnowledgeBaseEntry, KnowledgeBaseService, Pagination,
-    PaginatedResponse, SupportDashboardSummary, SupportRepository, TroubleshootingSuggestion,
+    ErrorLogSort, ErrorStatus, KnowledgeBaseEntry, KnowledgeBaseService, Pagination, SupportDashboardSummary, SupportRepository, TroubleshootingSuggestion,
     UpdateErrorStatusInput, UpdateKbEntryInput, DiagnosticsReport,
 };
 
@@ -68,8 +67,8 @@ pub struct ErrorLogQuery {
     pub per_page: i32,
 }
 
-fn default_page() -> i32 { 1 }
-fn default_per_page() -> i32 { 20 }
+const fn default_page() -> i32 { 1 }
+const fn default_per_page() -> i32 { 20 }
 
 /// Response for error log list.
 #[derive(Debug, Serialize, ToSchema)]

@@ -44,6 +44,7 @@ pub struct AIClient {
 
 impl AIClient {
     /// Create a new AI client.
+    #[must_use] 
     pub fn new(provider: Box<dyn AIProvider>, model: String) -> Self {
         Self { provider, model }
     }
@@ -84,17 +85,20 @@ impl AIClient {
     }
 
     /// Get the provider type.
+    #[must_use] 
     pub fn provider_type(&self) -> ProviderType {
         self.provider.provider_type()
     }
 
     /// Get the model.
+    #[must_use] 
     pub fn model(&self) -> &str {
         &self.model
     }
 }
 
 /// Get available models for all providers.
+#[must_use] 
 pub fn get_all_provider_models() -> Vec<ProviderModels> {
     vec![
         ProviderModels {
@@ -127,7 +131,7 @@ pub fn get_all_provider_models() -> Vec<ProviderModels> {
 
 // ==================== OpenAI Provider ====================
 
-/// OpenAI API provider.
+/// `OpenAI` API provider.
 pub struct OpenAIProvider {
     client: Client,
     api_key: SecretString,
@@ -135,7 +139,8 @@ pub struct OpenAIProvider {
 }
 
 impl OpenAIProvider {
-    /// Create a new OpenAI provider.
+    /// Create a new `OpenAI` provider.
+    #[must_use] 
     pub fn new(api_key: SecretString) -> Self {
         Self {
             client: Client::new(),
@@ -145,6 +150,7 @@ impl OpenAIProvider {
     }
 
     /// Get default models.
+    #[must_use] 
     pub fn default_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
@@ -262,7 +268,7 @@ impl AIProvider for OpenAIProvider {
 
             Ok(ConnectionTestResult {
                 success: false,
-                message: format!("Connection failed: {}", status),
+                message: format!("Connection failed: {status}"),
                 response_time_ms: Some(elapsed),
                 model: None,
             })
@@ -315,7 +321,7 @@ impl AIProvider for OpenAIProvider {
                 return Err(AIError::RateLimited);
             }
 
-            return Err(AIError::RequestFailed(format!("{}: {}", status, error_text)));
+            return Err(AIError::RequestFailed(format!("{status}: {error_text}")));
         }
 
         let chat_response: OpenAIChatResponse = response.json().await?;
@@ -353,6 +359,7 @@ pub struct AnthropicProvider {
 
 impl AnthropicProvider {
     /// Create a new Anthropic provider.
+    #[must_use] 
     pub fn new(api_key: SecretString) -> Self {
         Self {
             client: Client::new(),
@@ -362,6 +369,7 @@ impl AnthropicProvider {
     }
 
     /// Get default models.
+    #[must_use] 
     pub fn default_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
@@ -473,7 +481,7 @@ impl AIProvider for AnthropicProvider {
 
             Ok(ConnectionTestResult {
                 success: false,
-                message: format!("Connection failed: {}", status),
+                message: format!("Connection failed: {status}"),
                 response_time_ms: Some(elapsed),
                 model: None,
             })
@@ -530,7 +538,7 @@ impl AIProvider for AnthropicProvider {
                 return Err(AIError::RateLimited);
             }
 
-            return Err(AIError::RequestFailed(format!("{}: {}", status, error_text)));
+            return Err(AIError::RequestFailed(format!("{status}: {error_text}")));
         }
 
         let chat_response: AnthropicChatResponse = response.json().await?;
@@ -566,6 +574,7 @@ pub struct DeepseekProvider {
 
 impl DeepseekProvider {
     /// Create a new Deepseek provider.
+    #[must_use] 
     pub fn new(api_key: SecretString) -> Self {
         let mut inner = OpenAIProvider::new(api_key);
         inner.base_url = "https://api.deepseek.com".to_string();
@@ -573,6 +582,7 @@ impl DeepseekProvider {
     }
 
     /// Get default models.
+    #[must_use] 
     pub fn default_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
@@ -623,6 +633,7 @@ pub struct ZaiProvider {
 
 impl ZaiProvider {
     /// Create a new z.ai provider.
+    #[must_use] 
     pub fn new(api_key: SecretString) -> Self {
         let mut inner = OpenAIProvider::new(api_key);
         inner.base_url = "https://api.z.ai/v1".to_string();
@@ -630,6 +641,7 @@ impl ZaiProvider {
     }
 
     /// Get default models.
+    #[must_use] 
     pub fn default_models() -> Vec<ModelInfo> {
         vec![ModelInfo {
             id: "z-1".to_string(),
@@ -672,6 +684,7 @@ pub struct CustomProvider {
 
 impl CustomProvider {
     /// Create a new custom provider.
+    #[must_use] 
     pub fn new(api_key: SecretString, base_url: String) -> Self {
         let mut inner = OpenAIProvider::new(api_key);
         inner.base_url = base_url;

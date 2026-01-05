@@ -20,11 +20,11 @@ pub enum JiraAuth {
     /// API Token authentication (Basic Auth with email:token)
     /// This is the recommended method for most use cases.
     ApiToken {
-        /// Jira instance URL (e.g., "https://company.atlassian.net")
+        /// Jira instance URL (e.g., "<https://company.atlassian.net>")
         instance_url: String,
         /// User email address
         email: String,
-        /// API token from https://id.atlassian.com/manage-profile/security/api-tokens
+        /// API token from <https://id.atlassian.com/manage-profile/security/api-tokens>
         api_token: String,
     },
     /// OAuth 2.0 authentication (Bearer token)
@@ -268,7 +268,7 @@ pub struct Transition {
     pub is_available: bool,
 }
 
-fn default_true() -> bool {
+const fn default_true() -> bool {
     true
 }
 
@@ -317,7 +317,7 @@ impl JiraTicketsClient {
     /// This is the recommended method for most use cases.
     ///
     /// # Arguments
-    /// * `instance_url` - Jira Cloud URL (e.g., "https://company.atlassian.net")
+    /// * `instance_url` - Jira Cloud URL (e.g., "<https://company.atlassian.net>")
     /// * `email` - User email address
     /// * `api_token` - API token from Atlassian account settings
     #[must_use]
@@ -392,10 +392,10 @@ impl JiraTicketsClient {
     fn display_name(&self) -> String {
         match &self.auth {
             JiraAuth::ApiToken { instance_url, email, .. } => {
-                format!("{} ({})", instance_url, email)
+                format!("{instance_url} ({email})")
             }
             JiraAuth::OAuth { cloud_id, .. } => {
-                format!("cloud:{}", cloud_id)
+                format!("cloud:{cloud_id}")
             }
         }
     }
@@ -461,17 +461,17 @@ impl JiraTicketsClient {
         let mut clauses = Vec::new();
 
         if let Some(project) = &filters.project {
-            clauses.push(format!("project = \"{}\"", project));
+            clauses.push(format!("project = \"{project}\""));
         }
 
         if !filters.statuses.is_empty() {
             let statuses = filters
                 .statuses
                 .iter()
-                .map(|s| format!("\"{}\"", s))
+                .map(|s| format!("\"{s}\""))
                 .collect::<Vec<_>>()
                 .join(", ");
-            clauses.push(format!("status IN ({})", statuses));
+            clauses.push(format!("status IN ({statuses})"));
         }
 
         if let Some(assignee) = &filters.assignee {
@@ -479,7 +479,7 @@ impl JiraTicketsClient {
             if assignee == "currentUser()" {
                 clauses.push("assignee = currentUser()".to_string());
             } else {
-                clauses.push(format!("assignee = \"{}\"", assignee));
+                clauses.push(format!("assignee = \"{assignee}\""));
             }
         }
 
@@ -492,7 +492,7 @@ impl JiraTicketsClient {
         if base.is_empty() {
             "ORDER BY updated DESC".to_string()
         } else {
-            format!("{} ORDER BY updated DESC", base)
+            format!("{base} ORDER BY updated DESC")
         }
     }
 
@@ -538,7 +538,7 @@ impl JiraTicketsClient {
             let body = response.text().await.unwrap_or_default();
 
             if status.as_u16() == 404 {
-                anyhow::bail!("Ticket not found: {}", key);
+                anyhow::bail!("Ticket not found: {key}");
             }
 
             warn!(status = %status, body = %body, "Jira get ticket failed");
@@ -585,7 +585,7 @@ impl JiraTicketsClient {
             let body = response.text().await.unwrap_or_default();
 
             if status.as_u16() == 404 {
-                anyhow::bail!("Ticket not found: {}", key);
+                anyhow::bail!("Ticket not found: {key}");
             }
 
             warn!(status = %status, body = %body, "Jira get transitions failed");
@@ -683,9 +683,9 @@ impl JiraTicketsClient {
                     let error_text = response.text().await.unwrap_or_default();
 
                     if status.as_u16() == 400 {
-                        anyhow::bail!("Invalid transition: {}", error_text);
+                        anyhow::bail!("Invalid transition: {error_text}");
                     } else if status.as_u16() == 404 {
-                        anyhow::bail!("Ticket not found: {}", key);
+                        anyhow::bail!("Ticket not found: {key}");
                     }
 
                     warn!(
@@ -694,7 +694,7 @@ impl JiraTicketsClient {
                         error = %error_text,
                         "Transition failed"
                     );
-                    anyhow::bail!("Transition failed: {} - {}", status, error_text);
+                    anyhow::bail!("Transition failed: {status} - {error_text}");
                 }
                 Err(e) if attempt < MAX_ATTEMPTS => {
                     let delay = base_delay * 2u32.pow(attempt - 1);

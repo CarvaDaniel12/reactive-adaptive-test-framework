@@ -6,8 +6,7 @@ use uuid::Uuid;
 
 use crate::error::SupportError;
 use crate::types::{
-    CreateErrorLogInput, CreateKbEntryInput, ErrorLog, ErrorLogFilter, ErrorLogSort,
-    ErrorSeverity, ErrorSource, ErrorStatus, KnowledgeBaseEntry, Pagination,
+    CreateErrorLogInput, CreateKbEntryInput, ErrorLog, ErrorLogFilter, ErrorLogSort, ErrorSource, KnowledgeBaseEntry, Pagination,
     PaginatedResponse, SourceCount, SupportDashboardSummary, TopError, UpdateErrorStatusInput,
     UpdateKbEntryInput,
 };
@@ -19,7 +18,8 @@ pub struct SupportRepository {
 
 impl SupportRepository {
     /// Create a new repository instance.
-    pub fn new(pool: PgPool) -> Self {
+    #[must_use] 
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 
@@ -153,31 +153,31 @@ impl SupportRepository {
 
         if filter.status.is_some() {
             params_count += 1;
-            conditions.push(format!("status = ${}::VARCHAR::error_status", params_count));
+            conditions.push(format!("status = ${params_count}::VARCHAR::error_status"));
         }
         if filter.severity.is_some() {
             params_count += 1;
-            conditions.push(format!("severity = ${}::VARCHAR::error_severity", params_count));
+            conditions.push(format!("severity = ${params_count}::VARCHAR::error_severity"));
         }
         if filter.source.is_some() {
             params_count += 1;
-            conditions.push(format!("source = ${}::VARCHAR::error_source", params_count));
+            conditions.push(format!("source = ${params_count}::VARCHAR::error_source"));
         }
         if filter.user_id.is_some() {
             params_count += 1;
-            conditions.push(format!("user_id = ${}", params_count));
+            conditions.push(format!("user_id = ${params_count}"));
         }
         if filter.search.is_some() {
             params_count += 1;
-            conditions.push(format!("message ILIKE '%' || ${} || '%'", params_count));
+            conditions.push(format!("message ILIKE '%' || ${params_count} || '%'"));
         }
         if filter.from_date.is_some() {
             params_count += 1;
-            conditions.push(format!("last_seen_at >= ${}", params_count));
+            conditions.push(format!("last_seen_at >= ${params_count}"));
         }
         if filter.to_date.is_some() {
             params_count += 1;
-            conditions.push(format!("last_seen_at <= ${}", params_count));
+            conditions.push(format!("last_seen_at <= ${params_count}"));
         }
 
         let where_clause = conditions.join(" AND ");
@@ -190,7 +190,7 @@ impl SupportRepository {
 
         // For simplicity, we'll use a simpler approach with optional bindings
         // In production, consider using a query builder like sea-query
-        let query = format!(
+        let _query = format!(
             r#"
             SELECT id, message, stack_trace, severity as "severity: ErrorSeverity",
                    source as "source: ErrorSource", status as "status: ErrorStatus",
@@ -272,11 +272,11 @@ impl SupportRepository {
     pub async fn get_dashboard_summary(&self) -> Result<SupportDashboardSummary, SupportError> {
         // Get total counts by status
         let status_counts: Vec<(String, i64)> = sqlx::query_as(
-            r#"
+            r"
             SELECT status::TEXT, COUNT(*) as count
             FROM error_logs
             GROUP BY status
-            "#,
+            ",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -298,12 +298,12 @@ impl SupportRepository {
 
         // Get severity counts
         let severity_counts: Vec<(String, i64)> = sqlx::query_as(
-            r#"
+            r"
             SELECT severity::TEXT, COUNT(*) as count
             FROM error_logs
             WHERE status NOT IN ('resolved', 'dismissed')
             GROUP BY severity
-            "#,
+            ",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -321,12 +321,12 @@ impl SupportRepository {
 
         // Get counts by source
         let source_counts: Vec<(String, i64)> = sqlx::query_as(
-            r#"
+            r"
             SELECT source::TEXT, COUNT(*) as count
             FROM error_logs
             GROUP BY source
             ORDER BY count DESC
-            "#,
+            ",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -376,11 +376,11 @@ impl SupportRepository {
     /// Delete old error logs (retention policy).
     pub async fn cleanup_old_errors(&self, retention_days: i32) -> Result<i64, SupportError> {
         let result = sqlx::query(
-            r#"
+            r"
             DELETE FROM error_logs
             WHERE status = 'resolved'
             AND updated_at < NOW() - INTERVAL '1 day' * $1
-            "#,
+            ",
         )
         .bind(retention_days)
         .execute(&self.pool)
@@ -400,7 +400,7 @@ impl SupportRepository {
         let now = Utc::now();
 
         let entry: KnowledgeBaseEntry = sqlx::query_as(
-            r#"
+            r"
             INSERT INTO knowledge_base_entries (
                 id, title, problem, cause, solution,
                 related_errors, tags, view_count, helpful_count, not_helpful_count,
@@ -410,7 +410,7 @@ impl SupportRepository {
             RETURNING id, title, problem, cause, solution,
                       related_errors, tags, view_count, helpful_count, not_helpful_count,
                       created_at, updated_at
-            "#,
+            ",
         )
         .bind(id)
         .bind(&input.title)
@@ -429,13 +429,13 @@ impl SupportRepository {
     /// Get a knowledge base entry by ID.
     pub async fn get_kb_entry(&self, id: Uuid) -> Result<KnowledgeBaseEntry, SupportError> {
         let entry: Option<KnowledgeBaseEntry> = sqlx::query_as(
-            r#"
+            r"
             SELECT id, title, problem, cause, solution,
                    related_errors, tags, view_count, helpful_count, not_helpful_count,
                    created_at, updated_at
             FROM knowledge_base_entries
             WHERE id = $1
-            "#,
+            ",
         )
         .bind(id)
         .fetch_optional(&self.pool)
@@ -454,7 +454,7 @@ impl SupportRepository {
 
         let entries: Vec<KnowledgeBaseEntry> = if let Some(search_term) = search {
             sqlx::query_as(
-                r#"
+                r"
                 SELECT id, title, problem, cause, solution,
                        related_errors, tags, view_count, helpful_count, not_helpful_count,
                        created_at, updated_at
@@ -464,7 +464,7 @@ impl SupportRepository {
                    OR solution ILIKE '%' || $1 || '%'
                 ORDER BY view_count DESC, created_at DESC
                 LIMIT $2 OFFSET $3
-                "#,
+                ",
             )
             .bind(search_term)
             .bind(pagination.per_page)
@@ -473,14 +473,14 @@ impl SupportRepository {
             .await?
         } else {
             sqlx::query_as(
-                r#"
+                r"
                 SELECT id, title, problem, cause, solution,
                        related_errors, tags, view_count, helpful_count, not_helpful_count,
                        created_at, updated_at
                 FROM knowledge_base_entries
                 ORDER BY view_count DESC, created_at DESC
                 LIMIT $1 OFFSET $2
-                "#,
+                ",
             )
             .bind(pagination.per_page)
             .bind(offset)
@@ -510,7 +510,7 @@ impl SupportRepository {
         let _ = self.get_kb_entry(id).await?;
 
         let entry: KnowledgeBaseEntry = sqlx::query_as(
-            r#"
+            r"
             UPDATE knowledge_base_entries
             SET title = COALESCE($2, title),
                 problem = COALESCE($3, problem),
@@ -523,7 +523,7 @@ impl SupportRepository {
             RETURNING id, title, problem, cause, solution,
                       related_errors, tags, view_count, helpful_count, not_helpful_count,
                       created_at, updated_at
-            "#,
+            ",
         )
         .bind(id)
         .bind(&input.title)
@@ -555,11 +555,11 @@ impl SupportRepository {
     /// Increment view count for a knowledge base entry.
     pub async fn increment_kb_view(&self, id: Uuid) -> Result<(), SupportError> {
         sqlx::query(
-            r#"
+            r"
             UPDATE knowledge_base_entries
             SET view_count = view_count + 1
             WHERE id = $1
-            "#,
+            ",
         )
         .bind(id)
         .execute(&self.pool)
@@ -572,22 +572,22 @@ impl SupportRepository {
     pub async fn rate_kb_entry(&self, id: Uuid, helpful: bool) -> Result<(), SupportError> {
         if helpful {
             sqlx::query(
-                r#"
+                r"
                 UPDATE knowledge_base_entries
                 SET helpful_count = helpful_count + 1
                 WHERE id = $1
-                "#,
+                ",
             )
             .bind(id)
             .execute(&self.pool)
             .await?;
         } else {
             sqlx::query(
-                r#"
+                r"
                 UPDATE knowledge_base_entries
                 SET not_helpful_count = not_helpful_count + 1
                 WHERE id = $1
-                "#,
+                ",
             )
             .bind(id)
             .execute(&self.pool)
@@ -604,7 +604,7 @@ impl SupportRepository {
     ) -> Result<Vec<KnowledgeBaseEntry>, SupportError> {
         // Simple text matching - in production, consider using full-text search
         let entries: Vec<KnowledgeBaseEntry> = sqlx::query_as(
-            r#"
+            r"
             SELECT id, title, problem, cause, solution,
                    related_errors, tags, view_count, helpful_count, not_helpful_count,
                    created_at, updated_at
@@ -616,7 +616,7 @@ impl SupportRepository {
                )
             ORDER BY helpful_count DESC, view_count DESC
             LIMIT 5
-            "#,
+            ",
         )
         .bind(error_message)
         .fetch_all(&self.pool)
@@ -632,13 +632,13 @@ impl SupportRepository {
         hours: i32,
     ) -> Result<i32, SupportError> {
         let count: (i64,) = sqlx::query_as(
-            r#"
+            r"
             SELECT COUNT(*)
             FROM error_logs
             WHERE source = 'integration'
             AND context->>'integration' = $1
             AND last_seen_at > NOW() - INTERVAL '1 hour' * $2
-            "#,
+            ",
         )
         .bind(integration)
         .bind(hours)

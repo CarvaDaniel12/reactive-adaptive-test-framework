@@ -164,7 +164,7 @@ impl PatternDetector {
     }
 
     /// Detect consecutive problems (3+ tickets with same issue).
-    async fn detect_consecutive_problems(&self, data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
+    async fn detect_consecutive_problems(&self, _data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
         // Get last 5 completed workflows
         let recent: Vec<(String, Option<String>)> = sqlx::query_as(
             r#"

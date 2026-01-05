@@ -19,13 +19,13 @@ use crate::types::{
 /// Returns error if database query fails.
 pub async fn get_default_templates(pool: &PgPool) -> Result<Vec<WorkflowTemplate>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowTemplate>(
-        r#"
+        r"
         SELECT id, name, description, ticket_type, 
                steps_json, is_default, created_at, updated_at
         FROM workflow_templates
         WHERE is_default = true
         ORDER BY name
-        "#,
+        ",
     )
     .fetch_all(pool)
     .await
@@ -40,12 +40,12 @@ pub async fn get_template(
     id: Uuid,
 ) -> Result<Option<WorkflowTemplate>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowTemplate>(
-        r#"
+        r"
         SELECT id, name, description, ticket_type,
                steps_json, is_default, created_at, updated_at
         FROM workflow_templates
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(id)
     .fetch_optional(pool)
@@ -61,13 +61,13 @@ pub async fn get_templates_by_type(
     ticket_type: &str,
 ) -> Result<Vec<WorkflowTemplate>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowTemplate>(
-        r#"
+        r"
         SELECT id, name, description, ticket_type,
                steps_json, is_default, created_at, updated_at
         FROM workflow_templates
         WHERE ticket_type = $1
         ORDER BY is_default DESC, name
-        "#,
+        ",
     )
     .bind(ticket_type)
     .fetch_all(pool)
@@ -80,12 +80,12 @@ pub async fn get_templates_by_type(
 /// Returns error if database query fails.
 pub async fn get_all_templates(pool: &PgPool) -> Result<Vec<WorkflowTemplate>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowTemplate>(
-        r#"
+        r"
         SELECT id, name, description, ticket_type,
                steps_json, is_default, created_at, updated_at
         FROM workflow_templates
         ORDER BY is_default DESC, ticket_type, name
-        "#,
+        ",
     )
     .fetch_all(pool)
     .await
@@ -106,11 +106,11 @@ pub async fn create_template(
     let steps_json = serde_json::to_value(steps).expect("Failed to serialize steps");
 
     sqlx::query_as::<_, WorkflowTemplate>(
-        r#"
+        r"
         INSERT INTO workflow_templates (name, description, ticket_type, steps_json, is_default)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id, name, description, ticket_type, steps_json, is_default, created_at, updated_at
-        "#,
+        ",
     )
     .bind(name)
     .bind(description)
@@ -134,7 +134,7 @@ pub async fn get_active_workflow(
     ticket_id: &str,
 ) -> Result<Option<WorkflowInstance>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         SELECT id, template_id, ticket_id, user_id, status,
                current_step, started_at, paused_at, resumed_at, completed_at,
                created_at, updated_at
@@ -142,7 +142,7 @@ pub async fn get_active_workflow(
         WHERE ticket_id = $1 AND status IN ('active', 'paused')
         ORDER BY created_at DESC
         LIMIT 1
-        "#,
+        ",
     )
     .bind(ticket_id)
     .fetch_optional(pool)
@@ -158,13 +158,13 @@ pub async fn get_instance(
     id: Uuid,
 ) -> Result<Option<WorkflowInstance>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         SELECT id, template_id, ticket_id, user_id, status,
                current_step, started_at, paused_at, resumed_at, completed_at,
                created_at, updated_at
         FROM workflow_instances
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(id)
     .fetch_optional(pool)
@@ -180,14 +180,14 @@ pub async fn get_user_workflows(
     user_id: &str,
 ) -> Result<Vec<WorkflowInstance>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         SELECT id, template_id, ticket_id, user_id, status,
                current_step, started_at, paused_at, resumed_at, completed_at,
                created_at, updated_at
         FROM workflow_instances
         WHERE user_id = $1
         ORDER BY created_at DESC
-        "#,
+        ",
     )
     .bind(user_id)
     .fetch_all(pool)
@@ -205,13 +205,13 @@ pub async fn create_instance(
     user_id: &str,
 ) -> Result<WorkflowInstance, sqlx::Error> {
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         INSERT INTO workflow_instances (template_id, ticket_id, user_id)
         VALUES ($1, $2, $3)
         RETURNING id, template_id, ticket_id, user_id, status,
                   current_step, started_at, paused_at, resumed_at, completed_at,
                   created_at, updated_at
-        "#,
+        ",
     )
     .bind(template_id)
     .bind(ticket_id)
@@ -241,7 +241,7 @@ pub async fn update_instance_status(
     };
 
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         UPDATE workflow_instances
         SET status = $2, paused_at = COALESCE($3, paused_at), 
             completed_at = COALESCE($4, completed_at)
@@ -249,7 +249,7 @@ pub async fn update_instance_status(
         RETURNING id, template_id, ticket_id, user_id, status,
                   current_step, started_at, paused_at, resumed_at, completed_at,
                   created_at, updated_at
-        "#,
+        ",
     )
     .bind(id)
     .bind(status)
@@ -269,14 +269,14 @@ pub async fn update_instance_step(
     current_step: i32,
 ) -> Result<WorkflowInstance, sqlx::Error> {
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         UPDATE workflow_instances
         SET current_step = $2
         WHERE id = $1
         RETURNING id, template_id, ticket_id, user_id, status,
                   current_step, started_at, paused_at, resumed_at, completed_at,
                   created_at, updated_at
-        "#,
+        ",
     )
     .bind(id)
     .bind(current_step)
@@ -297,13 +297,13 @@ pub async fn get_step_results(
     instance_id: Uuid,
 ) -> Result<Vec<WorkflowStepResult>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowStepResult>(
-        r#"
+        r"
         SELECT id, instance_id, step_index, status, notes,
                links, started_at, completed_at, created_at, updated_at
         FROM workflow_step_results
         WHERE instance_id = $1
         ORDER BY step_index
-        "#,
+        ",
     )
     .bind(instance_id)
     .fetch_all(pool)
@@ -320,12 +320,12 @@ pub async fn get_step_result(
     step_index: i32,
 ) -> Result<Option<WorkflowStepResult>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowStepResult>(
-        r#"
+        r"
         SELECT id, instance_id, step_index, status, notes,
                links, started_at, completed_at, created_at, updated_at
         FROM workflow_step_results
         WHERE instance_id = $1 AND step_index = $2
-        "#,
+        ",
     )
     .bind(instance_id)
     .bind(step_index)
@@ -359,7 +359,7 @@ pub async fn upsert_step_result(
     };
 
     sqlx::query_as::<_, WorkflowStepResult>(
-        r#"
+        r"
         INSERT INTO workflow_step_results (instance_id, step_index, status, notes, links, started_at, completed_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (instance_id, step_index) 
@@ -371,7 +371,7 @@ pub async fn upsert_step_result(
             completed_at = COALESCE(EXCLUDED.completed_at, workflow_step_results.completed_at)
         RETURNING id, instance_id, step_index, status, notes,
                   links, started_at, completed_at, created_at, updated_at
-        "#,
+        ",
     )
     .bind(instance_id)
     .bind(step_index)
@@ -428,11 +428,11 @@ pub async fn skip_step(
 /// Returns error if database update fails.
 pub async fn pause_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
-        r#"
+        r"
         UPDATE workflow_instances
         SET status = 'paused', paused_at = NOW(), updated_at = NOW()
         WHERE id = $1 AND status = 'active'
-        "#,
+        ",
     )
     .bind(instance_id)
     .execute(pool)
@@ -446,11 +446,11 @@ pub async fn pause_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), sqlx
 /// Returns error if database update fails.
 pub async fn resume_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
-        r#"
+        r"
         UPDATE workflow_instances
         SET status = 'active', resumed_at = NOW(), updated_at = NOW()
         WHERE id = $1 AND status = 'paused'
-        "#,
+        ",
     )
     .bind(instance_id)
     .execute(pool)
@@ -464,11 +464,11 @@ pub async fn resume_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), sql
 /// Returns error if database update fails.
 pub async fn complete_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
-        r#"
+        r"
         UPDATE workflow_instances
         SET status = 'completed', completed_at = NOW(), updated_at = NOW()
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(instance_id)
     .execute(pool)
@@ -482,11 +482,11 @@ pub async fn complete_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), s
 /// Returns error if database update fails.
 pub async fn cancel_workflow(pool: &PgPool, instance_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
-        r#"
+        r"
         UPDATE workflow_instances
         SET status = 'cancelled', updated_at = NOW()
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(instance_id)
     .execute(pool)
@@ -503,14 +503,14 @@ pub async fn get_all_user_active_workflows(
     user_id: &str,
 ) -> Result<Vec<WorkflowInstance>, sqlx::Error> {
     sqlx::query_as::<_, WorkflowInstance>(
-        r#"
+        r"
         SELECT id, template_id, ticket_id, user_id, status,
                current_step, started_at, completed_at, paused_at, resumed_at,
                created_at, updated_at
         FROM workflow_instances
         WHERE user_id = $1 AND status IN ('active', 'paused')
         ORDER BY updated_at DESC
-        "#,
+        ",
     )
     .bind(user_id)
     .fetch_all(pool)

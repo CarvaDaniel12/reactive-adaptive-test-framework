@@ -17,7 +17,7 @@ pub struct KnowledgeBaseService {
 impl KnowledgeBaseService {
     /// Create a new knowledge base service.
     #[must_use] 
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         let repo = SupportRepository::new(pool);
         Self { repo }
     }

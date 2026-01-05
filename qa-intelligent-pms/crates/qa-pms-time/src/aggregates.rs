@@ -129,7 +129,7 @@ pub struct TrendPoint {
 /// * `ticket_type` - Type of ticket: "bug", "feature", or "regression"
 /// * `actual_seconds` - Total actual time spent
 /// * `estimated_seconds` - Total estimated time
-/// * `step_times` - Vector of (step_index, actual_seconds) for each step
+/// * `step_times` - Vector of (`step_index`, `actual_seconds`) for each step
 pub async fn record_workflow_completion(
     pool: &PgPool,
     workflow_instance_id: Uuid,
@@ -172,7 +172,7 @@ pub async fn record_workflow_completion(
 
     // Check for gap alert (>20% over estimate per FR-TRK-06)
     if estimated_seconds > 0 {
-        let gap_pct = (actual_seconds as f64 / estimated_seconds as f64) * 100.0;
+        let gap_pct = (f64::from(actual_seconds) / f64::from(estimated_seconds)) * 100.0;
         if gap_pct > 120.0 {
             create_gap_alert(
                 pool,
@@ -201,20 +201,20 @@ pub async fn create_gap_alert(
     alert_type: &str,
 ) -> Result<TimeGapAlert, sqlx::Error> {
     let gap_pct = if estimated_seconds > 0 {
-        (actual_seconds as f64 / estimated_seconds as f64) * 100.0
+        (f64::from(actual_seconds) / f64::from(estimated_seconds)) * 100.0
     } else {
         100.0
     };
 
     sqlx::query_as::<_, TimeGapAlert>(
-        r#"
+        r"
         INSERT INTO time_gap_alerts (
             workflow_instance_id, step_index, user_id,
             actual_seconds, estimated_seconds, gap_percentage, alert_type
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
-        "#,
+        ",
     )
     .bind(workflow_instance_id)
     .bind(step_index)
@@ -237,11 +237,11 @@ pub async fn get_historical_summary(
     user_id: Uuid,
     days: i32,
 ) -> Result<HistoricalSummary, sqlx::Error> {
-    let start_date = Utc::now().date_naive() - chrono::Duration::days(days as i64);
+    let start_date = Utc::now().date_naive() - chrono::Duration::days(i64::from(days));
 
     // Get totals
     let totals: (i64, i64, Option<f64>, Option<f64>) = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             COALESCE(SUM(tickets_completed), 0) as total_tickets,
             COALESCE(SUM(total_time_seconds), 0) as total_time,
@@ -249,7 +249,7 @@ pub async fn get_historical_summary(
             AVG(efficiency_ratio)::FLOAT8 as avg_efficiency
         FROM time_daily_aggregates
         WHERE user_id = $1 AND aggregate_date >= $2
-        "#,
+        ",
     )
     .bind(user_id)
     .bind(start_date)
@@ -258,7 +258,7 @@ pub async fn get_historical_summary(
 
     // Get by ticket type
     let by_type: Vec<(String, i64, i64)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             'bug' as ticket_type,
             COALESCE(SUM(bug_tickets), 0) as count,
@@ -279,7 +279,7 @@ pub async fn get_historical_summary(
             COALESCE(SUM(regression_time_seconds), 0)
         FROM time_daily_aggregates
         WHERE user_id = $1 AND aggregate_date >= $2
-        "#,
+        ",
     )
     .bind(user_id)
     .bind(start_date)
@@ -318,10 +318,10 @@ pub async fn get_trend_data(
     user_id: Uuid,
     days: i32,
 ) -> Result<Vec<TrendPoint>, sqlx::Error> {
-    let start_date = Utc::now().date_naive() - chrono::Duration::days(days as i64);
+    let start_date = Utc::now().date_naive() - chrono::Duration::days(i64::from(days));
 
     let rows: Vec<(NaiveDate, i32, i32, rust_decimal::Decimal)> = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             aggregate_date,
             tickets_completed,
@@ -330,7 +330,7 @@ pub async fn get_trend_data(
         FROM time_daily_aggregates
         WHERE user_id = $1 AND aggregate_date >= $2
         ORDER BY aggregate_date
-        "#,
+        ",
     )
     .bind(user_id)
     .bind(start_date)
@@ -342,7 +342,7 @@ pub async fn get_trend_data(
         .map(|(date, tickets, seconds, efficiency)| TrendPoint {
             date,
             tickets,
-            hours: seconds as f64 / 3600.0,
+            hours: f64::from(seconds) / 3600.0,
             // Use ToPrimitive trait for proper Decimal to f64 conversion
             efficiency: efficiency.to_f64().unwrap_or(1.0),
         })
@@ -355,11 +355,11 @@ pub async fn get_step_averages(
     template_id: Uuid,
 ) -> Result<Vec<StepAverage>, sqlx::Error> {
     sqlx::query_as::<_, StepAverage>(
-        r#"
+        r"
         SELECT * FROM time_step_averages
         WHERE template_id = $1
         ORDER BY step_index
-        "#,
+        ",
     )
     .bind(template_id)
     .fetch_all(pool)
@@ -369,10 +369,10 @@ pub async fn get_step_averages(
 /// Get user averages by ticket type.
 pub async fn get_user_averages(pool: &PgPool, user_id: Uuid) -> Result<Vec<UserAverage>, sqlx::Error> {
     sqlx::query_as::<_, UserAverage>(
-        r#"
+        r"
         SELECT * FROM time_user_averages
         WHERE user_id = $1
-        "#,
+        ",
     )
     .bind(user_id)
     .fetch_all(pool)
@@ -386,12 +386,12 @@ pub async fn get_undismissed_alerts(
     limit: i32,
 ) -> Result<Vec<TimeGapAlert>, sqlx::Error> {
     sqlx::query_as::<_, TimeGapAlert>(
-        r#"
+        r"
         SELECT * FROM time_gap_alerts
         WHERE user_id = $1 AND dismissed = false
         ORDER BY created_at DESC
         LIMIT $2
-        "#,
+        ",
     )
     .bind(user_id)
     .bind(limit)
@@ -402,11 +402,11 @@ pub async fn get_undismissed_alerts(
 /// Dismiss a gap alert.
 pub async fn dismiss_alert(pool: &PgPool, alert_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
-        r#"
+        r"
         UPDATE time_gap_alerts
         SET dismissed = true, dismissed_at = NOW()
         WHERE id = $1
-        "#,
+        ",
     )
     .bind(alert_id)
     .execute(pool)
@@ -422,11 +422,11 @@ pub async fn get_daily_aggregates(
     end_date: NaiveDate,
 ) -> Result<Vec<DailyAggregate>, sqlx::Error> {
     sqlx::query_as::<_, DailyAggregate>(
-        r#"
+        r"
         SELECT * FROM time_daily_aggregates
         WHERE user_id = $1 AND aggregate_date >= $2 AND aggregate_date <= $3
         ORDER BY aggregate_date
-        "#,
+        ",
     )
     .bind(user_id)
     .bind(start_date)
@@ -453,16 +453,16 @@ pub async fn calculate_efficiency(
     user_id: Uuid,
     days: i32,
 ) -> Result<f64, sqlx::Error> {
-    let start_date = Utc::now().date_naive() - chrono::Duration::days(days as i64);
+    let start_date = Utc::now().date_naive() - chrono::Duration::days(i64::from(days));
 
     let result: (Option<i64>, Option<i64>) = sqlx::query_as(
-        r#"
+        r"
         SELECT 
             SUM(total_time_seconds) as actual,
             SUM(total_estimated_seconds) as estimated
         FROM time_daily_aggregates
         WHERE user_id = $1 AND aggregate_date >= $2
-        "#,
+        ",
     )
     .bind(user_id)
     .bind(start_date)

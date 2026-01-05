@@ -148,6 +148,7 @@ impl ChatService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::{TicketContext, WorkflowStepContext};
 
     #[test]
     fn test_build_system_message_no_context() {

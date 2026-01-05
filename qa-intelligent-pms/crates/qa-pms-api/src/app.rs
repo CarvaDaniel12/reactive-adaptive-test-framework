@@ -177,14 +177,12 @@ fn create_startup_validator(settings: &Settings) -> StartupValidator {
 
     // Jira - CRITICAL integration (API Token or OAuth)
     if let Some(jira_settings) = settings.jira.as_ref() {
-        if jira_settings.has_api_token() {
-            let email = jira_settings.email.as_ref().unwrap();
-            let api_token = jira_settings.api_token.as_ref().unwrap().expose_secret();
+        if let (Some(email), Some(api_token)) = (&jira_settings.email, &jira_settings.api_token) {
             info!("Adding Jira to startup validation (critical, API Token auth)");
             let check: Arc<dyn HealthCheck> = Arc::new(JiraHealthCheck::with_api_token(
                 jira_settings.instance_url.clone(),
                 email.clone(),
-                api_token.clone(),
+                api_token.expose_secret().clone(),
             ));
             validator = validator.add_critical(check);
         }
@@ -234,14 +232,12 @@ fn create_health_scheduler(
 
     // Jira health check (API Token auth)
     if let Some(jira_settings) = settings.jira.as_ref() {
-        if jira_settings.has_api_token() {
-            let email = jira_settings.email.as_ref().unwrap();
-            let api_token = jira_settings.api_token.as_ref().unwrap().expose_secret();
+        if let (Some(email), Some(api_token)) = (&jira_settings.email, &jira_settings.api_token) {
             info!("Adding Jira to health scheduler");
             let check: Arc<dyn HealthCheck> = Arc::new(JiraHealthCheck::with_api_token(
                 jira_settings.instance_url.clone(),
                 email.clone(),
-                api_token.clone(),
+                api_token.expose_secret().clone(),
             ));
             scheduler = scheduler.add_check(check);
             has_checks = true;

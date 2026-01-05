@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::types::*;
+use crate::types::{NewPattern, DetectedPattern, PatternType, NewAlert, Alert, Severity};
 
 /// Repository for pattern and alert data.
 pub struct PatternRepository {
@@ -13,7 +13,7 @@ pub struct PatternRepository {
 
 impl PatternRepository {
     /// Create a new repository.
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 
@@ -23,13 +23,13 @@ impl PatternRepository {
         let now = Utc::now();
 
         sqlx::query(
-            r#"
+            r"
             INSERT INTO detected_patterns (
                 id, pattern_type, severity, title, description,
                 affected_tickets, common_factor, average_excess_percent,
                 confidence_score, suggested_actions, metadata, detected_at, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            "#,
+            ",
         )
         .bind(id)
         .bind(pattern.pattern_type.to_string())
@@ -71,7 +71,7 @@ impl PatternRepository {
         limit: i32,
     ) -> anyhow::Result<Vec<DetectedPattern>> {
         let rows: Vec<PatternRow> = sqlx::query_as(
-            r#"
+            r"
             SELECT 
                 id, pattern_type, severity, title, description,
                 affected_tickets, common_factor, average_excess_percent,
@@ -80,7 +80,7 @@ impl PatternRepository {
             WHERE pattern_type = $1
             ORDER BY detected_at DESC
             LIMIT $2
-            "#,
+            ",
         )
         .bind(pattern_type.to_string())
         .bind(limit)
@@ -93,7 +93,7 @@ impl PatternRepository {
     /// Get recent patterns.
     pub async fn get_recent_patterns(&self, limit: i32) -> anyhow::Result<Vec<DetectedPattern>> {
         let rows: Vec<PatternRow> = sqlx::query_as(
-            r#"
+            r"
             SELECT 
                 id, pattern_type, severity, title, description,
                 affected_tickets, common_factor, average_excess_percent,
@@ -101,7 +101,7 @@ impl PatternRepository {
             FROM detected_patterns
             ORDER BY detected_at DESC
             LIMIT $1
-            "#,
+            ",
         )
         .bind(limit)
         .fetch_all(&self.pool)
@@ -113,14 +113,14 @@ impl PatternRepository {
     /// Get pattern by ID.
     pub async fn get_pattern(&self, id: Uuid) -> anyhow::Result<Option<DetectedPattern>> {
         let row: Option<PatternRow> = sqlx::query_as(
-            r#"
+            r"
             SELECT 
                 id, pattern_type, severity, title, description,
                 affected_tickets, common_factor, average_excess_percent,
                 confidence_score, suggested_actions, metadata, detected_at, created_at
             FROM detected_patterns
             WHERE id = $1
-            "#,
+            ",
         )
         .bind(id)
         .fetch_optional(&self.pool)
@@ -135,12 +135,12 @@ impl PatternRepository {
         let now = Utc::now();
 
         sqlx::query(
-            r#"
+            r"
             INSERT INTO alerts (
                 id, pattern_id, alert_type, severity, title, message,
                 affected_tickets, suggested_actions, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            "#,
+            ",
         )
         .bind(id)
         .bind(alert.pattern_id)
@@ -174,7 +174,7 @@ impl PatternRepository {
     /// Get unread alerts.
     pub async fn get_unread_alerts(&self) -> anyhow::Result<Vec<Alert>> {
         let rows: Vec<AlertRow> = sqlx::query_as(
-            r#"
+            r"
             SELECT 
                 id, pattern_id, alert_type, severity, title, message,
                 affected_tickets, suggested_actions, is_read, is_dismissed,
@@ -188,7 +188,7 @@ impl PatternRepository {
                     ELSE 3 
                 END,
                 created_at DESC
-            "#,
+            ",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -199,10 +199,10 @@ impl PatternRepository {
     /// Get unread alert count.
     pub async fn get_unread_count(&self) -> anyhow::Result<i64> {
         let (count,): (i64,) = sqlx::query_as(
-            r#"
+            r"
             SELECT COUNT(*) FROM alerts
             WHERE NOT is_read AND NOT is_dismissed
-            "#,
+            ",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -222,11 +222,11 @@ impl PatternRepository {
     /// Dismiss an alert.
     pub async fn dismiss_alert(&self, id: Uuid, dismissed_by: Option<&str>) -> anyhow::Result<()> {
         sqlx::query(
-            r#"
+            r"
             UPDATE alerts 
             SET is_dismissed = TRUE, dismissed_at = NOW(), dismissed_by = $2
             WHERE id = $1
-            "#,
+            ",
         )
         .bind(id)
         .bind(dismissed_by)

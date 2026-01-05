@@ -8,7 +8,7 @@
 use sqlx::PgPool;
 use tracing::info;
 
-use crate::types::*;
+use crate::types::{DetectedPattern, WorkflowAnalysisData, Severity, NewPattern, PatternType};
 use crate::repository::PatternRepository;
 
 /// Time excess threshold (50% over estimate).
@@ -68,7 +68,7 @@ impl PatternDetector {
     async fn get_workflow_data(&self, workflow_id: uuid::Uuid) -> anyhow::Result<WorkflowAnalysisData> {
         let row: (uuid::Uuid, String, String, i64, Option<i64>, Option<String>, chrono::DateTime<chrono::Utc>) = 
             sqlx::query_as(
-                r#"
+                r"
                 SELECT 
                     wi.id,
                     wi.ticket_key,
@@ -81,7 +81,7 @@ impl PatternDetector {
                 FROM workflow_instances wi
                 JOIN workflow_templates wt ON wi.template_id = wt.id
                 WHERE wi.id = $1
-                "#,
+                ",
             )
             .bind(workflow_id)
             .fetch_one(&self.pool)
@@ -89,10 +89,10 @@ impl PatternDetector {
 
         // Get step notes
         let notes: Vec<(Option<String>,)> = sqlx::query_as(
-            r#"
+            r"
             SELECT notes FROM workflow_step_results
             WHERE instance_id = $1 AND notes IS NOT NULL
-            "#,
+            ",
         )
         .bind(workflow_id)
         .fetch_all(&self.pool)
@@ -167,7 +167,7 @@ impl PatternDetector {
     async fn detect_consecutive_problems(&self, _data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
         // Get last 5 completed workflows
         let recent: Vec<(String, Option<String>)> = sqlx::query_as(
-            r#"
+            r"
             SELECT 
                 wi.ticket_key,
                 (SELECT string_agg(notes, ' ') FROM workflow_step_results WHERE instance_id = wi.id) as all_notes
@@ -175,7 +175,7 @@ impl PatternDetector {
             WHERE wi.status = 'completed'
             ORDER BY wi.completed_at DESC
             LIMIT 5
-            "#,
+            ",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -216,7 +216,7 @@ impl PatternDetector {
         let pattern = NewPattern {
             pattern_type: PatternType::ConsecutiveProblem,
             severity,
-            title: format!("Recurring issue: {}", common_keyword),
+            title: format!("Recurring issue: {common_keyword}"),
             description: Some(format!(
                 "{} of the last {} tickets mention '{}'",
                 count, recent.len(), common_keyword
@@ -244,7 +244,7 @@ impl PatternDetector {
     async fn detect_spike(&self, data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
         // Compare today's count to 7-day average
         let stats: Option<(i64, f64)> = sqlx::query_as(
-            r#"
+            r"
             WITH today_count AS (
                 SELECT COUNT(*) as cnt
                 FROM workflow_instances
@@ -264,7 +264,7 @@ impl PatternDetector {
             )
             SELECT today_count.cnt, COALESCE(avg_count.avg, 0)
             FROM today_count, avg_count
-            "#,
+            ",
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -293,8 +293,7 @@ impl PatternDetector {
             severity,
             title: "Ticket volume spike detected".to_string(),
             description: Some(format!(
-                "Today's ticket count ({}) is {:.1}x the 7-day average ({:.1})",
-                today_count, spike_ratio, avg_count
+                "Today's ticket count ({today_count}) is {spike_ratio:.1}x the 7-day average ({avg_count:.1})"
             )),
             affected_tickets: vec![data.ticket_key.clone()],
             common_factor: None,
@@ -350,16 +349,16 @@ impl PatternDetector {
 
 fn format_duration(seconds: i64) -> String {
     if seconds < 60 {
-        format!("{}s", seconds)
+        format!("{seconds}s")
     } else if seconds < 3600 {
         format!("{}m", seconds / 60)
     } else {
         let hours = seconds / 3600;
         let mins = (seconds % 3600) / 60;
         if mins > 0 {
-            format!("{}h {}m", hours, mins)
+            format!("{hours}h {mins}m")
         } else {
-            format!("{}h", hours)
+            format!("{hours}h")
         }
     }
 }

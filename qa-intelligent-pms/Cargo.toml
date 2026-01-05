@@ -96,7 +96,7 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 all = "warn"
-pedantic = "warn"
-nursery = "warn"
+pedantic = { level = "allow", priority = -1 }
+nursery = { level = "allow", priority = -1 }
 unwrap_used = "warn"
 expect_used = "warn"

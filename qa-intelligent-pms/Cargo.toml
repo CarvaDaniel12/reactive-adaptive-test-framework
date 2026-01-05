@@ -1,0 +1,102 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/qa-pms-core",
+    "crates/qa-pms-config",
+    "crates/qa-pms-api",
+    "crates/qa-pms-workflow",
+    "crates/qa-pms-time",
+    "crates/qa-pms-tracking",
+    "crates/qa-pms-dashboard",
+    "crates/qa-pms-jira",
+    "crates/qa-pms-postman",
+    "crates/qa-pms-testmo",
+    "crates/qa-pms-splunk",
+    "crates/qa-pms-ai",
+    "crates/qa-pms-patterns",
+    "crates/qa-pms-support",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+authors = ["Daniel"]
+license = "MIT"
+repository = "https://github.com/your-org/qa-intelligent-pms"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.42", features = ["full"] }
+
+# Web framework
+axum = "0.7"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "compression-gzip", "timeout"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "uuid", "rust_decimal"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# HTTP client
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# OAuth
+oauth2 = "4.4"
+
+# Encryption & Security
+aes-gcm = "0.10"
+secrecy = { version = "0.8", features = ["serde"] }
+zeroize = "1.7"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0"
+
+# Logging & Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Time & IDs
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.11", features = ["v4", "serde"] }
+
+# Environment
+dotenvy = "0.15"
+
+# API Documentation
+utoipa = { version = "5.3", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "9.0", features = ["axum"] }
+
+# Async trait and utilities
+async-trait = "0.1"
+futures = "0.3"
+
+# Internal crates
+qa-pms-core = { path = "crates/qa-pms-core" }
+qa-pms-config = { path = "crates/qa-pms-config" }
+qa-pms-jira = { path = "crates/qa-pms-jira" }
+qa-pms-postman = { path = "crates/qa-pms-postman" }
+qa-pms-testmo = { path = "crates/qa-pms-testmo" }
+qa-pms-splunk = { path = "crates/qa-pms-splunk" }
+qa-pms-workflow = { path = "crates/qa-pms-workflow" }
+qa-pms-time = { path = "crates/qa-pms-time" }
+qa-pms-tracking = { path = "crates/qa-pms-tracking" }
+qa-pms-dashboard = { path = "crates/qa-pms-dashboard" }
+qa-pms-ai = { path = "crates/qa-pms-ai" }
+qa-pms-patterns = { path = "crates/qa-pms-patterns" }
+qa-pms-support = { path = "crates/qa-pms-support" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "warn"
+expect_used = "warn"

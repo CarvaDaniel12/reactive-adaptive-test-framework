@@ -1,0 +1,74 @@
+# Mapeamentos de Componentes
+# Mapeia variações de nomes de componentes para nomes normalizados
+
+component_mappings:
+  # Booking
+  "booking service": "Booking"
+  "booking-service": "Booking"
+  "booking_service": "Booking"
+  "booking": "Booking"
+  "Booking Service": "Booking"
+  
+  # Payment
+  "payment service": "Payment"
+  "payment-service": "Payment"
+  "payment_service": "Payment"
+  "payment": "Payment"
+  "Payment Service": "Payment"
+  "payments": "Payment"
+  
+  # Calendar
+  "calendar service": "Calendar"
+  "calendar-service": "Calendar"
+  "calendar_service": "Calendar"
+  "calendar": "Calendar"
+  "Calendar Service": "Calendar"
+  
+  # Identity/Auth
+  "identity service": "Identity"
+  "identity-service": "Identity"
+  "identity_service": "Identity"
+  "identity": "Identity"
+  "auth": "Identity"
+  "authentication": "Identity"
+  "authorization": "Identity"
+  
+  # Reservations
+  "reservation service": "Reservation"
+  "reservation-service": "Reservation"
+  "reservation_service": "Reservation"
+  "reservation": "Reservation"
+  "reservations": "Reservation"
+  
+  # Quotes
+  "quote service": "Quote"
+  "quote-service": "Quote"
+  "quote_service": "Quote"
+  "quote": "Quote"
+  "quotes": "Quote"
+
+# Convenções de nomes (customizáveis)
+naming_conventions:
+  test_case:
+    format: "{METHOD}_{TestType}_{Description}"
+    ticket_format: "{TICKET_KEY}_{METHOD}_{TestType}_{Description}"
+  
+  folder_endpoint:
+    format: "{METHOD}_{NormalizedPath}"
+  
+  folder_reactive:
+    format: "{YYYY-MM-DD}_{Priority}_{Trend}"
+  
+  folder_sprint:
+    format: "Sprint-{ID}"
+
+# Regras de normalização de endpoints
+endpoint_normalization:
+  remove_query_params: true
+  remove_fragments: true
+  remove_trailing_slash: true
+  normalize_api_versions: true
+  api_version_patterns:
+    - "/api/v[0-9]+/"
+    - "/v[0-9]+/"
+

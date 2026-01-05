@@ -1,0 +1,16 @@
+splunk:
+  host: "prd-p-xxxxx.cloud.splunk.com"  # Substitua pelo host real do Splunk Cloud
+  port: 8089  # Para Splunk Cloud, geralmente 8089 ou 443
+  scheme: "https"
+  authentication:
+    # Opcao 1: Token (recomendado)
+    type: "token"
+    token: "${SPLUNK_TOKEN}"
+    
+    # Opcao 2: Username/Password (se token nao estiver disponivel)
+    # type: "basic"
+    # username: "${SPLUNK_USERNAME}"
+    # password: "${SPLUNK_PASSWORD}"
+  default_index: "main"  # Substitua pelo indice real onde estao os logs do PMS
+  timeout: 300
+  verify_ssl: true

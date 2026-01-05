@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/v3/thread-participant-best-profile/24ed5237-c22f-462f-9a59-0b643d9c4ec3",
+    "total_requests": 48,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 2.08,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.200849",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/v3/thread-participant-best-profile/24ed5237-c22f-462f-9a59-0b643d9c4ec3",
+    "total_requests": 48,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 2.08,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.670562",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

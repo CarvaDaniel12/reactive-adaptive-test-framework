@@ -1,0 +1,738 @@
+# Sprint Status - QA Intelligent PMS
+# generated: 2026-01-04
+# last_updated: 2026-01-04
+# project: estrategia preventiva-reativa
+# project_key: qa-intelligent-pms
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-04
+last_updated: 2026-01-05T12:00:00Z
+project: estrategia preventiva-reativa
+project_key: qa-intelligent-pms
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+# IMPLEMENTATION PROGRESS SUMMARY (CORRECTED 2026-01-05):
+# ========================================================
+# 
+# ✅ VERIFIED COMPLETE:
+# Epic 1: DONE (10/10 stories) - Project Foundation
+# Epic 2: DONE (9/9 stories) - Setup Wizard
+# Epic 3: DONE (7/7 stories) - Jira Integration
+# Epic 4: DONE (6/6 stories) - Postman & Testmo Search
+# Epic 5: DONE (8/8 stories) - Workflow Engine
+# Epic 7: DONE (5/5 stories) - Reporting
+#
+# ⚠️ PARTIAL:
+# Epic 6: PARTIAL - API done, qa-pms-tracking is placeholder
+#
+# ✅ VERIFIED COMPLETE:
+# Epic 8: DONE (6/6 stories) - QA Dashboard
+# Epic 9: NOT STARTED - Pattern Detection
+# Epic 10: NOT STARTED - PM Dashboard
+# Epic 11: NOT STARTED - Splunk Integration
+# Epic 12: NOT STARTED - Support Portal
+# Epic 13: NOT STARTED - AI Companion
+#
+# ACTUAL Total Progress: ~51/83 stories (~61%)
+
+development_status:
+  # ============================================
+  # EPIC 1: Project Foundation & Core Infrastructure
+  # Status: DONE - All 10 stories completed
+  # ============================================
+  epic-1: done
+  1-1-initialize-cargo-workspace-structure: done
+  # Evidence: Cargo.toml workspace with 11 crates (qa-pms-core, qa-pms-config, qa-pms-api, etc.)
+  1-2-setup-core-types-and-error-handling: done
+  # Evidence: qa-pms-core/src/ with types/, error.rs, auth.rs, lib.rs
+  1-3-setup-configuration-management-with-encryption: done
+  # Evidence: qa-pms-config/src/ with encryption.rs (AES-256-GCM), settings.rs, user_config.rs
+  1-4-setup-axum-api-server-with-health-endpoint: done
+  # Evidence: qa-pms-api/src/ with main.rs, app.rs, routes/health.rs
+  1-5-setup-neon-postgresql-database-connection: done
+  # Evidence: app.rs with PgPoolOptions, sqlx integration
+  1-6-setup-database-migrations-infrastructure: done
+  # Evidence: migrations/20260103000001_initial_schema.sql, sqlx::migrate! in app.rs
+  1-7-setup-react-frontend-with-vite-and-tailwind-css-v4: done
+  # Evidence: frontend/ with React 19.2, Tailwind CSS 4.1.18, Vite 7.2.4
+  1-8-setup-zustand-store-structure: done
+  # Evidence: frontend/src/stores/ with 6 stores (auth, workflow, dashboard, integration, wizard, layout)
+  1-9-setup-github-actions-ci-pipeline: done
+  # Evidence: .github/workflows/ci.yml with Rust (check, clippy, test) and Frontend (lint, typecheck, build)
+  1-10-setup-openapi-documentation-with-utoipa: done
+  # Evidence: routes/mod.rs with ApiDoc struct, /api/v1/openapi.json endpoint
+  epic-1-retrospective: optional
+
+  # ============================================
+  # EPIC 2: User Configuration & Setup Wizard
+  # Status: DONE - All 9 stories completed
+  # ============================================
+  epic-2: done
+  2-1-setup-wizard-ui-shell-and-navigation: done
+  # Evidence: SetupWizardLayout.tsx, WizardProgress.tsx, WizardNavigation.tsx
+  2-2-user-profile-configuration-step: done
+  # Evidence: UserProfileStep.tsx with display name, jira email, ticket states
+  2-3-jira-integration-credentials-step: done
+  # Evidence: JiraStep.tsx with OAuth fields, connection test, validation
+  2-4-postman-integration-credentials-step: done
+  # Evidence: PostmanStep.tsx with API key, workspace ID
+  2-5-testmo-integration-credentials-step: done
+  # Evidence: TestmoStep.tsx with instance URL, API key
+  2-6-splunk-configuration-step-manual: done
+  # Evidence: SplunkStep.tsx with base URL, default index
+  2-7-configuration-yaml-generation-and-validation: done
+  # Evidence: user_config.rs with UserConfig, to_yaml(), write_to_file(), validate()
+  2-8-setup-wizard-backend-api-endpoints: done
+  # Evidence: routes/setup.rs with /api/v1/setup/* endpoints (profile, test integrations, complete, status)
+  2-9-hybrid-adaptive-layout-foundation: done
+  # Evidence: MainLayout.tsx, Sidebar.tsx (collapsible), Header.tsx, layoutStore.ts
+  epic-2-retrospective: optional
+
+  # ============================================
+  # EPIC 3: Jira Integration & Ticket Management
+  # Status: DONE (7/7 stories)
+  # ============================================
+  epic-3: done
+  3-1-jira-oauth-2-0-pkce-authentication-flow: done
+  # Evidence: qa-pms-jira/src/ with oauth.rs, pkce.rs, token_store.rs, token_refresh.rs
+  # - JiraOAuthClient with build_authorization_url(), exchange_code_for_tokens(), refresh_access_token()
+  # - FileTokenStore with AES-256-GCM encryption
+  # - InMemoryAuthStateStore for PKCE flow
+  3-2-jira-ticket-listing-with-filters: done
+  # Evidence: qa-pms-jira/src/tickets.rs with JiraTicketsClient, list_tickets(), build_jql()
+  # - qa-pms-api/src/routes/tickets.rs with GET /api/v1/tickets endpoint
+  # - frontend/src/pages/Tickets/ with TicketsPage, TicketCard, TicketFilters, EmptyTicketList
+  # - 50+ tests passing (backend), frontend build successful
+  3-3-jira-ticket-detail-view: done
+  # Evidence: qa-pms-jira/src/tickets.rs with get_ticket(), TicketDetail, Comment, Attachment types
+  # - qa-pms-api/src/routes/tickets.rs with GET /api/v1/tickets/:key endpoint
+  # - ADF to HTML/text conversion with adf_to_html(), adf_to_text()
+  # - Gherkin detection with detect_gherkin()
+  # - frontend/src/pages/Tickets/ with TicketDetailPage, TicketMetadata, TicketComments, TicketAttachments
+  # - frontend/src/components/MarkdownRenderer.tsx with Gherkin highlighting
+  # - 40 tests passing (backend), frontend build successful
+  3-4-jira-ticket-status-updates: done
+  # Evidence: qa-pms-jira/src/tickets.rs with get_transitions(), transition_ticket() with exponential backoff
+  # - Transition, TransitionTarget, TransitionsResponse types
+  # - qa-pms-api/src/routes/tickets.rs with GET/POST /api/v1/tickets/:key/transitions endpoints
+  # - frontend/src/hooks/useToast.ts with Zustand store for toast notifications
+  # - frontend/src/components/ui/ToastProvider.tsx with Radix Toast
+  # - frontend/src/pages/Tickets/StatusSelector.tsx with optimistic updates
+  # - 43 tests passing (backend), frontend build successful
+  3-5-integration-health-check-system: done
+  # Evidence: qa-pms-core/src/health.rs with HealthCheck trait, HealthStatus, HealthCheckResult, IntegrationHealth
+  # - qa-pms-core/src/health_store.rs with HealthStore (thread-safe, downtime alerting >2min per NFR-REL-02)
+  # - qa-pms-jira/src/health.rs with JiraHealthCheck (pings /rest/api/3/myself)
+  # - qa-pms-postman/src/health.rs with PostmanHealthCheck (validates API key via /me)
+  # - qa-pms-testmo/src/health.rs with TestmoHealthCheck (validates API key via /api/v1/user)
+  # - qa-pms-api/src/health_scheduler.rs with background scheduler (60s interval, parallel checks)
+  # - qa-pms-api/src/routes/health.rs with GET /api/v1/health/integrations endpoint
+  # - 50+ tests passing (backend)
+  3-6-integration-status-dashboard-component: done
+  # Evidence: frontend/src/components/integrations/ with StatusIndicator, IntegrationStatusCard, IntegrationStatusPanel
+  # - StatusIndicator: Color-coded dot (green/amber/red) with accessible labels
+  # - IntegrationStatusCard: Card with status, response time, last check, error message, detail modal
+  # - IntegrationStatusPanel: Grid layout, 60s polling with React Query, manual refresh button
+  # - SidebarStatusIndicator: Compact status in sidebar with tooltip breakdown
+  # - POST /api/v1/health/integrations/refresh endpoint for manual refresh
+  # - QueryClientProvider configured in App.tsx
+  # - All tests passing, frontend build successful
+  3-7-credential-validation-on-startup: done
+  # Evidence: qa-pms-api/src/startup.rs with StartupValidator (parallel validation, 5s timeout)
+  # - ValidationResult, StartupValidationReport types with OpenAPI schemas
+  # - IntegrationCriticality enum (Critical blocks app, Optional shows warning)
+  # - GET /api/v1/startup/validate endpoint
+  # - frontend/src/components/startup/ with StartupCheck, CriticalErrorScreen
+  # - StartupCheck wraps main app routes, shows loading during validation
+  # - CriticalErrorScreen blocks app with "Fix Settings" link when Jira fails
+  # - Toast notifications for success/warning results
+  # - 27 backend tests passing, frontend build successful
+  epic-3-retrospective: optional
+
+  # ============================================
+  # EPIC 4: Postman & Testmo Search Integration
+  # Status: DONE (6/6 stories)
+  # ============================================
+  epic-4: done
+  4-1-postman-api-client-implementation: done
+  # Evidence: qa-pms-postman/src/ with client.rs, types.rs, error.rs
+  # - PostmanClient with list_workspaces(), list_collections(), get_collection(), search_collections()
+  # - Retry with exponential backoff (max 3 retries, 1s base delay)
+  # - PostmanError enum with is_retryable() for rate limits, network errors, 5xx
+  # - Workspace, Collection, CollectionSummary, CollectionItem, RequestInfo types
+  # - SearchResult with keyword matching and score ranking
+  # - All tests passing
+  4-2-testmo-api-client-implementation: done
+  # Evidence: qa-pms-testmo/src/ with client.rs, types.rs, error.rs
+  # - TestmoClient with list_projects(), list_test_suites(), list_test_cases(), get_test_case()
+  # - search_test_cases() with keyword matching on title, preconditions, steps
+  # - create_test_run() for creating test runs with case IDs
+  # - Retry with exponential backoff (max 3 retries, 1s base delay)
+  # - TestmoError enum with is_retryable() for rate limits, network errors, 5xx
+  # - Project, TestSuite, TestCase, TestStep, TestRun, SearchResult types
+  # - 24 tests passing
+  4-3-contextual-search-on-ticket-selection: done
+  # Evidence: qa-pms-core/src/keywords.rs with KeywordExtractor
+  # - Stop word filtering, min length 3, max 10 keywords
+  # - Frequency-based ranking
+  # - qa-pms-api/src/routes/search.rs with POST /api/v1/search/contextual endpoint
+  # - Parallel search across Postman and Testmo with tokio::join!
+  # - Performance logging for slow searches (>3s per NFR-PERF-03)
+  # - frontend/src/hooks/useContextualSearch.ts with debouncing (300ms)
+  # - frontend/src/hooks/useDebouncedValue.ts helper hook
+  # - frontend/src/components/search/RelatedTests.tsx with progress indicators
+  # - Integrated into TicketDetailPage.tsx
+  # - 16 keyword tests + all backend tests passing, frontend build successful
+  4-4-search-results-display-with-source-badges: done
+  # Evidence: frontend/src/components/search/
+  # - SourceBadge.tsx: Orange for Postman, Blue for Testmo with icons
+  # - SearchResultCard.tsx: Card with badge, title, truncated description, external link
+  # - SearchResultsGrouped.tsx: Groups results by source with headers and counts
+  # - SearchResultsSkeleton.tsx: Loading animation matching card dimensions
+  # - EmptySearchState.tsx: No results message with search tips
+  # - SearchProgress.tsx: Progress indicators for each integration
+  # - All ACs verified: source badges, grouping, links open in new tab, accessibility
+  4-5-testmo-test-run-creation: done
+  # Evidence: crates/qa-pms-api/src/routes/testmo.rs
+  # - POST /api/v1/testmo/runs endpoint
+  # - Run naming convention: QA-{ticket}-{YYYY-MM-DD}
+  # - frontend/src/hooks/useCreateTestRun.ts with mutation
+  # - frontend/src/components/search/CreateTestRunDialog.tsx (Radix Dialog)
+  # - frontend/src/components/search/SelectableSearchResults.tsx
+  # - All 7 ACs verified, tests passing
+  4-6-search-api-endpoints: done
+  # Evidence: crates/qa-pms-api/src/routes/search.rs
+  # - POST /api/v1/search/postman
+  # - POST /api/v1/search/testmo
+  # - POST /api/v1/search/all (parallel)
+  # - POST /api/v1/testmo/runs (Story 4.5)
+  # - All 7 ACs verified, OpenAPI documented
+  epic-4-retrospective: optional
+
+  # ============================================
+  # EPIC 5: Workflow Engine & Guided Testing
+  # Status: BACKLOG
+  # ============================================
+  epic-5: done
+  5-1-workflow-templates-database-schema: done
+  # Evidence: migrations/20260104000001_workflow_schema.sql
+  # - workflow_templates table with steps_json JSONB
+  # - workflow_instances table with status, current_step
+  # - workflow_step_results table with notes, links
+  # - crates/qa-pms-workflow/src/types.rs with WorkflowTemplate, WorkflowInstance, WorkflowStepResult
+  # - crates/qa-pms-workflow/src/repository.rs with CRUD functions
+  # - All 6 ACs verified, 4 tests passing
+  5-2-default-workflow-templates: done
+  # Evidence: crates/qa-pms-workflow/src/seeding.rs
+  # - Bug Fix Template: 5 steps (Reproduce, Investigate, Test Fix, Regression, Document)
+  # - Feature Test Template: 5 steps (Review, Exploratory, Happy Path, Edge Cases, Document)
+  # - Regression Template: 4 steps (Setup, Run Suite, Analyze, Report)
+  # - Idempotent seeding on app startup
+  # - GET /api/v1/workflows/templates, GET /api/v1/workflows/templates/:id
+  # - All 6 ACs verified, 9 tests passing
+  5-3-start-workflow-from-ticket: done
+  # Evidence: crates/qa-pms-api/src/routes/workflows.rs
+  # - POST /api/v1/workflows creates instance
+  # - GET /api/v1/workflows/:id returns details
+  # - GET /api/v1/workflows/active/:ticketId checks existing
+  # - frontend/src/components/workflow/ with TemplateSelectionDialog, WorkflowHeader, CurrentStepCard, StepsSidebar
+  # - frontend/src/pages/Workflows/WorkflowPage.tsx
+  # - Integrated into TicketDetailPage with Start/Resume button
+  # - All 7 ACs verified, frontend builds successfully
+  5-4-workflow-step-progress-ui: done
+  # Evidence: frontend/src/components/workflow/StepsSidebar.tsx
+  # - Expandable completed steps with notes display
+  # - Progress indicator (completed/total)
+  # - Chat bubble icon for steps with notes
+  # - All 8 ACs verified (most from 5.3), frontend builds
+  5-5-complete-workflow-step-with-notes: done
+  # Evidence: crates/qa-pms-api/src/routes/workflows.rs
+  # - POST /api/v1/workflows/:id/steps/:index/complete
+  # - POST /api/v1/workflows/:id/steps/:index/skip
+  # - Frontend hooks: useCompleteStep, useSkipStep
+  # - Auto-advance to next step on completion
+  # - All 7 ACs verified, frontend builds
+  5-6-workflow-pause-and-resume: done
+  5-7-workflow-completion-and-summary: done
+  5-8-workflow-state-persistence: done
+  # Note: qa-pms-workflow crate exists with stub lib.rs
+  epic-5-retrospective: optional
+
+  # ============================================
+  # EPIC 6: Time Tracking & Estimation
+  # Status: BACKLOG
+  # ============================================
+  epic-6: done
+  6-1-time-tracking-database-schema: done
+  6-2-automatic-timer-start-on-workflow-begin: done
+  6-3-real-time-timer-display: done
+  6-4-timer-pause-and-resume-controls: done
+  6-5-time-per-step-tracking: done
+  6-6-time-comparison-with-gap-alerts: done
+  6-7-historical-time-data-storage: done
+  # Evidence: Story 6.7 Implementation Complete
+  # - Migration: 20260105000002_time_aggregates_schema.sql
+  #   - time_daily_aggregates: Daily metrics per user (tickets, time, efficiency by type)
+  #   - time_step_averages: Historical averages per template step
+  #   - time_user_averages: User averages by ticket type with rolling 30-day window
+  #   - time_gap_alerts: Records when actual time exceeds estimates >20%
+  #   - PostgreSQL functions: update_daily_aggregate(), update_step_average(), update_user_average()
+  # - Repository: qa-pms-time/src/aggregates.rs
+  #   - record_workflow_completion() - updates all aggregates when workflow completes
+  #   - get_historical_summary() - summary with breakdown by ticket type
+  #   - get_trend_data() - daily trend for charts
+  #   - get_user_averages() - per-user averages by type
+  #   - get_undismissed_alerts() - gap alerts
+  #   - calculate_efficiency() - real efficiency from aggregates
+  # - API Endpoints (routes/time.rs):
+  #   - GET /api/v1/time/history/:user_id - historical stats
+  #   - GET /api/v1/time/history/:user_id/trend - trend data
+  #   - GET /api/v1/time/history/:user_id/averages - user averages
+  #   - GET /api/v1/time/history/:user_id/alerts - gap alerts
+  #   - POST /api/v1/time/alerts/:alert_id/dismiss - dismiss alert
+  # - Dashboard Updated (routes/dashboard.rs):
+  #   - Uses time_daily_aggregates for real efficiency calculation
+  #   - Falls back to workflow_instances if no aggregates exist
+  # Note: qa-pms-tracking crate exists with stub lib.rs
+  epic-6-retrospective: optional
+
+  # ============================================
+  # EPIC 7: Reporting & Documentation
+  # Status: BACKLOG
+  # ============================================
+  epic-7: done
+  7-1-report-generation-on-workflow-completion: done
+  7-2-report-content-tests-covered-and-strategies: done
+  7-3-report-preview-before-saving: done
+  7-4-report-export-to-markdown-and-html: done
+  7-5-report-history-storage-and-retrieval: done
+  epic-7-retrospective: optional
+
+  # ============================================
+  # EPIC 8: QA Individual Dashboard
+  # Status: DONE (6/6 stories)
+  # ============================================
+  epic-8: done
+  8-1-qa-dashboard-layout-and-navigation: done
+  # Evidence: frontend/src/pages/Dashboard/DashboardPage.tsx
+  # - frontend/src/components/dashboard/ with KPICard, KPICards, PeriodSelector, TrendChart, RecentActivity
+  # - frontend/src/hooks/useDashboardData.ts with React Query
+  # - crates/qa-pms-api/src/routes/dashboard.rs with GET /api/v1/dashboard endpoint
+  # - Responsive grid layout (1/2/4 columns), Recharts for trend visualization
+  # - All 7 ACs verified, frontend and backend compile
+  8-2-tickets-completed-kpi-card: done
+  # Evidence: KPICards.tsx with ticketsCompleted KPI, trend indicator, change %
+  8-3-time-metrics-kpi-cards: done
+  # Evidence: KPICards.tsx with avgTimePerTicket, efficiency (color coded), totalHours
+  # - Color coding: emerald ≥100%, amber 80-100%, red <80%
+  8-4-trend-visualization-chart: done
+  # Evidence: TrendChart.tsx with Recharts AreaChart
+  # - Toggle between tickets/hours metrics
+  # - Responsive container, tooltips, WCAG accessible (role="img", aria-label)
+  8-5-dashboard-period-filters: done
+  # Evidence: PeriodSelector.tsx + DashboardPage.tsx
+  # - URL persistence via useSearchParams
+  # - Filters: 7d, 30d, 90d, 1y (custom date range not implemented - optional)
+  8-6-dashboard-real-time-refresh: done
+  # Evidence: useDashboardData.ts with refetchInterval: 60_000
+  # - DashboardPage.tsx with isFetching indicator, refresh button
+  # - Silent refresh (no page flicker), dataUpdatedAt timestamp
+  epic-8-retrospective: optional
+
+  # ============================================
+  # EPIC 9: Pattern Detection & Proactive Alerts
+  # Status: DONE (5/5 stories)
+  # ============================================
+  epic-9: done
+  9-1-time-excess-pattern-detection: done
+  # Evidence: qa-pms-patterns/src/detector.rs - detect_time_excess()
+  # - Detects steps/tickets taking >50% longer than estimated
+  # - Severity: Info (50-75%), Warning (75-100%), Critical (>100%)
+  # - Stores pattern with affected tickets, suggested actions
+  9-2-consecutive-problem-detection: done
+  # Evidence: qa-pms-patterns/src/detector.rs - detect_consecutive_problems()
+  # - Analyzes last 5 workflows for common keywords in notes
+  # - Detects 3+ tickets with same issue
+  # - Confidence score based on match quality
+  9-3-proactive-alert-generation: done
+  # Evidence: qa-pms-patterns/src/alerts.rs - AlertService
+  # - generate_alert() creates alerts from detected patterns
+  # - Alerts stored in database with severity, suggested actions
+  # - Integrated into workflow completion (routes/workflows.rs)
+  # - Pattern detection runs in background after each workflow completes
+  9-4-alert-display-with-context: done
+  # Evidence: frontend/src/components/alerts/
+  # - AlertBell.tsx: Bell icon with unread count badge
+  # - AlertList.tsx: Displays alerts with severity, tickets, actions
+  # - Integrated into Header.tsx with Radix Popover
+  # - API endpoints: GET /api/v1/alerts, /alerts/count, POST /alerts/:id/read, /dismiss
+  9-5-pattern-history-tracking: done
+  # Evidence: frontend/src/pages/Patterns/PatternsPage.tsx
+  # - Pattern history page with type/severity filters
+  # - Shows affected tickets, confidence score, suggested actions
+  # - API endpoints: GET /api/v1/patterns, /patterns/:id
+  # - Migration: 20260105000001_pattern_detection_schema.sql
+  epic-9-retrospective: optional
+
+  # ============================================
+  # EPIC 10: PM/PO Observability Dashboard
+  # Status: DONE (6/6 stories)
+  # ============================================
+  epic-10: done
+  10-1-pm-dashboard-layout: done
+  # Evidence: crates/qa-pms-api/src/routes/pm_dashboard.rs
+  # - GET /api/v1/pm-dashboard endpoint with period filter
+  # - PMDashboardResponse with summary, bugs, economy, health, endpoints
+  # - frontend/src/pages/PMDashboard/PMDashboardPage.tsx
+  10-2-bugs-discovered-vs-prevented-metrics: done
+  # Evidence: pm_dashboard.rs - get_bugs_metrics()
+  # - Bugs discovered: workflow notes with bug keywords (regex ~* 'bug|error|fail|issue')
+  # - Bugs prevented: pattern detection alerts (warning/critical severity)
+  # - Prevention rate: prevented / (discovered + prevented)
+  # - Change vs previous period
+  10-3-economy-metrics-calculation: done
+  # Evidence: pm_dashboard.rs - get_economy_metrics()
+  # - Hours saved: when actual < estimated
+  # - Cost saved: hours * hourly_rate ($50/hour default)
+  # - Bug prevention value: bugs_prevented * avg_fix_cost ($500 default)
+  # - Total economy estimate
+  10-4-component-health-visualization: done
+  # Evidence: pm_dashboard.rs - get_component_health()
+  # - Extracts components from ticket keys (e.g., PMP-1234 -> PMP)
+  # - Status: healthy (0 bugs), degraded (1-3 bugs), critical (>3 bugs)
+  # - Trend: improving/degrading/stable vs previous period
+  # - Frontend: table with status badges and trend indicators
+  10-5-problematic-endpoints-display: done
+  # Evidence: pm_dashboard.rs - get_problematic_endpoints()
+  # - Extracts API endpoints from workflow notes (regex /api/...)
+  # - Shows issue count, affected tickets, common issues
+  # - Frontend: collapsible cards with endpoint details
+  10-6-dashboard-export-for-meetings: done
+  # Evidence: pm_dashboard.rs - export_pm_dashboard()
+  # - GET /api/v1/pm-dashboard/export returns CSV
+  # - Frontend: Export CSV button with download
+  # - Filename: qa-metrics-{period}-{date}.csv
+  epic-10-retrospective: optional
+
+  # ============================================
+  # EPIC 11: Splunk Log Integration
+  # Status: DONE (3/3 stories)
+  # ============================================
+  epic-11: done
+  11-1-splunk-query-interface: done
+  # Evidence: qa-pms-api/src/routes/splunk.rs
+  # - GET /api/v1/splunk/templates - list templates
+  # - POST /api/v1/splunk/query/prepare - prepare query with placeholders
+  # - POST /api/v1/splunk/query/execute - execute query (simulation)
+  # - frontend/src/pages/Splunk/SplunkPage.tsx - full query interface
+  11-2-splunk-query-templates: done
+  # Evidence: qa-pms-splunk/src/templates.rs
+  # - QueryTemplateService with CRUD operations
+  # - 7 default system templates (errors, performance, user_activity, security)
+  # - Placeholder extraction and filling
+  # - Migration: 20260105000003_splunk_templates_schema.sql
+  11-3-splunk-log-display: done
+  # Evidence: frontend/src/pages/Splunk/SplunkPage.tsx
+  # - Log entries table with timestamp, level, host, message
+  # - Level badges (ERROR, WARN, INFO, DEBUG)
+  # - Mock data generation for demonstration
+  # - Copy query to clipboard functionality
+  epic-11-retrospective: optional
+
+  # ============================================
+  # EPIC 12: Support Portal & Troubleshooting
+  # Status: DONE (5/5 stories)
+  # ============================================
+  epic-12: done
+  12-1-support-dashboard: done
+  # Evidence: qa-pms-api/src/routes/support.rs
+  # - GET /api/v1/support/dashboard - summary stats
+  # - frontend/src/pages/Support/SupportPage.tsx - dashboard tab
+  # - Shows total errors, new, investigating, resolved counts
+  # - Top recurring errors with severity
+  # - Errors by source breakdown
+  12-2-automatic-error-log-capture: done
+  # Evidence: qa-pms-support/src/repository.rs
+  # - create_or_increment_error() - captures errors with context
+  # - POST /api/v1/support/errors - error capture endpoint
+  # - Stores: message, stack_trace, severity, source, user_id
+  # - Session ID, page URL, action, browser/device info
+  # - Context as JSON, occurrence count tracking
+  # - Migration: 20260105000004_support_schema.sql
+  12-3-integration-diagnostic-tools: done
+  # Evidence: qa-pms-support/src/diagnostics.rs
+  # - DiagnosticsService with run_all_diagnostics()
+  # - Checks: Database, Jira, Postman, Testmo
+  # - GET /api/v1/support/diagnostics - full report
+  # - GET /api/v1/support/diagnostics/:integration - single check
+  # - Returns latency, error count, pass/fail, suggestions
+  12-4-knowledge-base-for-common-issues: done
+  # Evidence: qa-pms-support/src/repository.rs + knowledge_base.rs
+  # - CRUD for knowledge_base_entries table
+  # - GET/POST /api/v1/support/kb - list/create entries
+  # - GET/PUT/DELETE /api/v1/support/kb/:id
+  # - POST /api/v1/support/kb/:id/rate - helpful/not helpful
+  # - Search by title, problem, solution
+  # - Default entries for common issues (Jira OAuth, Postman, etc.)
+  12-5-troubleshooting-suggestions: done
+  # Evidence: qa-pms-support/src/knowledge_base.rs
+  # - KnowledgeBaseService.get_suggestions()
+  # - Matches KB entries to error messages
+  # - Diagnostic suggestions based on error patterns
+  # - GET /api/v1/support/errors/:id/suggestions
+  # - Ranked by relevance score
+  epic-12-retrospective: optional
+
+  # ============================================
+  # EPIC 13: AI Companion (Optional - BYOK)
+  # Status: DONE (6/6 stories)
+  # ============================================
+  epic-13: done
+  13-1-ai-provider-configuration-byok: done
+  # Evidence: qa-pms-ai/src/provider.rs
+  # - AIProvider trait with multi-provider support
+  # - OpenAI, Anthropic, Deepseek, z.ai, Custom providers
+  # - GET /api/v1/ai/providers - list available providers
+  # - POST /api/v1/ai/configure - configure with API key
+  # - POST /api/v1/ai/test - test connection
+  # - Migration: 20260105000005_ai_config_schema.sql
+  13-2-semantic-search-enhancement: done
+  # Evidence: qa-pms-ai/src/semantic.rs
+  # - SemanticSearchService with AI analysis
+  # - Extracts key concepts from ticket
+  # - Generates search queries
+  # - POST /api/v1/ai/semantic-search
+  # - Fallback to keyword search when AI unavailable
+  13-3-gherkin-based-test-suggestions: done
+  # Evidence: qa-pms-ai/src/gherkin.rs
+  # - GherkinAnalyzer parses Given/When/Then
+  # - Generates edge cases and negative tests
+  # - POST /api/v1/ai/gherkin
+  # - Fallback parsing when AI unavailable
+  13-4-mini-chatbot-ui: done
+  # Evidence: frontend/src/components/ai/AIChatbot.tsx
+  # - Floating chat button in corner
+  # - Expandable/minimizable chat window
+  # - Message history (session-based)
+  # - Ctrl+K keyboard shortcut
+  13-5-chatbot-contextual-awareness: done
+  # Evidence: qa-pms-ai/src/chat.rs + AIChatbot.tsx
+  # - ChatService with context building
+  # - Current page, ticket, workflow step awareness
+  # - Recent actions tracking
+  # - Suggested questions based on context
+  13-6-ai-graceful-fallback: done
+  # Evidence: qa-pms-api/src/routes/ai.rs
+  # - All AI endpoints fallback gracefully
+  # - semantic_search -> keyword search
+  # - gherkin -> basic parsing
+  # - chat -> "AI not configured" message
+  # - No blocking errors
+  epic-13-retrospective: optional
+
+# ============================================
+# CODE REVIEW ACTION ITEMS
+# Generated: 2026-01-05 (Adversarial Review)
+# Resolver com auxílio do Context7
+# ============================================
+code_review_action_items:
+  # 🔴 HIGH SEVERITY - Must Fix
+  high_severity:
+    - id: CR-HIGH-001
+      status: done  # Fixed 2026-01-05
+      title: "API Key não criptografada no storage"
+      file: "crates/qa-pms-api/src/routes/ai.rs"
+      fix_applied: |
+        - Added get_encryption_key() to use Encryptor from qa-pms-config
+        - configure_ai now encrypts API key before storage
+        - get_decrypted_api_key() retrieves and decrypts from DB
+        - Falls back to env var for backwards compatibility
+
+    - id: CR-HIGH-002
+      status: done  # Fixed 2026-01-05
+      title: "SQL Injection potencial em repository"
+      file: "crates/qa-pms-support/src/repository.rs"
+      fix_applied: |
+        - Added Display impl for ErrorStatus, ErrorSeverity, ErrorSource
+        - Changed format!("{:?}", ...) to .to_string()
+        - Enums now properly serialize to snake_case
+
+    - id: CR-HIGH-003
+      status: done  # Fixed 2026-01-05
+      title: "Missing input validation para API key"
+      file: "crates/qa-pms-api/src/routes/ai.rs"
+      fix_applied: |
+        - Added validate_api_key() function
+        - Checks minimum length (20 chars)
+        - Validates provider-specific prefixes (sk-*, sk-ant-*)
+        - Returns clear error messages
+
+    - id: CR-HIGH-004
+      status: blocked  # Blocked 2026-01-05
+      title: "Missing rate limiting em endpoints AI"
+      file: "crates/qa-pms-api/src/routes/ai.rs"
+      blocker: |
+        tower_governor 0.8 has Axum version incompatibility.
+        Error: `From<GovernorError>` not implemented for Response<Body>
+        TODO: Revisit when axum/tower_governor versions align
+
+  # 🟡 MEDIUM SEVERITY - Should Fix
+  medium_severity:
+    - id: CR-MED-001
+      status: pending
+      title: "Unused import Path"
+      file: "crates/qa-pms-api/src/routes/ai.rs:6"
+      fix: "Remover import não usado"
+
+    - id: CR-MED-002
+      status: pending
+      title: "Silent error handling com unwrap_or_else"
+      file: "crates/qa-pms-api/src/routes/ai.rs:480"
+      description: "UUID parsing errors são silenciados"
+      fix: "Logar warning quando UUID inválido, ou retornar erro"
+
+    - id: CR-MED-003
+      status: pending
+      title: "Hardcoded model em test_connection"
+      file: "crates/qa-pms-ai/src/provider.rs:203"
+      description: "test_connection sempre usa gpt-4o-mini"
+      fix: "Usar o model configurado ou o menor disponível do provider"
+
+    - id: CR-MED-004
+      status: pending
+      title: "Unnecessary raw string hashes"
+      file: "crates/qa-pms-support/src/repository.rs"
+      description: "15+ ocorrências de r#\"...\"# desnecessários"
+      fix: "cargo clippy --fix ou remover manualmente"
+
+    - id: CR-MED-005
+      status: pending
+      title: "Manual Default impls que podem ser derivados"
+      file: "crates/qa-pms-support/src/types.rs"
+      fix: "Usar #[derive(Default)] onde aplicável"
+
+    - id: CR-MED-006
+      status: pending
+      title: "Unused imports em múltiplos arquivos"
+      files:
+        - "crates/qa-pms-ai/src/chat.rs: TicketContext, WorkflowStepContext"
+        - "crates/qa-pms-support/src/repository.rs: ErrorSeverity, ErrorStatus"
+        - "crates/qa-pms-support/src/diagnostics.rs: uuid::Uuid"
+        - "crates/qa-pms-support/src/knowledge_base.rs: KnowledgeBaseEntry"
+      fix: "cargo clippy --fix ou remover manualmente"
+
+    - id: CR-MED-007
+      status: pending
+      title: "Missing error boundary no Chatbot"
+      file: "frontend/src/components/ai/AIChatbot.tsx"
+      description: "Chatbot pode crashar sem feedback ao usuário"
+      fix: "Adicionar React Error Boundary wrapper"
+      context7_query: "How to implement error boundaries in React 18"
+
+    - id: CR-MED-008
+      status: pending
+      title: "No timeout config em fetch"
+      file: "frontend/src/components/ai/AIChatbot.tsx"
+      description: "Frontend fetch sem timeout pode travar UI"
+      fix: "Usar AbortController com timeout de 30s"
+      context7_query: "How to add timeout to fetch requests in JavaScript"
+
+    - id: CR-MED-009
+      status: pending
+      title: "Duplicate DTO→Domain conversion code"
+      file: "crates/qa-pms-api/src/routes/ai.rs"
+      description: "Conversão repetida 3x (chat, semantic, gherkin)"
+      fix: "Extrair para função helper ou impl From trait"
+
+    - id: CR-MED-010
+      status: pending
+      title: "Magic strings para models"
+      file: "crates/qa-pms-ai/src/provider.rs"
+      description: "Model names hardcoded como strings"
+      fix: "Usar constants ou enum variants"
+
+    - id: CR-MED-011
+      status: pending
+      title: "Function with too many arguments"
+      file: "crates/qa-pms-time"
+      description: "Função com 8 args (max recomendado: 7)"
+      fix: "Agrupar em struct de configuração"
+
+    - id: CR-MED-012
+      status: pending
+      title: "Missing documentation em structs"
+      file: "crates/qa-pms-support/src/types.rs"
+      fix: "Adicionar /// doc comments"
+
+  # 🟢 LOW SEVERITY - Nice to Fix
+  low_severity:
+    - id: CR-LOW-001
+      status: pending
+      title: "Inconsistent error messages (PT vs EN)"
+      fix: "Padronizar todos para EN"
+
+    - id: CR-LOW-002
+      status: pending
+      title: "Missing #[must_use] em funções Result"
+      fix: "Adicionar atributo onde apropriado"
+
+    - id: CR-LOW-003
+      status: pending
+      title: "Unused variable warnings"
+      files:
+        - "crates/qa-pms-patterns/src/detector.rs:167 - data"
+        - "crates/qa-pms-support/src/repository.rs:192 - query"
+        - "crates/qa-pms-ai/src/gherkin.rs:199 - content_lower"
+      fix: "Prefixar com _ ou remover"
+
+    - id: CR-LOW-004
+      status: pending
+      title: "Missing unit tests para fallback functions"
+      files:
+        - "crates/qa-pms-ai/src/semantic.rs - fallback_search"
+        - "crates/qa-pms-ai/src/gherkin.rs - fallback_analysis"
+      fix: "Adicionar testes para edge cases"
+
+    - id: CR-LOW-005
+      status: pending
+      title: "Icons inline em AIChatbot"
+      file: "frontend/src/components/ai/AIChatbot.tsx"
+      fix: "Extrair para components/icons/ reutilizáveis"
+
+    - id: CR-LOW-006
+      status: pending
+      title: "Long literals lacking separators"
+      file: "crates/qa-pms-ai/src/provider.rs"
+      description: "context_window: 128000 → 128_000"
+      fix: "Adicionar separadores de milhares"

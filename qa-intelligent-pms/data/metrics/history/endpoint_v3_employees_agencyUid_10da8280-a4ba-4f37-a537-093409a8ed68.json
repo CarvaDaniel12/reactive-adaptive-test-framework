@@ -1,0 +1,18 @@
+[
+  {
+    "endpoint": "/v3/employees?agencyUid=10da8280-a4ba-4f37-a537-093409a8ed68",
+    "total_requests": 34,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 2.94,
+    "is_critical": false,
+    "timestamp": "2026-01-01T13:30:44.322152",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "endpoint": "/api/v3.2/custom-data?leadUid=44d1d381-36d6-4660-aea4-4fdebe327b90",
+    "total_requests": 12,
+    "total_errors": 12,
+    "client_errors_4xx": 12,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2026-01-01T13:30:44.083144",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

@@ -1,0 +1,47 @@
+[package]
+name = "qa-pms-ai"
+description = "AI companion (BYOK) for QA Intelligent PMS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[features]
+default = []
+
+[dependencies]
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Async
+async-trait = { workspace = true }
+tokio = { workspace = true }
+futures = { workspace = true }
+
+# HTTP client
+reqwest = { workspace = true, features = ["stream"] }
+
+# Security
+secrecy = { workspace = true }
+
+# Time & IDs
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+# API Documentation
+utoipa = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[lints]
+workspace = true

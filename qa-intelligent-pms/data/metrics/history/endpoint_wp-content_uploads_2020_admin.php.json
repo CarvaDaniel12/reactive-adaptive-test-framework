@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/wp-content/uploads/2020/admin.php",
+    "total_requests": 11,
+    "total_errors": 11,
+    "client_errors_4xx": 11,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.206140",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/wp-content/uploads/2020/admin.php",
+    "total_requests": 11,
+    "total_errors": 11,
+    "client_errors_4xx": 11,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.675836",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

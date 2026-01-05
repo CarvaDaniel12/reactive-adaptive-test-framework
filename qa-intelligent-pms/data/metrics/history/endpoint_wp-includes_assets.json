@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/wp-includes/assets/",
+    "total_requests": 4,
+    "total_errors": 4,
+    "client_errors_4xx": 4,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.049316",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/wp-includes/assets/",
+    "total_requests": 4,
+    "total_errors": 4,
+    "client_errors_4xx": 4,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.049316",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/v3/threads/74f686e8-fa17-4c5a-bb30-5c1cba1f147c",
+    "total_requests": 34,
+    "total_errors": 14,
+    "client_errors_4xx": 14,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 41.18,
+    "is_critical": false,
+    "timestamp": "2025-12-15T16:10:16.430920",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/v3/threads/74f686e8-fa17-4c5a-bb30-5c1cba1f147c",
+    "total_requests": 34,
+    "total_errors": 14,
+    "client_errors_4xx": 14,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 41.18,
+    "is_critical": false,
+    "timestamp": "2025-12-15T16:10:16.430920",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

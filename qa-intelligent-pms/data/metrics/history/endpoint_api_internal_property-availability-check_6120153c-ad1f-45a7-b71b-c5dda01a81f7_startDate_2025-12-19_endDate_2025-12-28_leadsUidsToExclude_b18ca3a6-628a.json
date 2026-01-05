@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/internal/property-availability-check/6120153c-ad1f-45a7-b71b-c5dda01a81f7?startDate=2025-12-19&endDate=2025-12-28&leadsUidsToExclude=b18ca3a6-628a-4d53-9971-6f01fa077531",
+    "total_requests": 35,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T16:10:16.432933",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/internal/property-availability-check/6120153c-ad1f-45a7-b71b-c5dda01a81f7?startDate=2025-12-19&endDate=2025-12-28&leadsUidsToExclude=b18ca3a6-628a-4d53-9971-6f01fa077531",
+    "total_requests": 35,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T16:10:16.432933",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

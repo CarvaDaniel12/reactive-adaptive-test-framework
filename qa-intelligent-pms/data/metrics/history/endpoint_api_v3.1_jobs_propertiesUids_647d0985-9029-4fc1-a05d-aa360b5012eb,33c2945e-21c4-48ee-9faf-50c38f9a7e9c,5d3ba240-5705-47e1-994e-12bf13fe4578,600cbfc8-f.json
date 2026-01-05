@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.1/jobs?propertiesUids=647d0985-9029-4fc1-a05d-aa360b5012eb,33c2945e-21c4-48ee-9faf-50c38f9a7e9c,5d3ba240-5705-47e1-994e-12bf13fe4578,600cbfc8-f787-4b91-a02d-60563dcc8605,e8272d3e-240c-4af1-a84e-f267d982409b,dee2e1f2-faf1-44e5-a6f2-11041cc19230,f79995ff-7354-4bf8-95ec-cbdc48d95f3e,f3d68092-b600-4ce6-ad7c-d2ce02baf66e,93593b3b-d29d-4a9f-9b35-db90b73e1a9f,e8a9ae09-dc54-4628-8819-a06e0f2916f3&from=2025-10-30&to=2026-04-16",
+    "total_requests": 23,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.210185",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.1/jobs?propertiesUids=647d0985-9029-4fc1-a05d-aa360b5012eb,33c2945e-21c4-48ee-9faf-50c38f9a7e9c,5d3ba240-5705-47e1-994e-12bf13fe4578,600cbfc8-f787-4b91-a02d-60563dcc8605,e8272d3e-240c-4af1-a84e-f267d982409b,dee2e1f2-faf1-44e5-a6f2-11041cc19230,f79995ff-7354-4bf8-95ec-cbdc48d95f3e,f3d68092-b600-4ce6-ad7c-d2ce02baf66e,93593b3b-d29d-4a9f-9b35-db90b73e1a9f,e8a9ae09-dc54-4628-8819-a06e0f2916f3&from=2025-10-30&to=2026-04-16",
+    "total_requests": 23,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.680324",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>QA Intelligent PMS - Concept and Overview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #1a73e8;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34a853;
+            margin-top: 30px;
+            border-bottom: 2px solid #e8eaed;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #ea4335;
+            margin-top: 25px;
+        }
+        h4 {
+            color: #fbbc04;
+            margin-top: 20px;
+        }
+        blockquote {
+            border-left: 4px solid #1a73e8;
+            padding-left: 20px;
+            margin-left: 0;
+            color: #5f6368;
+            font-style: italic;
+        }
+        pre {
+            background-color: #f1f3f4;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background-color: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #e8eaed;
+            margin: 30px 0;
+        }
+        strong {
+            color: #1a73e8;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<h1>QA Intelligent PMS - Concept and Overview</h1>
+
+<blockquote>Collaborative document for strategy discussion and alignment</blockquote>
+
+<hr>
+
+<h2>Executive Summary</h2>
+
+<p>This project aims to <strong>increase QA efficiency</strong> by automating repetitive tasks, freeing time for QAs to focus on <strong>strategic thinking and process improvement</strong>, thereby improving overall <strong>product quality</strong>.</p>
+
+<p>The system connects and streamlines three complementary testing approaches:</p>
+
+<ol>
+    <li><strong>Reusable Test Repository</strong> - Knowledge base that grows and evolves</li>
+    <li><strong>Preventive Strategy</strong> - Prepares tests before code reaches production</li>
+    <li><strong>Reactive Strategy</strong> - Leverages observability metrics to identify weaknesses</li>
+</ol>
+
+<hr>
+
+<h2>Work Cycle</h2>
+
+<h3>How It Works</h3>
+
+<p>The cycle starts with the <strong>preventive strategy</strong>, feeds the reusable test repository, and feeds back from it. On <strong>Friday</strong>, we collect metrics from the observability tool, verify improvements/degradations, and adapt the strategy.</p>
+
+<pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    WEEKLY CYCLE                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  📅 WEEK START (Monday)                                     │
+│  ┌────────────────────────────────────────────┐             │
+│  │  PREVENTIVE STRATEGY                      │             │
+│  │  • Analyzes Jira tickets                 │             │
+│  │  • Prepares tests and documentation      │             │
+│  │  • Organizes in test management tool     │             │
+│  │  • Queries/updates base repository       │             │
+│  └────────────────────────────────────────────┘             │
+│                         ↓                                    │
+│  ┌────────────────────────────────────────────┐             │
+│  │  REUSABLE TEST REPOSITORY                │             │
+│  │  • Receives successful new tests         │             │
+│  │  • Provides existing cases for reuse     │             │
+│  │  • Evolves as knowledge base             │             │
+│  └────────────────────────────────────────────┘             │
+│                         ↓                                    │
+│  📅 MID-WEEK                                                │
+│  ┌────────────────────────────────────────────┐             │
+│  │  REACTIVE STRATEGY                       │             │
+│  │  • Leverages observability metrics       │             │
+│  │  • Identifies major weaknesses           │             │
+│  │  • Creates tests focused on real issues  │             │
+│  │  • Reuses cases from base repository     │             │
+│  └────────────────────────────────────────────┘             │
+│                         ↓                                    │
+│  📅 WEEK END (Friday)                                       │
+│  ┌────────────────────────────────────────────┐             │
+│  │  ANALYSIS AND ADAPTATION                 │             │
+│  │  • Collects observability metrics        │             │
+│  │  • Verifies improvements/degradations    │             │
+│  │  • Adapts strategy for next week         │             │
+│  │  • Merges useful cases to base repo      │             │
+│  └────────────────────────────────────────────┘             │
+│                         ↑                                    │
+│                    (Feedback loop)                           │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+</pre>
+
+<hr>
+
+<h2>Three Testing Approaches</h2>
+
+<h3>1. Reusable Test Repository (Base Repository)</h3>
+
+<p><strong>Definition</strong>: A centralized repository storing successful, well-structured tests that can be reused across different contexts.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+    <li>Prevents work duplication</li>
+    <li>Accumulates knowledge over time</li>
+    <li>Ensures consistency across sprints</li>
+    <li>Serves as knowledge base for both strategies</li>
+</ul>
+
+<p><strong>Mechanics</strong>:</p>
+<ul>
+    <li>Receives successful tests from preventive strategy</li>
+    <li>Receives useful cases from reactive strategy (at sprint end)</li>
+    <li>Provides existing cases for both strategies to query</li>
+    <li>Grows organically, becoming increasingly valuable</li>
+</ul>
+
+<hr>
+
+<h3>2. Preventive Strategy (Before Sprint)</h3>
+
+<p><strong>Definition</strong>: Creates tests BEFORE code reaches production, preparing tests and organized documentation in the test management tool.</p>
+
+<p><strong>When to use</strong>: At week/sprint start, before development begins.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+    <li>Prevents bugs BEFORE they reach production</li>
+    <li>Prepares tests based on planned requirements (Jira tickets)</li>
+    <li>Identifies high-risk tickets before development starts</li>
+    <li>Generates Acceptance Criteria (AC) for tickets missing them</li>
+</ul>
+
+<p><strong>Mechanics</strong>:</p>
+<ul>
+    <li>Analyzes Jira tickets for upcoming sprint</li>
+    <li>Calculates risk scores based on component history and ticket complexity</li>
+    <li>Generates ACs using templates</li>
+    <li>Creates test cases organized by sprint: <code>Sprint-{ID}/{Component}/{Endpoint}/</code></li>
+    <li><strong>Queries base repository</strong> to reuse similar existing cases</li>
+    <li><strong>Updates base repository</strong> with new cases that become reusable knowledge</li>
+</ul>
+
+<p><strong>Flow</strong>:</p>
+<pre>Jira Tickets → Risk Analysis → AC Generation → Test Case Generation → 
+Query Base Repository (reuse if exists) → Create in Sprint Structure → 
+Update Base Repository with new cases</pre>
+
+<hr>
+
+<h3>3. Reactive Strategy (Friday - Observability)</h3>
+
+<p><strong>Definition</strong>: Leverages observability metrics to understand where the major weaknesses are and create tests focused on real problems already existing in production.</p>
+
+<p><strong>When to use</strong>: During the week, especially on Friday, analyzing production metrics.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+    <li>Identifies REAL problems that are happening</li>
+    <li>Focuses testing efforts on endpoints with current issues</li>
+    <li>Creates tests based on production metrics (error rates, traffic patterns)</li>
+    <li>Detects trends and degradation over time</li>
+</ul>
+
+<p><strong>Mechanics</strong>:</p>
+<ul>
+    <li>Analyzes Splunk logs (CSV/JSON exports)</li>
+    <li>Identifies critical endpoints (high error rate, high traffic, degrading trends)</li>
+    <li><strong>Reuses existing cases from base repository</strong> via inheritance</li>
+    <li>Links with Postman to get real request details (bodies, headers, CURL)</li>
+    <li>Creates test cases in reactive repository: <code>Reativo/{Date}_{Priority}_{Trend}/</code></li>
+    <li>At sprint end: merges useful cases back to base repository, deletes temporary reactive structure</li>
+</ul>
+
+<p><strong>Flow</strong>:</p>
+<pre>Splunk Logs → Metrics Analysis → Critical Endpoint Identification → 
+Search Postman for Requests → Query Base Repository (inherit if exists) → 
+Create in Reactive Structure → Link with base cases → 
+Sprint End: Merge useful cases to Base</pre>
+
+<hr>
+
+<h2>QA Control and Automation</h2>
+
+<h3>Integrated TODO/Checklist System</h3>
+
+<p>The system includes an <strong>integrated TODO/checklist</strong> in the web application that guides QAs through all workflow steps.</p>
+
+<p><strong>Features</strong>:</p>
+<ul>
+    <li>Integrated task management in web application</li>
+    <li>Step-by-step guidance for all workflows (preventive and reactive)</li>
+    <li>Clear visibility of current status and next actions</li>
+    <li>Common TODO app patterns (check/uncheck, progress tracking, filtering)</li>
+    <li>Tasks automatically populated based on workflow context</li>
+</ul>
+
+<h3>Optional Automation with Manual Override</h3>
+
+<p>QAs can choose whether to use automation scripts or not, maintaining freedom to take control at any moment.</p>
+
+<p><strong>Characteristics</strong>:</p>
+<ul>
+    <li>QAs can choose to run automation scripts OR perform tasks manually</li>
+    <li>Toggle automation on/off at any workflow step</li>
+    <li>Manual execution options always available alongside automated ones</li>
+    <li>Full control to review, modify, or bypass automated decisions</li>
+    <li>Freedom to take manual control at any moment</li>
+</ul>
+
+<p><strong>Value</strong>:</p>
+<ul>
+    <li><strong>Efficiency</strong>: Automation handles routine work, freeing QA time</li>
+    <li><strong>Strategic Focus</strong>: More time for strategic thinking and process improvement</li>
+    <li><strong>Quality Improvement</strong>: Focus on overall product quality, not repetitive tasks</li>
+    <li><strong>Control</strong>: Never locked into automation - manual override always available</li>
+    <li><strong>Guidance</strong>: Clear checklist ensures nothing is missed while maintaining flexibility</li>
+</ul>
+
+<p><strong>Workflow Example</strong>:</p>
+<ol>
+    <li>System suggests: "Analyze Splunk logs for critical endpoints"</li>
+    <li>QA chooses: Run automated analysis OR upload and analyze manually</li>
+    <li>System suggests: "Create test cases in Testmo"</li>
+    <li>QA chooses: Use automation script OR create manually via UI</li>
+    <li>TODO list updates automatically showing completed and pending tasks</li>
+    <li>QA can always switch between automated and manual modes</li>
+</ol>
+
+<hr>
+
+<h2>Integrations</h2>
+
+<h3>Postman ↔ Testmo</h3>
+
+<p><strong>Problem</strong>: Developers create and test API requests in Postman, but QA needs to create formal test cases in Testmo. Manually duplicating work is error-prone and time-consuming.</p>
+
+<p><strong>Solution</strong>: Automatic linking and synchronization.</p>
+
+<p><strong>Benefits</strong>:</p>
+<ul>
+    <li>Reuses real requests without manually copying bodies/headers</li>
+    <li>Synchronization: changes in Postman reflected in Testmo</li>
+    <li>Accuracy: test cases use exactly what developers validated</li>
+    <li>Automation: creates test cases automatically from Postman data</li>
+</ul>
+
+<hr>
+
+<h2>Metrics and Observability</h2>
+
+<h3>Weekly Analysis (Friday)</h3>
+
+<p>On Friday, the system:</p>
+
+<ol>
+    <li><strong>Collects metrics</strong> from observability tool (Splunk)</li>
+    <li><strong>Analyzes</strong> improvements and degradations compared to previous week</li>
+    <li><strong>Identifies</strong> patterns and trends</li>
+    <li><strong>Adapts</strong> strategy for next week</li>
+    <li><strong>Merges</strong> useful cases from reactive strategy into base repository</li>
+</ol>
+
+<p><strong>Observed indicators</strong>:</p>
+<ul>
+    <li>Error rates per endpoint</li>
+    <li>Traffic patterns</li>
+    <li>Degradation trends</li>
+    <li>Most critical components</li>
+    <li>Effectiveness of preventive tests</li>
+</ul>
+
+<hr>
+
+<h2>Benefits</h2>
+
+<h3>For QA</h3>
+<ul>
+    <li><strong>More time</strong> for strategic thinking and process improvement</li>
+    <li><strong>Accumulated knowledge</strong> through reusable repository</li>
+    <li><strong>Full control</strong> over automation vs manual</li>
+    <li><strong>Clear guidance</strong> through integrated TODO system</li>
+    <li><strong>Streamlined workflow</strong> connecting preventive, reactive, and base repository</li>
+</ul>
+
+<h3>For Organization</h3>
+<ul>
+    <li><strong>Increased efficiency</strong> in test creation and execution</li>
+    <li><strong>Better quality</strong> through more strategic testing</li>
+    <li><strong>Cost reduction</strong> with less rework and production bugs</li>
+    <li><strong>Visibility</strong> through metrics and continuous analysis</li>
+    <li><strong>Continuous improvement</strong> through weekly feedback cycle</li>
+</ul>
+
+<hr>
+
+<h2>Current Status</h2>
+
+<h3>MVP (In Progress ~50%)</h3>
+
+<p><strong>Completed</strong>:</p>
+<ul>
+    <li>✅ Reactive web interface with file processing</li>
+    <li>✅ Postman integration (search, matching)</li>
+    <li>✅ Testmo integration (CRUD, inheritance)</li>
+    <li>✅ Base repository structure</li>
+    <li>✅ Naming conventions system</li>
+    <li>✅ Reactive merge service (structure implemented)</li>
+</ul>
+
+<p><strong>In Progress/Planned</strong>:</p>
+<ul>
+    <li>🚧 Complete preventive service integration</li>
+    <li>🚧 Preventive reuse from Base repository</li>
+    <li>🚧 Complete lifecycle automation</li>
+    <li>🚧 UI enhancements</li>
+    <li>🚧 TODO/checklist system with automation controls</li>
+</ul>
+
+<h3>Roadmap 2026</h3>
+
+<p>See Roadmap 2026 document for complete quarterly planning details.</p>
+
+<hr>
+
+<h2>Collaboration</h2>
+
+<p>This document is open for comments, suggestions, and ideas.</p>
+
+<p><strong>How to contribute</strong>:</p>
+<ul>
+    <li>Add comments directly in the document</li>
+    <li>Suggest workflow improvements</li>
+    <li>Share ideas for metrics and indicators</li>
+    <li>Propose new features</li>
+</ul>
+
+<hr>
+
+<h2>Related Documentation</h2>
+
+<ul>
+    <li>Project Concept - Detailed concepts and complete lifecycle</li>
+    <li>Roadmap 2026 - Detailed quarterly planning</li>
+    <li>Current Status - Current implementation status</li>
+</ul>
+
+<hr>
+
+<p><strong>Last updated</strong>: 2025-01-XX<br>
+<strong>Maintained by</strong>: QA Team<br>
+<strong>Contact</strong>: [Add contact information]</p>
+
+</body>
+</html>

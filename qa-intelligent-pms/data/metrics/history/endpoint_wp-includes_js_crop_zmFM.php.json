@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/wp-includes/js/crop/zmFM.php",
+    "total_requests": 12,
+    "total_errors": 12,
+    "client_errors_4xx": 12,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.205638",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/wp-includes/js/crop/zmFM.php",
+    "total_requests": 12,
+    "total_errors": 12,
+    "client_errors_4xx": 12,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.674828",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

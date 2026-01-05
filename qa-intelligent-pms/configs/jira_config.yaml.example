@@ -1,0 +1,17 @@
+jira:
+  base_url: "https://seu-dominio.atlassian.net"  # Substitua pela URL real do seu Jira
+  api_version: "3"
+  authentication:
+    type: "basic"
+    username: "${JIRA_USERNAME}"  # Seu email do Jira
+    api_token: "${JIRA_API_TOKEN}"  # Token obtido em https://id.atlassian.com/manage-profile/security/api-tokens
+  default_fields:
+    - "summary"
+    - "description"
+    - "components"
+    - "status"
+    - "issuetype"
+    - "assignee"
+    - "reporter"
+  timeout: 30
+

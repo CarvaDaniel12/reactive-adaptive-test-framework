@@ -1,0 +1,28 @@
+# Regras de boas práticas de código Python para este projeto
+
+# 1. Verificação de sintaxe e problemas comuns
+python scripts/check_code.py
+
+# 2. Formatação automática do código
+python scripts/format_code.py
+
+# Alternativamente, utilize Ruff para checagem e formatação:
+ruff check src/ scripts/    # Checagem de código
+ruff format src/ scripts/   # Formatação automática
+
+# 3. Boas práticas recomendadas para Python neste projeto:
+# - Utilize nomes de variáveis e funções descritivos (em inglês, exceto domínios muito específicos).
+# - Siga o padrão PEP 8 para indentação, espaçamento e organização do código.
+# - Prefira f-strings para formatação de strings.
+# - Evite importações não utilizadas.
+# - Separe responsabilidades: cada função deve ter uma única responsabilidade clara.
+# - Adicione docstrings nas funções públicas e módulos.
+# - Trate exceções de forma específica, evitando 'except:' genérico.
+# - Não exponha informações sensíveis em logs ou mensagens de erro.
+# - Use type hints sempre que possível para clareza.
+# - Escreva testes automatizados para funções críticas.
+# - Utilize logging ao invés de print para aplicações maiores.
+# - Mantenha dependências atualizadas e documentadas.
+---
+alwaysApply: true
+---

@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.2/property-calendar/69536519-0bab-4b73-a704-72446bd9ca72?from=2025-12-13&to=2027-12-13&availabilityComments=true",
+    "total_requests": 28,
+    "total_errors": 24,
+    "client_errors_4xx": 24,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 85.71,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.200344",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.2/property-calendar/69536519-0bab-4b73-a704-72446bd9ca72?from=2025-12-13&to=2027-12-13&availabilityComments=true",
+    "total_requests": 28,
+    "total_errors": 24,
+    "client_errors_4xx": 24,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 85.71,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.669554",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

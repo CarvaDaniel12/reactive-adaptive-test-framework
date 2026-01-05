@@ -1,0 +1,36 @@
+[package]
+name = "qa-pms-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Support portal and troubleshooting for QA Intelligent PMS"
+
+[dependencies]
+# Async runtime
+tokio = { workspace = true }
+
+# Database
+sqlx = { workspace = true, features = ["json"] }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Time & IDs
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# API Documentation
+utoipa = { workspace = true }
+
+[lints]
+workspace = true

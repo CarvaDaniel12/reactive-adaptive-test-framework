@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/internal/pricing-rules?propertyUid=be544cf4-a251-4fe7-a3aa-4bc8b5a0a8bb&_limit=10",
+    "total_requests": 24,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 4.17,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.206642",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/internal/pricing-rules?propertyUid=be544cf4-a251-4fe7-a3aa-4bc8b5a0a8bb&_limit=10",
+    "total_requests": 24,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 4.17,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.675836",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.2/rooms?propertyUid=87375ee9-dfd6-44aa-a94a-5d9c8a97afa0",
+    "total_requests": 12,
+    "total_errors": 12,
+    "client_errors_4xx": 2,
+    "server_errors_5xx": 10,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": true,
+    "timestamp": "2025-12-15T16:10:16.434933",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.2/rooms?propertyUid=87375ee9-dfd6-44aa-a94a-5d9c8a97afa0",
+    "total_requests": 12,
+    "total_errors": 12,
+    "client_errors_4xx": 2,
+    "server_errors_5xx": 10,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": true,
+    "timestamp": "2025-12-15T16:10:16.434933",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

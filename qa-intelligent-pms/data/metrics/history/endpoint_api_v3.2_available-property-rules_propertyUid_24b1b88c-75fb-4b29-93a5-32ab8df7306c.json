@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.2/available-property-rules?propertyUid=24b1b88c-75fb-4b29-93a5-32ab8df7306c",
+    "total_requests": 5,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 20.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.049818",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.2/available-property-rules?propertyUid=24b1b88c-75fb-4b29-93a5-32ab8df7306c",
+    "total_requests": 5,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 20.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.049818",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

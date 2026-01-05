@@ -1,0 +1,37 @@
+[package]
+name = "qa-pms-config"
+description = "Configuration management and encryption for QA Intelligent PMS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qa-pms-core = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+aes-gcm = { workspace = true }
+secrecy = { workspace = true }
+zeroize = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+dotenvy = { workspace = true }
+
+# For hex encoding/decoding encryption keys
+hex = "0.4"
+
+# For random nonce generation
+rand = "0.8"
+
+# For finding config directory
+dirs = "5.0"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[lints]
+workspace = true

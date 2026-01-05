@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3/pricing-periods/?propertyUid=eed4f66a-8e4c-4fce-a624-5b2112d7ebf9&from=2025-12-15&to=2026-12-15",
+    "total_requests": 10,
+    "total_errors": 10,
+    "client_errors_4xx": 10,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.046306",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3/pricing-periods/?propertyUid=eed4f66a-8e4c-4fce-a624-5b2112d7ebf9&from=2025-12-15&to=2026-12-15",
+    "total_requests": 10,
+    "total_errors": 10,
+    "client_errors_4xx": 10,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.046306",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

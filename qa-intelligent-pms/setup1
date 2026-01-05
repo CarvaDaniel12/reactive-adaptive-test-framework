@@ -1,0 +1,128 @@
+#!/bin/bash
+# ============================================
+# Setup Completo - QA Intelligent PMS
+# ============================================
+# Este script configura tudo com as credenciais fornecidas
+
+echo "============================================"
+echo "Configurando QA Intelligent PMS"
+echo "============================================"
+echo ""
+
+# Criar .env com credenciais configuradas
+cat > .env << 'ENVEOF'
+# ============================================
+# Configuração de Credenciais - CONFIGURADO
+# ============================================
+# IMPORTANTE: Este arquivo contém credenciais reais!
+# Nunca commite este arquivo no Git!
+
+# ============================================
+# Jira Configuration
+# ============================================
+# Token obtido em: https://id.atlassian.com/manage-profile/security/api-tokens
+# Nome do token: QA-testing-plan-documentation
+JIRA_API_TOKEN=ATATT3xFfGF0g4xIxqiUKPzJFKnjy6G3tuFfCxCKrD3PiucHQPZOC8i9ZB8YqzsrO2s0uVgGLeZVmVEY-NlQ6y0WjIUcHbZJMO_0M_kqjWXDs4AQ2pk9TtsxOdHc8LMadNcI0erKv9Mn5MxbcLdtiXs_56AdYBNd0JvUTMdAV9kAoRm3SB0sEvo=8BB32299
+JIRA_USERNAME=USUARIO_REMOVIDO
+
+# ============================================
+# Splunk Configuration
+# ============================================
+# Usando Username/Password (RECOMENDADO para Splunk Cloud)
+SPLUNK_USERNAME=USUARIO_REMOVIDO
+SPLUNK_PASSWORD=SENHA_REMOVIDA
+
+# Host do Splunk (veja na URL quando acessa: prd-p-xxxxx.cloud.splunk.com)
+# ATENCAO: Preencha com o host real do seu Splunk Cloud
+SPLUNK_HOST=prd-p-xxxxx.cloud.splunk.com
+
+# ============================================
+# Postman Configuration
+# ============================================
+# API Key obtida em: https://www.postman.com/settings/me/api-keys
+POSTMAN_API_KEY=PMAK-693dac1219f799000157fbc7-076135c7992bddb45f9765509dd08354d6
+# ATENCAO: Preencha com o Workspace ID real (veja na URL do workspace)
+POSTMAN_WORKSPACE_ID=seu-workspace-id
+
+# ============================================
+# Optional: Notification Settings
+# ============================================
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+# EMAIL_USERNAME=seu-email@exemplo.com
+# EMAIL_PASSWORD=sua-senha
+ENVEOF
+
+echo "[OK] Arquivo .env criado com credenciais configuradas"
+echo ""
+
+# Configurar Jira
+echo "Configurando Jira..."
+cat > configs/jira_config.yaml << 'JIRAEOF'
+jira:
+  base_url: "https://hostfully.atlassian.net"  # URL do Jira da Hostfully
+  api_version: "3"
+  authentication:
+    type: "basic"
+    username: "${JIRA_USERNAME}"
+    api_token: "${JIRA_API_TOKEN}"
+  default_fields:
+    - "summary"
+    - "description"
+    - "components"
+    - "status"
+    - "issuetype"
+    - "assignee"
+    - "reporter"
+  timeout: 30
+JIRAEOF
+
+echo "[OK] configs/jira_config.yaml configurado"
+echo ""
+
+# Configurar Postman
+echo "Configurando Postman..."
+cat > configs/postman_config.yaml << 'POSTMANEOF'
+postman:
+  api_key: "${POSTMAN_API_KEY}"
+  workspace_id: "seu-workspace-id"  # ATENCAO: Substitua pelo Workspace ID real
+  default_collection_name: "Testes Gerados"
+  base_url_variable: "{{base_url}}"
+  timeout: 30
+POSTMANEOF
+
+echo "[OK] configs/postman_config.yaml configurado"
+echo ""
+
+# Configurar Splunk
+echo "Configurando Splunk..."
+cat > configs/splunk_config.yaml << 'SPLUNKEOF'
+splunk:
+  host: "prd-p-xxxxx.cloud.splunk.com"  # ATENCAO: Substitua pelo host real do Splunk Cloud
+  port: 8089  # Ou 443 se 8089 não funcionar
+  scheme: "https"
+  authentication:
+    type: "basic"
+    username: "${SPLUNK_USERNAME}"
+    password: "${SPLUNK_PASSWORD}"
+  default_index: "main"  # ATENCAO: Substitua pelo indice real onde estao os logs do PMS
+  timeout: 300
+  verify_ssl: true
+SPLUNKEOF
+
+echo "[OK] configs/splunk_config.yaml configurado"
+echo ""
+
+echo "============================================"
+echo "Configuracao concluida!"
+echo "============================================"
+echo ""
+echo "IMPORTANTE: Voce ainda precisa preencher:"
+echo "  1. SPLUNK_HOST: host do Splunk Cloud (veja na URL quando acessa)"
+echo "  2. POSTMAN_WORKSPACE_ID: ID do workspace (veja na URL do Postman)"
+echo "  3. configs/splunk_config.yaml: host e default_index"
+echo ""
+echo "Depois, teste as conexoes:"
+echo "  python scripts/test_jira_connection.py"
+echo "  python scripts/test_postman_connection.py"
+echo "  python scripts/test_splunk_connection.py"
+echo "============================================"

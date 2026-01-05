@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3/property-calendar/89f94e92-6c16-4a68-aeec-1841b989d7d4?from=2025-12-14&to=2026-06-14",
+    "total_requests": 9,
+    "total_errors": 9,
+    "client_errors_4xx": 9,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.212193",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3/property-calendar/89f94e92-6c16-4a68-aeec-1841b989d7d4?from=2025-12-14&to=2026-06-14",
+    "total_requests": 9,
+    "total_errors": 9,
+    "client_errors_4xx": 9,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.682880",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

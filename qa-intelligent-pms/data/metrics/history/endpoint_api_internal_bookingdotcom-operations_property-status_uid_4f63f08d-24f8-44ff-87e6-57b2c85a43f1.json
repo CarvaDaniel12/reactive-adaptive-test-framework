@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/internal/bookingdotcom-operations/property-status?uid=4f63f08d-24f8-44ff-87e6-57b2c85a43f1",
+    "total_requests": 10,
+    "total_errors": 10,
+    "client_errors_4xx": 10,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.206642",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/internal/bookingdotcom-operations/property-status?uid=4f63f08d-24f8-44ff-87e6-57b2c85a43f1",
+    "total_requests": 10,
+    "total_errors": 10,
+    "client_errors_4xx": 10,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.675836",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

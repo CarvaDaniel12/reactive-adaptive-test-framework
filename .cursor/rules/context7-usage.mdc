@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+---
+# Context7 Usage Rule
+
+Always use Context7 MCP when need library/API documentation, code generation, setup or configuration steps without the user having to explicitly ask.
+
+## When to Use Context7
+
+- Looking up API documentation for any library/framework
+- Generating code that uses external libraries
+- Setting up new dependencies or configurations
+- Checking best practices for library usage
+- Verifying correct syntax or method signatures
+- Finding code examples for implementation
+
+## How to Use
+
+1. First call `resolve-library-id` to get the Context7-compatible library ID
+2. Then call `query-docs` with the library ID and your specific question
+
+## Examples
+
+- Setting up pytest fixtures → Query pytest docs
+- Using Click for CLI → Query click docs
+- Async programming with asyncio → Query asyncio docs
+- Any new library being added to the project → Query its docs first

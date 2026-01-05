@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.2/leads/2b992fd1-f65c-4680-b85a-8aa2147d1eda",
+    "total_requests": 16,
+    "total_errors": 7,
+    "client_errors_4xx": 7,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 43.75,
+    "is_critical": false,
+    "timestamp": "2025-12-13T23:36:45.205638",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.2/leads/2b992fd1-f65c-4680-b85a-8aa2147d1eda",
+    "total_requests": 16,
+    "total_errors": 7,
+    "client_errors_4xx": 7,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 43.75,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:50.675332",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

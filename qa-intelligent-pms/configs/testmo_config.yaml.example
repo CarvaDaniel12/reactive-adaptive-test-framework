@@ -1,0 +1,6 @@
+testmo:
+  base_url: "${TESTMO_BASE_URL}"  # URL base do Testmo (ex: https://seu-empresa.testmo.com)
+  api_key: "${TESTMO_API_KEY}"  # API Key do Testmo
+  default_project_id: null  # ID do projeto padrão (opcional)
+  timeout: 30
+

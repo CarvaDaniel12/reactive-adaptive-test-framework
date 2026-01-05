@@ -1,0 +1,75 @@
+[package]
+name = "qa-pms-api"
+description = "Axum web server for QA Intelligent PMS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "qa-pms-api"
+path = "src/main.rs"
+
+[dependencies]
+qa-pms-core = { workspace = true, features = ["axum"] }
+qa-pms-config = { workspace = true }
+qa-pms-jira = { workspace = true }
+qa-pms-postman = { workspace = true }
+qa-pms-testmo = { workspace = true }
+qa-pms-workflow = { workspace = true }
+qa-pms-time = { workspace = true }
+qa-pms-patterns = { workspace = true }
+qa-pms-splunk = { workspace = true }
+qa-pms-support = { workspace = true }
+qa-pms-ai = { workspace = true }
+
+# Async utilities
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+# TODO: Add rate limiting when axum version compatibility is resolved
+# tower_governor = { version = "0.8", features = ["axum"] }
+
+# Secrets
+secrecy = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Time & IDs
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+# Decimal (for proper Decimal to f64 conversion)
+rust_decimal = { version = "1.33", features = ["serde"] }
+
+# API Documentation
+utoipa = { workspace = true }
+# Note: utoipa-swagger-ui requires specific Axum version alignment
+# TODO: Add Swagger UI once version compatibility is resolved
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[lints]
+workspace = true

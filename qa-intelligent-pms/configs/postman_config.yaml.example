@@ -1,0 +1,7 @@
+postman:
+  api_key: "${POSTMAN_API_KEY}"  # Obtido em https://www.postman.com/settings/me/api-keys
+  workspace_id: "seu-workspace-id"  # ID do workspace (veja na URL do Postman: /workspace/xxxxx-xxxxx-xxxxx/)
+  default_collection_name: "Testes Gerados"
+  base_url_variable: "{{base_url}}"
+  timeout: 30
+

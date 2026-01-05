@@ -1,0 +1,47 @@
+# Rust
+/qa-intelligent-pms/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node.js / Frontend
+/qa-intelligent-pms/frontend/node_modules/
+/qa-intelligent-pms/frontend/dist/
+/qa-intelligent-pms/frontend/.vite/
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test coverage
+coverage/
+*.lcov
+
+# Cursor IDE specific (keep rules but ignore cache)
+.cursor/mcp.json
+.cursor/cache/
+
+# BMAD outputs that may contain sensitive data
+# Keep the structure but ignore generated secrets
+_bmad-output/**/*.secret

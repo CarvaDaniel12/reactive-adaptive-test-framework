@@ -1,0 +1,18 @@
+[
+  {
+    "endpoint": "/api/internal/leads-actions-facade/9d8099f4-a7c0-4f9a-aaa9-c28ec0662fc7/pre-approve",
+    "total_requests": 1,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-14T16:55:54.014086",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

@@ -1,0 +1,12 @@
+[package]
+name = "qa-pms-time"
+version = "0.1.0"
+edition = "2021"
+description = "Time tracking for QA PMS workflows"
+
+[dependencies]
+chrono = { workspace = true }
+rust_decimal = { version = "1.33", features = ["serde", "serde-with-str", "db-postgres"] }
+serde = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }

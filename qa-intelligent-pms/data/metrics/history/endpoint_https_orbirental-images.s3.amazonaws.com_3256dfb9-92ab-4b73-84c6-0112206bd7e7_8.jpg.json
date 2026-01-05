@@ -1,0 +1,18 @@
+[
+  {
+    "endpoint": "/https://orbirental-images.s3.amazonaws.com/3256dfb9-92ab-4b73-84c6-0112206bd7e7_8.jpg",
+    "total_requests": 31,
+    "total_errors": 31,
+    "client_errors_4xx": 31,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 100.0,
+    "is_critical": false,
+    "timestamp": "2026-01-01T13:30:44.310523",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

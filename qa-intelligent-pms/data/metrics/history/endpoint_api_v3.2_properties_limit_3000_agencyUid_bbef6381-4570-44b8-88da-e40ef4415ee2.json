@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.2/properties?_limit=3000&agencyUid=bbef6381-4570-44b8-88da-e40ef4415ee2",
+    "total_requests": 33,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 3.03,
+    "is_critical": false,
+    "timestamp": "2025-12-15T16:10:16.432933",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.2/properties?_limit=3000&agencyUid=bbef6381-4570-44b8-88da-e40ef4415ee2",
+    "total_requests": 33,
+    "total_errors": 1,
+    "client_errors_4xx": 1,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 3.03,
+    "is_critical": false,
+    "timestamp": "2025-12-15T16:10:16.432933",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

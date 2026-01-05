@@ -1,0 +1,27 @@
+[package]
+name = "qa-pms-testmo"
+description = "Testmo integration for QA Intelligent PMS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qa-pms-core = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[lints]
+workspace = true

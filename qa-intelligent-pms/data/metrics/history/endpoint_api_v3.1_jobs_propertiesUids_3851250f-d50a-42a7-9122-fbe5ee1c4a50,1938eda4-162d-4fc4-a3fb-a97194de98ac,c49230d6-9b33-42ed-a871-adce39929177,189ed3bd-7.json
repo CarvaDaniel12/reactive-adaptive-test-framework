@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "/api/v3.1/jobs?propertiesUids=3851250f-d50a-42a7-9122-fbe5ee1c4a50,1938eda4-162d-4fc4-a3fb-a97194de98ac,c49230d6-9b33-42ed-a871-adce39929177,189ed3bd-780a-4558-804e-bc2cb7648785,4ce90701-0a3d-4003-b4dc-3f5ad54a76ac,a953343e-4481-4962-9d03-f6096ffa9ceb,56fb3cc4-4653-437d-821d-fcb96a932c16,a9d1b97b-24cf-4562-b066-2e6ee1caff09,fe45e084-d6a7-4827-9596-cde13caf46ef,57caaeb8-1ee9-489d-9543-6282f9cc021d,261dd938-8ab2-4be8-bf20-b89a7ed68b35,162c467a-1f16-4277-b3b2-0fbac5883a31,d1dacef0-e68d-41ef-912f-704d5729e4f3,b6d1d18c-bbcb-41d0-8624-327b68034a22,670d84b1-f4cf-4898-94db-05988191c6f7,9ba6b632-0d18-42ca-a75a-0d1b8c79e705,85523a5b-5d03-4919-aae0-d51be87a2a6d,a69015ba-58f7-4357-a055-7461b72be585,2b68a131-3efd-4a06-a3b4-55bc665be0a4,e773ef7c-10d3-4b5a-89ce-b8178e3357e9,ddd58767-87ca-4a3f-a927-9e033652e8a1,2afeb5eb-d9ae-4459-ae63-eb2232d63f27,f2456546-ade4-4fca-95f0-a28e9507d871,a666e0c4-fc91-4e4f-a8cc-0a79bd172e76,3b8979ad-789d-46b7-8721-31c81b692904,77031b0b-870e-426e-a9f4-66439d7eacdd,003fd879-ac15-47ea-bfc5-cab3264ed22f,ddfe9009-1a04-4df4-9893-8b500b8b3c33,ae2b6f39-7231-4ece-acae-6e3b4d663243,76ef84bc-c5f3-404e-b969-cb1eae349b8b,cf0db801-70c5-4d61-8d88-c8ff964aac04,bcda94b5-c128-4816-a687-3d73782d4326,5e5475d7-53ef-4c9e-b988-06df08da99ec,af7599b0-e445-4129-9da3-1d3f8506081c,1db7d12d-0755-4645-9913-9c1578302b7e,c21670e1-63d3-4bb3-ab26-276daf7c4079&from=2025-12-24&to=2025-12-27",
+    "total_requests": 4,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.054073",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  },
+  {
+    "endpoint": "/api/v3.1/jobs?propertiesUids=3851250f-d50a-42a7-9122-fbe5ee1c4a50,1938eda4-162d-4fc4-a3fb-a97194de98ac,c49230d6-9b33-42ed-a871-adce39929177,189ed3bd-780a-4558-804e-bc2cb7648785,4ce90701-0a3d-4003-b4dc-3f5ad54a76ac,a953343e-4481-4962-9d03-f6096ffa9ceb,56fb3cc4-4653-437d-821d-fcb96a932c16,a9d1b97b-24cf-4562-b066-2e6ee1caff09,fe45e084-d6a7-4827-9596-cde13caf46ef,57caaeb8-1ee9-489d-9543-6282f9cc021d,261dd938-8ab2-4be8-bf20-b89a7ed68b35,162c467a-1f16-4277-b3b2-0fbac5883a31,d1dacef0-e68d-41ef-912f-704d5729e4f3,b6d1d18c-bbcb-41d0-8624-327b68034a22,670d84b1-f4cf-4898-94db-05988191c6f7,9ba6b632-0d18-42ca-a75a-0d1b8c79e705,85523a5b-5d03-4919-aae0-d51be87a2a6d,a69015ba-58f7-4357-a055-7461b72be585,2b68a131-3efd-4a06-a3b4-55bc665be0a4,e773ef7c-10d3-4b5a-89ce-b8178e3357e9,ddd58767-87ca-4a3f-a927-9e033652e8a1,2afeb5eb-d9ae-4459-ae63-eb2232d63f27,f2456546-ade4-4fca-95f0-a28e9507d871,a666e0c4-fc91-4e4f-a8cc-0a79bd172e76,3b8979ad-789d-46b7-8721-31c81b692904,77031b0b-870e-426e-a9f4-66439d7eacdd,003fd879-ac15-47ea-bfc5-cab3264ed22f,ddfe9009-1a04-4df4-9893-8b500b8b3c33,ae2b6f39-7231-4ece-acae-6e3b4d663243,76ef84bc-c5f3-404e-b969-cb1eae349b8b,cf0db801-70c5-4d61-8d88-c8ff964aac04,bcda94b5-c128-4816-a687-3d73782d4326,5e5475d7-53ef-4c9e-b988-06df08da99ec,af7599b0-e445-4129-9da3-1d3f8506081c,1db7d12d-0755-4645-9913-9c1578302b7e,c21670e1-63d3-4bb3-ab26-276daf7c4079&from=2025-12-24&to=2025-12-27",
+    "total_requests": 4,
+    "total_errors": 0,
+    "client_errors_4xx": 0,
+    "server_errors_5xx": 0,
+    "keyword_errors": 0,
+    "error_rate": 0.0,
+    "is_critical": false,
+    "timestamp": "2025-12-15T01:14:46.054073",
+    "avg_response_time": null,
+    "max_response_time": null,
+    "min_response_time": null,
+    "unique_clients": 0,
+    "method": null
+  }
+]

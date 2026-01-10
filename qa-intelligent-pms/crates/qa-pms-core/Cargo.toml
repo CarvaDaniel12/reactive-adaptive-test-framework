@@ -26,6 +26,9 @@ tokio = { workspace = true, features = ["sync"] }
 axum = { workspace = true, optional = true }
 utoipa = { workspace = true, optional = true }
 
+# Database repository implementation
+sqlx = { workspace = true }
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util", "macros"] }
 

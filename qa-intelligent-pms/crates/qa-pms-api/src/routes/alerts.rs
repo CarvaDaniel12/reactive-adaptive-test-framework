@@ -92,9 +92,7 @@ pub struct PatternsResponse {
     ),
     tag = "Alerts"
 )]
-pub async fn get_alerts(
-    State(state): State<AppState>,
-) -> ApiResult<Json<AlertsResponse>> {
+pub async fn get_alerts(State(state): State<AppState>) -> ApiResult<Json<AlertsResponse>> {
     // Query alerts from database
     let rows: Vec<AlertRow> = sqlx::query_as(
         r"
@@ -135,12 +133,11 @@ pub async fn get_alerts(
 pub async fn get_unread_count(
     State(state): State<AppState>,
 ) -> ApiResult<Json<UnreadCountResponse>> {
-    let (count,): (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM alerts WHERE NOT is_read AND NOT is_dismissed",
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to count alerts: {e}")))?;
+    let (count,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM alerts WHERE NOT is_read AND NOT is_dismissed")
+            .fetch_one(&state.db)
+            .await
+            .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to count alerts: {e}")))?;
 
     Ok(Json(UnreadCountResponse { count }))
 }
@@ -192,13 +189,12 @@ pub async fn dismiss_alert(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> ApiResult<Json<serde_json::Value>> {
-    let result = sqlx::query(
-        "UPDATE alerts SET is_dismissed = TRUE, dismissed_at = NOW() WHERE id = $1",
-    )
-    .bind(id)
-    .execute(&state.db)
-    .await
-    .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to dismiss alert: {e}")))?;
+    let result =
+        sqlx::query("UPDATE alerts SET is_dismissed = TRUE, dismissed_at = NOW() WHERE id = $1")
+            .bind(id)
+            .execute(&state.db)
+            .await
+            .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to dismiss alert: {e}")))?;
 
     if result.rows_affected() == 0 {
         return Err(ApiError::NotFound(format!("Alert {id} not found")));
@@ -216,9 +212,7 @@ pub async fn dismiss_alert(
     ),
     tag = "Alerts"
 )]
-pub async fn get_patterns(
-    State(state): State<AppState>,
-) -> ApiResult<Json<PatternsResponse>> {
+pub async fn get_patterns(State(state): State<AppState>) -> ApiResult<Json<PatternsResponse>> {
     let rows: Vec<PatternRow> = sqlx::query_as(
         r"
         SELECT 

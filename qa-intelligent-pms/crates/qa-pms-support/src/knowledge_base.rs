@@ -5,9 +5,7 @@ use uuid::Uuid;
 
 use crate::error::SupportError;
 use crate::repository::SupportRepository;
-use crate::types::{
-    ErrorLog, SuggestionSource, TroubleshootingSuggestion,
-};
+use crate::types::{ErrorLog, SuggestionSource, TroubleshootingSuggestion};
 
 /// Service for knowledge base and troubleshooting suggestions.
 pub struct KnowledgeBaseService {
@@ -16,7 +14,7 @@ pub struct KnowledgeBaseService {
 
 impl KnowledgeBaseService {
     /// Create a new knowledge base service.
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: PgPool) -> Self {
         let repo = SupportRepository::new(pool);
         Self { repo }
@@ -31,7 +29,7 @@ impl KnowledgeBaseService {
 
         // 1. Find matching knowledge base entries
         let kb_entries = self.repo.find_matching_kb_entries(&error.message).await?;
-        
+
         for (idx, entry) in kb_entries.iter().enumerate() {
             let relevance = 100 - (idx as i32 * 15); // Decrease relevance by position
             suggestions.push(TroubleshootingSuggestion {
@@ -174,7 +172,7 @@ impl KnowledgeBaseService {
     }
 
     /// Get default knowledge base entries for seeding.
-    #[must_use] 
+    #[must_use]
     pub fn get_default_entries() -> Vec<crate::types::CreateKbEntryInput> {
         vec![
             crate::types::CreateKbEntryInput {

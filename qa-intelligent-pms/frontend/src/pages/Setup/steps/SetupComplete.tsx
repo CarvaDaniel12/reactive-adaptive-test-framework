@@ -9,19 +9,27 @@ import { useWizardStore } from "@/stores/wizardStore";
 
 type CompletionState = "idle" | "saving" | "success" | "error";
 
+interface SetupValidationError {
+  field: string;
+  message: string;
+  step: string;
+  fixPath: string;
+}
+
 interface CompletionResponse {
   success: boolean;
-  errors?: string[];
+  errors?: SetupValidationError[];
   configuredIntegrations?: string[];
+  configPath?: string;
 }
 
 export function SetupComplete() {
   const navigate = useNavigate();
-  const { completedSteps, skippedSteps, formData, completeWizard, isComplete, reset } =
+  const { completedSteps, skippedSteps, formData, completeWizard, isComplete } =
     useWizardStore();
 
   const [state, setState] = useState<CompletionState>("idle");
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<SetupValidationError[]>([]);
 
   // If already complete, redirect to main app
   useEffect(() => {
@@ -39,6 +47,7 @@ export function SetupComplete() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          profile: formData.profile,
           jira: formData.jira,
           postman: formData.postman,
           testmo: formData.testmo,
@@ -54,16 +63,31 @@ export function SetupComplete() {
 
         // Redirect after success animation
         setTimeout(() => {
-          reset();
           navigate("/", { replace: true });
         }, 2000);
       } else {
         setState("error");
-        setErrors(result.errors || ["Configuration validation failed"]);
+        setErrors(
+          result.errors ?? [
+            {
+              field: "setup",
+              message: "Configuration validation failed",
+              step: "general",
+              fixPath: "/setup",
+            },
+          ]
+        );
       }
     } catch {
       setState("error");
-      setErrors(["Could not connect to server. Please try again."]);
+      setErrors([
+        {
+          field: "connection",
+          message: "Could not connect to server. Please try again.",
+          step: "general",
+          fixPath: "/setup",
+        },
+      ]);
     }
   };
 
@@ -161,10 +185,24 @@ export function SetupComplete() {
             <CrossIcon className="w-5 h-5 text-error-500" />
             <span className="font-medium text-error-700">Setup Failed</span>
           </div>
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="space-y-2">
             {errors.map((error, index) => (
-              <li key={index} className="text-sm text-error-600">
-                {error}
+              <li
+                key={index}
+                className="text-sm text-error-700 flex items-start justify-between gap-3"
+              >
+                <span className="flex-1">
+                  <span className="font-medium">{error.field}</span>: {error.message}
+                </span>
+                {error.fixPath ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(error.fixPath)}
+                    className="text-primary-600 hover:underline whitespace-nowrap"
+                  >
+                    Fix
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -70,6 +70,38 @@ A interface web fornece uma experiência completa e visual para análise reativa
 - **Responsivo**: Layout adaptável
 - **Acessibilidade**: Contrastes adequados e navegação clara
 
+### ✅ Anomaly Detection Dashboard (Story 31.9)
+
+**Funcionalidades:**
+- **Lista de Anomalias**: Visualização completa de anomalias detectadas
+  - Filtros por tipo (6 tipos), severidade (3 níveis), período (24h, 7d, 30d)
+  - Badges de severidade (Critical, Warning, Info)
+  - Timestamps relativos
+  - Cards interativos com hover effects
+
+- **Gráficos de Tendências**:
+  - **Anomaly Frequency Chart**: Line chart mostrando frequência de anomalias ao longo do tempo
+  - **Severity Distribution Chart**: Bar chart mostrando distribuição por severidade
+  - Gráficos responsivos usando Recharts
+
+- **Modal de Detalhes**:
+  - Métricas estatísticas completas (z-score, confidence, deviation)
+  - Entidades afetadas (workflow IDs, ticket IDs)
+  - Passos de investigação sugeridos
+  - Visualização de baseline vs current value
+
+- **Integração**:
+  - Endpoint: `/anomalies` (rota React)
+  - Item de navegação no sidebar "Anomalies"
+  - Atualização automática via React Query
+  - Loading skeletons e empty states
+
+**Tecnologias:**
+- React 19.2 com TypeScript
+- TanStack Query para data fetching
+- Recharts para visualizações
+- Tailwind CSS para estilização
+
 ## Como Executar
 
 ### Iniciar o Servidor

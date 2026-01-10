@@ -6,9 +6,9 @@ use uuid::Uuid;
 
 use crate::error::SupportError;
 use crate::types::{
-    CreateErrorLogInput, CreateKbEntryInput, ErrorLog, ErrorLogFilter, ErrorLogSort, ErrorSource, KnowledgeBaseEntry, Pagination,
-    PaginatedResponse, SourceCount, SupportDashboardSummary, TopError, UpdateErrorStatusInput,
-    UpdateKbEntryInput,
+    CreateErrorLogInput, CreateKbEntryInput, ErrorLog, ErrorLogFilter, ErrorLogSort, ErrorSource,
+    KnowledgeBaseEntry, PaginatedResponse, Pagination, SourceCount, SupportDashboardSummary,
+    TopError, UpdateErrorStatusInput, UpdateKbEntryInput,
 };
 
 /// Repository for support database operations.
@@ -18,7 +18,7 @@ pub struct SupportRepository {
 
 impl SupportRepository {
     /// Create a new repository instance.
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
@@ -48,7 +48,7 @@ impl SupportRepository {
             "#,
         )
         .bind(&input.message)
-        .bind(input.source.to_string())  // CR-HIGH-002: Use Display instead of Debug
+        .bind(input.source.to_string()) // CR-HIGH-002: Use Display instead of Debug
         .fetch_optional(&self.pool)
         .await?;
 
@@ -157,7 +157,9 @@ impl SupportRepository {
         }
         if filter.severity.is_some() {
             params_count += 1;
-            conditions.push(format!("severity = ${params_count}::VARCHAR::error_severity"));
+            conditions.push(format!(
+                "severity = ${params_count}::VARCHAR::error_severity"
+            ));
         }
         if filter.source.is_some() {
             params_count += 1;
@@ -530,8 +532,16 @@ impl SupportRepository {
         .bind(&input.problem)
         .bind(&input.cause)
         .bind(&input.solution)
-        .bind(input.related_errors.map(|v| serde_json::to_value(v).unwrap_or_default()))
-        .bind(input.tags.map(|v| serde_json::to_value(v).unwrap_or_default()))
+        .bind(
+            input
+                .related_errors
+                .map(|v| serde_json::to_value(v).unwrap_or_default()),
+        )
+        .bind(
+            input
+                .tags
+                .map(|v| serde_json::to_value(v).unwrap_or_default()),
+        )
         .fetch_one(&self.pool)
         .await?;
 

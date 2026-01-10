@@ -320,7 +320,10 @@ impl TestmoClient {
                     id: case.id.to_string(),
                     name: case.title.clone(),
                     description: case.preconditions.clone(),
-                    url: format!("{}/projects/{}/cases/{}", self.base_url, project_id, case.id),
+                    url: format!(
+                        "{}/projects/{}/cases/{}",
+                        self.base_url, project_id, case.id
+                    ),
                     score,
                     matches: vec![case.title],
                 });
@@ -437,8 +440,10 @@ mod tests {
 
     #[test]
     fn test_calculate_match_score_multiple_keywords() {
-        let score =
-            calculate_match_score("User Login Test", &["user".to_string(), "login".to_string()]);
+        let score = calculate_match_score(
+            "User Login Test",
+            &["user".to_string(), "login".to_string()],
+        );
         assert!(score >= 2.0);
     }
 
@@ -478,8 +483,10 @@ mod tests {
         assert!(title_score > 0.0);
 
         // Steps should also contribute
-        let step_score =
-            calculate_match_score(&case.steps.as_ref().unwrap()[0].content, &["username".to_string()]) * 0.5;
+        let step_score = calculate_match_score(
+            &case.steps.as_ref().unwrap()[0].content,
+            &["username".to_string()],
+        ) * 0.5;
         assert!(step_score > 0.0);
     }
 }

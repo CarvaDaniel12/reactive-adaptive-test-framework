@@ -1,6 +1,6 @@
 # Story 6.7: Historical Time Data Storage
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -44,258 +44,56 @@ So that dashboards can show trends.
 
 ## Tasks
 
-- [ ] Task 1: Create time_aggregations table
-- [ ] Task 2: Create aggregation service
-- [ ] Task 3: Trigger aggregation on workflow completion
-- [ ] Task 4: Create date range query methods
-- [ ] Task 5: Implement data retention cleanup job
-- [ ] Task 6: Create aggregation summary API endpoint
+- [x] Task 1: Create aggregates tables (daily/step/user + gap alerts)
+- [x] Task 2: Create aggregation service (SQL functions + Rust wrapper)
+- [x] Task 3: Trigger aggregation on workflow completion
+- [x] Task 4: Create date range query methods
+- [ ] Task 5: Implement data retention cleanup scheduling job (function exists; scheduling is follow-up)
+- [x] Task 6: Create historical/aggregations API endpoints (history/trend/averages/alerts)
+
+## Review Follow-ups (AI)
+
+- [x] [AI-Review][MED] Update this story file (tasks/status/dev record) to match the implemented aggregates module and migrations [_bmad-output/implementation-artifacts/6-7-historical-time-data-storage.md]
 
 ## Dev Notes
 
 ### Database Schema
 
-```sql
--- migrations/20260103_create_time_aggregations.sql
-
--- Daily aggregations per user
-CREATE TABLE time_aggregations_daily (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(255),
-    date DATE NOT NULL,
-    ticket_type VARCHAR(100),
-    workflows_completed INTEGER DEFAULT 0,
-    total_active_seconds INTEGER DEFAULT 0,
-    total_estimated_seconds INTEGER DEFAULT 0,
-    total_paused_seconds INTEGER DEFAULT 0,
-    avg_efficiency_ratio DECIMAL(5, 2),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    UNIQUE(user_id, date, ticket_type)
-);
-
--- Step-level aggregations for trend analysis
-CREATE TABLE time_aggregations_step (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(255),
-    template_id UUID REFERENCES workflow_templates(id),
-    step_index INTEGER NOT NULL,
-    period_start DATE NOT NULL,
-    period_end DATE NOT NULL,
-    sample_count INTEGER DEFAULT 0,
-    avg_seconds INTEGER,
-    min_seconds INTEGER,
-    max_seconds INTEGER,
-    std_dev_seconds DECIMAL(10, 2),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    UNIQUE(user_id, template_id, step_index, period_start)
-);
-
--- Indexes
-CREATE INDEX idx_time_agg_daily_user_date 
-    ON time_aggregations_daily(user_id, date DESC);
-CREATE INDEX idx_time_agg_daily_date 
-    ON time_aggregations_daily(date DESC);
-CREATE INDEX idx_time_agg_step_user_template 
-    ON time_aggregations_step(user_id, template_id);
-```
+Implemented in:
+- `migrations/20260104000002_time_tracking_schema.sql` (raw sessions + estimates + pause events)
+- `migrations/20260105000002_time_aggregates_schema.sql` (aggregates + gap alerts + SQL functions)
 
 ### Aggregation Service
 
-```rust
-// crates/qa-pms-workflow/src/time/aggregation.rs
-use chrono::{NaiveDate, Utc};
-
-pub struct TimeAggregationService {
-    pool: PgPool,
-}
-
-impl TimeAggregationService {
-    /// Called when workflow completes
-    pub async fn aggregate_workflow_completion(
-        &self,
-        instance: &WorkflowInstance,
-        sessions: &[TimeSession],
-        template: &WorkflowTemplate,
-    ) -> Result<()> {
-        let date = instance.completed_at
-            .map(|t| t.date_naive())
-            .unwrap_or_else(|| Utc::now().date_naive());
-        
-        let total_active: i32 = sessions.iter()
-            .filter_map(|s| s.total_seconds)
-            .sum();
-        
-        let total_paused: i32 = sessions.iter()
-            .map(|s| s.total_paused_seconds)
-            .sum();
-        
-        let total_estimated: i32 = template.steps.iter()
-            .map(|s| (s.estimated_minutes * 60) as i32)
-            .sum();
-        
-        let efficiency = if total_estimated > 0 {
-            total_active as f64 / total_estimated as f64
-        } else {
-            1.0
-        };
-
-        // Upsert daily aggregation
-        sqlx::query(
-            r#"
-            INSERT INTO time_aggregations_daily 
-                (user_id, date, ticket_type, workflows_completed, 
-                 total_active_seconds, total_estimated_seconds, 
-                 total_paused_seconds, avg_efficiency_ratio)
-            VALUES ($1, $2, $3, 1, $4, $5, $6, $7)
-            ON CONFLICT (user_id, date, ticket_type) DO UPDATE
-            SET workflows_completed = time_aggregations_daily.workflows_completed + 1,
-                total_active_seconds = time_aggregations_daily.total_active_seconds + $4,
-                total_estimated_seconds = time_aggregations_daily.total_estimated_seconds + $5,
-                total_paused_seconds = time_aggregations_daily.total_paused_seconds + $6,
-                avg_efficiency_ratio = (
-                    (time_aggregations_daily.total_active_seconds + $4)::DECIMAL /
-                    NULLIF(time_aggregations_daily.total_estimated_seconds + $5, 0)
-                ),
-                updated_at = NOW()
-            "#,
-        )
-        .bind(&instance.user_id)
-        .bind(date)
-        .bind(&template.ticket_type)
-        .bind(total_active)
-        .bind(total_estimated)
-        .bind(total_paused)
-        .bind(efficiency)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
-
-    /// Get aggregations for date range
-    pub async fn get_daily_aggregations(
-        &self,
-        user_id: Option<&str>,
-        start_date: NaiveDate,
-        end_date: NaiveDate,
-    ) -> Result<Vec<DailyAggregation>> {
-        let query = match user_id {
-            Some(uid) => {
-                sqlx::query_as::<_, DailyAggregation>(
-                    r#"
-                    SELECT * FROM time_aggregations_daily
-                    WHERE user_id = $1 AND date BETWEEN $2 AND $3
-                    ORDER BY date DESC
-                    "#,
-                )
-                .bind(uid)
-                .bind(start_date)
-                .bind(end_date)
-            }
-            None => {
-                sqlx::query_as::<_, DailyAggregation>(
-                    r#"
-                    SELECT * FROM time_aggregations_daily
-                    WHERE date BETWEEN $1 AND $2
-                    ORDER BY date DESC
-                    "#,
-                )
-                .bind(start_date)
-                .bind(end_date)
-            }
-        };
-        
-        query.fetch_all(&self.pool).await.map_err(Into::into)
-    }
-
-    /// Get trend data for dashboard
-    pub async fn get_trend_data(
-        &self,
-        user_id: &str,
-        days: i32,
-    ) -> Result<Vec<TrendDataPoint>> {
-        sqlx::query_as::<_, TrendDataPoint>(
-            r#"
-            SELECT 
-                date,
-                SUM(workflows_completed) as workflows,
-                SUM(total_active_seconds) / 3600.0 as hours,
-                AVG(avg_efficiency_ratio) as efficiency
-            FROM time_aggregations_daily
-            WHERE user_id = $1 
-              AND date >= CURRENT_DATE - $2::INTEGER
-            GROUP BY date
-            ORDER BY date
-            "#,
-        )
-        .bind(user_id)
-        .bind(days)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(Into::into)
-    }
-}
-
-#[derive(Debug, Serialize, sqlx::FromRow)]
-#[serde(rename_all = "camelCase")]
-pub struct TrendDataPoint {
-    pub date: NaiveDate,
-    pub workflows: i64,
-    pub hours: f64,
-    pub efficiency: Option<f64>,
-}
-```
+Implemented in `crates/qa-pms-time/src/aggregates.rs`:
+- `record_workflow_completion()` calls SQL functions (`update_*`) to keep aggregates in sync
+- query helpers: `get_historical_summary`, `get_trend_data`, `get_user_averages`, `get_daily_aggregates`, `get_undismissed_alerts`
 
 ### Data Retention Job
 
-```rust
-// crates/qa-pms-api/src/jobs/cleanup.rs
-pub async fn cleanup_old_time_data(pool: &PgPool) -> Result<u64> {
-    // Keep raw sessions for 30 days per NFR-REL-04
-    let deleted = sqlx::query(
-        r#"
-        DELETE FROM time_sessions
-        WHERE ended_at < NOW() - INTERVAL '30 days'
-          AND is_active = false
-        "#,
-    )
-    .execute(pool)
-    .await?
-    .rows_affected();
+Implemented in DB + Rust wrapper:
+- `migrations/20260105000002_time_aggregates_schema.sql` defines `cleanup_old_aggregates()`
+- `crates/qa-pms-time/src/aggregates.rs` provides `cleanup_old_data()`
 
-    tracing::info!(deleted = deleted, "Cleaned up old time sessions");
-    
-    Ok(deleted)
-}
-```
+Scheduling the cleanup periodically is tracked as a follow-up (Task 5).
 
 ### API Endpoint
 
-```rust
-// GET /api/v1/time/aggregations
-#[utoipa::path(
-    get,
-    path = "/api/v1/time/aggregations",
-    params(
-        ("start_date" = NaiveDate, Query, description = "Start date"),
-        ("end_date" = NaiveDate, Query, description = "End date"),
-        ("user_id" = Option<String>, Query, description = "Filter by user"),
-    ),
-    responses(
-        (status = 200, description = "Time aggregations", body = Vec<DailyAggregation>),
-    ),
-    tag = "time"
-)]
-pub async fn get_aggregations(/* ... */) -> Result<Json<Vec<DailyAggregation>>, ApiError> {
-    // Implementation
-}
-```
+Implemented endpoints:
+- `GET /api/v1/time/history/{user_id}` (summary)
+- `GET /api/v1/time/history/{user_id}/trend`
+- `GET /api/v1/time/history/{user_id}/averages`
+- `GET /api/v1/time/history/{user_id}/alerts`
 
 ### References
 
 - [Source: epics.md#Story 6.7]
 - [NFR: NFR-REL-04 - 30 days data retention]
 - [Dependency: Epic 8 - QA Individual Dashboard]
+
+## Completion Notes List
+
+- Aggregates schema implemented via `time_daily_aggregates`, `time_step_averages`, `time_user_averages`, `time_gap_alerts`
+- Aggregation logic implemented via PostgreSQL functions (`update_daily_aggregate`, `update_step_average`, `update_user_average`)
+- Aggregation is triggered on workflow completion (`POST /api/v1/workflows/{id}/complete`)
+- Dashboards can query trends/summary via `/api/v1/dashboard` and `/api/v1/time/history/*`

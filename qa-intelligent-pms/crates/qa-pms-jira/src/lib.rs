@@ -25,7 +25,8 @@ pub use health::JiraHealthCheck;
 pub use oauth::{AuthorizationState, JiraOAuthClient, JiraOAuthConfig, TokenResponse};
 pub use tickets::{
     Attachment, Comment, CommentContainer, JiraTicket, JiraTicketsClient, SearchResponse,
-    TicketDetail, TicketDetailFields, TicketFields, TicketFilters, Transition, TransitionTarget,
+    SprintFilter, TicketDetail, TicketDetailFields, TicketFields, TicketFilters, Transition,
+    TransitionTarget,
 };
 pub use token_refresh::spawn_token_refresh_task;
 pub use token_store::{FileTokenStore, InMemoryAuthStateStore};

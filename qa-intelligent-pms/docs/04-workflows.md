@@ -405,6 +405,35 @@ Todos os fluxos devem tratar erros graciosamente:
 - Processamento assíncrono para operações longas
 - Limites de paginação para grandes volumes
 
+### Detecção de Anomalias (Story 31.9)
+
+O sistema detecta automaticamente anomalias durante a execução de workflows.
+
+**Fluxo de Detecção:**
+1. Após workflow completion, sistema carrega baseline histórico (últimas 30 execuções)
+2. Calcula métricas estatísticas (média, desvio padrão) para execution time
+3. Compara execução atual com baseline usando z-score
+4. Detecta anomalias se:
+   - Performance degradation: execution time > baseline + 2σ
+   - Unusual execution time: |z-score| > 2.0
+5. Gera alertas se anomalias forem detectadas
+6. Armazena anomalias no banco de dados para análise posterior
+
+**Tipos de Anomalias:**
+- `PerformanceDegradation`: Tempo de execução significativamente acima do baseline
+- `UnusualExecutionTime`: Tempo de execução incomum (muito rápido ou muito lento)
+
+**Severidade:**
+- `Info`: Z-score entre 2.0 e 2.5
+- `Warning`: Z-score entre 2.5 e 3.0
+- `Critical`: Z-score > 3.0
+
+**Integração:**
+- Detecção automática no evento `complete_workflow`
+- Executado em background (non-blocking)
+- Alertas enviados via sistema de alertas com rate limiting
+- Dashboard UI disponível em `/anomalies`
+
 ### Segurança
 
 - Credenciais nunca em logs

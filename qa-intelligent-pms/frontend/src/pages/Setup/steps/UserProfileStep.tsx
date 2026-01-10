@@ -54,6 +54,7 @@ export function UserProfileStep() {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your name"
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg
+              text-neutral-900 placeholder:text-neutral-400
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               transition-colors"
           />
@@ -73,6 +74,7 @@ export function UserProfileStep() {
             onChange={(e) => setJiraEmail(e.target.value)}
             placeholder="your.email@company.com"
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg
+              text-neutral-900 placeholder:text-neutral-400
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               transition-colors"
           />

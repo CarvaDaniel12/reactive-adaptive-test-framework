@@ -36,13 +36,13 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-04
-last_updated: 2026-01-05T12:00:00Z
+last_updated: 2026-01-10T01:49:11Z
 project: estrategia preventiva-reativa
 project_key: qa-intelligent-pms
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
-# IMPLEMENTATION PROGRESS SUMMARY (CORRECTED 2026-01-05):
+# IMPLEMENTATION PROGRESS SUMMARY (UPDATED 2026-01-10):
 # ========================================================
 # 
 # ✅ VERIFIED COMPLETE:
@@ -51,20 +51,25 @@ story_location: _bmad-output/implementation-artifacts
 # Epic 3: DONE (7/7 stories) - Jira Integration
 # Epic 4: DONE (6/6 stories) - Postman & Testmo Search
 # Epic 5: DONE (8/8 stories) - Workflow Engine
+# Epic 6: DONE (7/7 stories) - Time Tracking (incl. qa-pms-tracking wrapper)
 # Epic 7: DONE (5/5 stories) - Reporting
-#
-# ⚠️ PARTIAL:
-# Epic 6: PARTIAL - API done, qa-pms-tracking is placeholder
-#
-# ✅ VERIFIED COMPLETE:
 # Epic 8: DONE (6/6 stories) - QA Dashboard
-# Epic 9: NOT STARTED - Pattern Detection
-# Epic 10: NOT STARTED - PM Dashboard
-# Epic 11: NOT STARTED - Splunk Integration
-# Epic 12: NOT STARTED - Support Portal
-# Epic 13: NOT STARTED - AI Companion
+# Epic 9: DONE (5/5 stories) - Pattern Detection & Proactive Alerts
+# Epic 10: DONE (6/6 stories) - PM Dashboard
+# Epic 11: DONE (3/3 stories) - Splunk Integration
+# Epic 12: DONE (5/5 stories) - Support Portal
+# Epic 13: DONE (6/6 stories) - AI Companion (Optional - BYOK)
 #
-# ACTUAL Total Progress: ~51/83 stories (~61%)
+# 📋 IN PROGRESS / READY FOR DEV:
+# Epic 14: BACKLOG (8/8 stories) - Rust Implementation Improvements (Story files created)
+# Epic 15: BACKLOG (12/12 stories) - Authentication & Authorization (9 story files created)
+#
+# 🆕 PLANNED:
+# Epic 21: BACKLOG (9/9 stories) - Developer Experience
+# Epic 31: IN-PROGRESS (1/10 stories) - AI Enhanced Automation
+#   - ✅ 31.9: Anomaly Detection in Workflows (DONE)
+#
+# ACTUAL Total Progress: 83/83 core stories (100%) + 39 new stories (Epic 14, 15, 21, 31)
 
 development_status:
   # ============================================
@@ -286,7 +291,7 @@ development_status:
   5-6-workflow-pause-and-resume: done
   5-7-workflow-completion-and-summary: done
   5-8-workflow-state-persistence: done
-  # Note: qa-pms-workflow crate exists with stub lib.rs
+  # Note: qa-pms-workflow crate is implemented and used by the API routes and frontend workflow UI.
   epic-5-retrospective: optional
 
   # ============================================
@@ -324,7 +329,7 @@ development_status:
   # - Dashboard Updated (routes/dashboard.rs):
   #   - Uses time_daily_aggregates for real efficiency calculation
   #   - Falls back to workflow_instances if no aggregates exist
-  # Note: qa-pms-tracking crate exists with stub lib.rs
+  # Note: qa-pms-tracking crate is implemented and used as a wrapper around qa-pms-time functions.
   epic-6-retrospective: optional
 
   # ============================================
@@ -519,7 +524,7 @@ development_status:
   # Status: DONE (6/6 stories)
   # ============================================
   epic-13: done
-  13-1-ai-provider-configuration-byok: done
+  13-1-ai-provider-configuration-byok: review
   # Evidence: qa-pms-ai/src/provider.rs
   # - AIProvider trait with multi-provider support
   # - OpenAI, Anthropic, Deepseek, z.ai, Custom providers
@@ -561,6 +566,124 @@ development_status:
   # - No blocking errors
   epic-13-retrospective: optional
 
+  # ============================================
+  # EPIC 14: Rust Implementation Improvements
+  # Status: BACKLOG - Story files created (ready-for-dev)
+  # ============================================
+  epic-14: backlog
+  14-1-graceful-shutdown-and-signal-handling: review
+  # Story file exists: 14-1-graceful-shutdown-signal-handling.md
+  # Implementation complete: All tasks done, 11 tests passing
+  14-2-request-id-middleware-for-correlation: review
+  # Story file exists: 14-2-request-id-middleware-for-correlation.md
+  # Implementation complete: All tasks done, 10 tests passing (4 unit + 6 integration)
+  14-3-prometheus-metrics-integration: ready-for-dev
+  # Story file exists: 14-3-prometheus-metrics-integration.md
+  14-4-in-memory-cache-layer-with-moka: ready-for-dev
+  # Story file exists: 14-4-in-memory-cache-layer-with-moka.md
+  14-5-rate-limiting-with-tower-governor: ready-for-dev
+  # Story file exists: 14-5-rate-limiting-with-tower-governor.md
+  14-6-opentelemetry-distributed-tracing: ready-for-dev
+  # Story file exists: 14-6-opentelemetry-distributed-tracing.md
+  14-7-cli-admin-tool: ready-for-dev
+  # Story file exists: 14-7-cli-admin-tool.md
+  14-8-integration-tests-with-testcontainers: ready-for-dev
+  # Story file exists: 14-8-integration-tests-with-testcontainers.md
+  epic-14-retrospective: optional
+
+  # ============================================
+  # EPIC 15: Authentication & Authorization
+  # Status: BACKLOG - Some story files created
+  # ============================================
+  epic-15: backlog
+  15-1-jwt-authentication-with-refresh-tokens: ready-for-dev
+  # Story file exists: 15-1-jwt-authentication.md
+  15-2-oauth-2-0-pkce-openid-connect: ready-for-dev
+  # Story file exists: 15-2-oauth-2-0-pkce-authentication.md
+  15-3-role-based-access-control-rbac: ready-for-dev
+  # Story file exists: 15-3-role-based-access-control-rbac.md
+  15-4-multi-factor-authentication-mfa: ready-for-dev
+  # Story file exists: 15-multi-factor-authentication/15-4-multi-factor-authentication-mfa.md
+  15-5-password-policies-and-reset-flows: ready-for-dev
+  # Story file exists: 15-5-password-policies-and-reset-flows.md
+  15-6-session-management-and-refresh-tokens: ready-for-dev
+  # Story file exists: 15-6-session-management.md
+  15-7-api-key-authentication-for-service-accounts: ready-for-dev
+  # Story file exists: 15-7-api-key-authentication.md
+  15-8-permission-system-with-granular-controls: ready-for-dev
+  # Story file exists: 15-8-permission-system-with-granular-controls.md
+  15-9-admin-dashboard-for-user-management: ready-for-dev
+  # Story file exists: 15-9-admin-dashboard-for-user-management.md
+  15-10-audit-trail-for-auth-events: ready-for-dev
+  # Story file exists: 15-10-audit-trail.md
+  15-11-rate-limiting-for-auth-endpoints: ready-for-dev
+  # Story file exists: 15-11-rate-limiting.md
+  15-12-security-headers-and-csrf-protection: ready-for-dev
+  # Story file exists: 15-12-security-headers-and-csrf-protection.md
+  epic-15-retrospective: optional
+
+  # ============================================
+  # EPIC 21: Developer Experience
+  # Status: BACKLOG - Story files not created yet
+  # Note: Epic starts with Story 21.2 (no 21.1 found)
+  # ============================================
+  epic-21: backlog
+  21-2-code-generation-templates-for-workflows: ready-for-dev
+  # Story file exists: 21-2-code-generation-templates-for-workflows.md
+  21-3-mock-data-generators-for-testing: ready-for-dev
+  # Story file exists: 21-3-mock-data-generators-for-testing.md
+  21-4-ide-plugins-vs-code-extension: ready-for-dev
+  # Story file exists: 21-4-ide-plugins-vs-code-extension.md
+  21-5-interactive-api-playground: ready-for-dev
+  # Story file exists: 21-5-interactive-api-playground.md
+  21-6-hot-reload-for-configuration-changes: ready-for-dev
+  # Story file exists: 21-6-hot-reload-for-configuration-changes.md
+  21-7-development-mode-with-enhanced-logging: ready-for-dev
+  # Story file exists: 21-7-development-mode-with-enhanced-logging.md
+  21-8-debug-tools-and-profiling-helpers: ready-for-dev
+  # Story file exists: 21-8-debug-tools-and-profiling-helpers.md
+  21-9-code-snippet-library: ready-for-dev
+  # Story file exists: 21-9-code-snippet-library.md
+  21-10-developer-portal-with-interactive-docs: ready-for-dev
+  # Story file exists: 21-10-developer-portal-with-interactive-docs.md
+  epic-21-retrospective: optional
+
+  # ============================================
+  # EPIC 31: AI Enhanced Automation
+  # Status: IN-PROGRESS - 1/10 stories completed
+  # ============================================
+  epic-31: in-progress
+  31-1-auto-test-generation-from-tickets: in-progress
+  # Story file exists: 31-1-auto-test-generation-from-tickets.md
+  # Started: 2026-01-10
+  # Task 3 completed (2026-01-10): Test case data model in qa-pms-core
+  # - TestCase, TestCaseId, TestPriority, TestCaseType, TestRepository, TestCaseStatus types
+  # - Database migration: 20260110140000_create_test_cases_table.sql
+  # - TestCaseRepository with CRUD operations
+  # - Validation and helper methods (validate, touch)
+  # - All 10 unit tests passing, compilation successful
+  31-2-bug-prediction-ml-model: ready-for-dev
+  # Story file exists: 31-2-bug-prediction-ml-model.md
+  31-3-smart-test-prioritization: ready-for-dev
+  # Story file exists: 31-3-smart-test-prioritization.md
+  31-4-root-cause-analysis-assistant: ready-for-dev
+  # Story file exists: 31-4-root-cause-analysis-assistant.md
+  31-5-automated-report-generation: ready-for-dev
+  # Story file exists: 31-5-automated-report-generation.md
+  31-6-risk-scoring-algorithms: ready-for-dev
+  # Story file exists: 31-6-risk-scoring-algorithms.md
+  31-7-test-coverage-recommendations: ready-for-dev
+  # Story file exists: 31-7-test-coverage-recommendations.md
+  31-8-natural-language-query-interface: ready-for-dev
+  # Story file exists: 31-8-natural-language-query-interface.md
+  31-9-anomaly-detection-in-workflows: done
+  # Story file exists: 31-9-anomaly-detection-in-workflows.md
+  # Completed: 2026-01-10
+  # All tasks (1-9) completed: Anomaly detector, baseline tracking, algorithms, alerts, storage, API endpoints, dashboard UI, integration, tests
+  31-10-ai-driven-optimization-suggestions: ready-for-dev
+  # Story file exists: 31-10-ai-driven-optimization-suggestions.md
+  epic-31-retrospective: optional
+
 # ============================================
 # CODE REVIEW ACTION ITEMS
 # Generated: 2026-01-05 (Adversarial Review)
@@ -599,13 +722,73 @@ code_review_action_items:
         - Returns clear error messages
 
     - id: CR-HIGH-004
-      status: blocked  # Blocked 2026-01-05
+      status: pending
       title: "Missing rate limiting em endpoints AI"
       file: "crates/qa-pms-api/src/routes/ai.rs"
-      blocker: |
-        tower_governor 0.8 has Axum version incompatibility.
-        Error: `From<GovernorError>` not implemented for Response<Body>
-        TODO: Revisit when axum/tower_governor versions align
+      note: |
+        - Not implemented yet (dependency is currently commented out)
+        - Per tower-governor docs, Axum integration can use GovernorLayer and/or custom error_handler
+        - Prefer per-route limits for /api/v1/ai/* endpoints
+
+    - id: CR-HIGH-005
+      status: pending
+      title: "AI config storage broken: api_key_encrypted BYTEA vs Encryptor returns hex string"
+      files:
+        - "migrations/20260105000005_ai_config_schema.sql"
+        - "crates/qa-pms-api/src/routes/ai.rs"
+      evidence: |
+        - DB schema: ai_configs.api_key_encrypted is BYTEA
+        - Encryptor.encrypt() returns hex-encoded String
+        - routes/ai.rs binds api_key_encrypted as Option<String> in SELECT and binds String in INSERT
+        - This will fail at runtime (type mismatch) and may silently break AI features
+      fix: |
+        - Align DB type to TEXT (store hex string), OR change Encryptor to return Vec<u8> and store BYTEA
+        - Update queries to use correct SQLx types (Option<String> for TEXT or Option<Vec<u8>> for BYTEA)
+
+    - id: CR-HIGH-006
+      status: pending
+      title: "AI BYOK is not per-user: uses user_id NULL and ON CONFLICT(user_id) won't upsert"
+      files:
+        - "crates/qa-pms-api/src/routes/ai.rs"
+        - "migrations/20260105000005_ai_config_schema.sql"
+      evidence: |
+        - routes/ai.rs uses user_id IS NULL everywhere (singleton/global config)
+        - user_id has UNIQUE constraint; NULL does not conflict in Postgres unique indexes
+        - INSERT ... ON CONFLICT(user_id) DO UPDATE will not fire for NULL and can create multiple rows
+      fix: |
+        - Make AI config per authenticated user_id (preferred), OR enforce a true singleton row (e.g., unique index on (COALESCE(user_id, '000...')))
+        - Update SELECT/UPDATE queries accordingly
+
+    - id: CR-HIGH-007
+      status: pending
+      title: "Missing AI Settings UI (Provider/Model/API key management) despite API endpoints"
+      files:
+        - "frontend/src/components/ai/AIChatbot.tsx"
+        - "crates/qa-pms-api/src/routes/ai.rs"
+      evidence: |
+        - Frontend only calls /api/v1/ai/status + /ai/chat; no UI to call /ai/providers /ai/configure /ai/test /ai/disable
+        - AIChatbot tells user to configure in Settings, but no Settings page exists
+      fix: |
+        - Add minimal AI settings page (provider list + model select + masked API key input + test + save + disable)
+        - Or integrate into existing Setup wizard (optional step) if that matches product flow
+
+    - id: CR-HIGH-008
+      status: done  # Fixed 2026-01-07
+      title: "Setup integration tests are stubbed (Postman/Testmo) despite existing crates"
+      files:
+        - "crates/qa-pms-api/src/routes/setup.rs"
+      evidence: |
+        - routes/setup.rs: test_postman and test_testmo endpoints still simulate success and have TODOs
+        - This undermines setup validation UX and contradicts integration readiness expectations
+      fix: |
+        - Wire setup test endpoints to qa-pms-postman and qa-pms-testmo clients for real validation
+        - Return concrete error messages + suggestions
+      fix_applied: |
+        - Replaced simulated Postman/Testmo success with real health checks:
+          - Postman: qa_pms_postman::PostmanHealthCheck (/me)
+          - Testmo: qa_pms_testmo::TestmoHealthCheck (/api/v1/user)
+        - Store credentials in setup state only when health check is Online/Degraded
+        - Return response-time based success messages and propagate integration error_message on failure
 
   # 🟡 MEDIUM SEVERITY - Should Fix
   medium_severity:
@@ -657,6 +840,73 @@ code_review_action_items:
       status: deferred  # Documentation pass later
       title: "Missing documentation em structs"
 
+    - id: CR-MED-013
+      status: done  # Fixed 2026-01-07
+      title: "Setup complete flow doesn't run integration validation in parallel (AC mismatch for Story 2.7)"
+      files:
+        - "crates/qa-pms-api/src/routes/setup.rs"
+      evidence: |
+        - complete_setup validates config fields and writes YAML
+        - It does not run the integration validation/health checks described in the story acceptance criteria
+      fix: |
+        - Invoke StartupValidator (or dedicated validation) during complete_setup and surface results in response
+      fix_applied: |
+        - Added StartupValidator execution during POST /api/v1/setup/complete
+        - Uses JiraHealthCheck (critical, API token auth only) + Postman/Testmo health checks (optional)
+        - Returns startupValidation report in response; blocks completion only on critical failure
+
+    - id: CR-MED-014
+      status: pending
+      title: "BMAD story files are stale (Status/Tasks not updated after implementation)"
+      files:
+        - "_bmad-output/implementation-artifacts/13-1-ai-provider-configuration-byok.md"
+        - "_bmad-output/implementation-artifacts/6-7-historical-time-data-storage.md"
+      note: "Story 2.7 was updated and synced on 2026-01-07; remaining listed stories still need sync."
+      evidence: |
+        - Several story files still show Status: ready-for-dev and unchecked tasks, but sprint-status marks them done
+      fix: |
+        - Update story Status/Tasks + Dev Agent Record, or run BMAD code-review per story and sync statuses
+
+    - id: CR-MED-015
+      status: pending
+      title: "cargo clippy -- -D warnings fails (expect/unwrap in code and tests)"
+      files:
+        - "crates/qa-pms-config/src/encryption.rs (tests)"
+        - "crates/qa-pms-config/src/user_config.rs (tests)"
+      note: "Workflow crate clippy issues fixed on 2026-01-07 (removed expect/unwrap + renamed from_str helpers); remaining clippy failures are in config/tests."
+      fix: |
+        - Remove expect/unwrap in production code
+        - In tests: prefer Result-returning tests or add local #[allow(clippy::unwrap_used)] / #[allow(clippy::expect_used)] where justified
+
+    - id: CR-MED-016
+      status: pending
+      title: "Jira OAuth in setup wizard is not end-to-end (no cloud_id/access_token flow)"
+      files:
+        - "frontend/src/pages/Setup/steps/JiraStep.tsx"
+        - "crates/qa-pms-api/src/routes/setup.rs"
+        - "crates/qa-pms-jira/src/oauth.rs"
+      evidence: |
+        - Wizard UI collects client_id/client_secret and stores them, but doesn't execute OAuth callback to obtain cloud_id/access_token
+        - Startup health validation requires an access token for OAuth (JiraHealthCheck::with_oauth)
+      fix: |
+        - Either implement the full OAuth flow in the wizard (authorize → callback → store cloud_id/access_token), OR
+        - Hide/disable OAuth option until supported; keep API token as the supported path
+
+    - id: CR-MED-017
+      status: done  # Fixed 2026-01-07
+      title: "Time aggregates were not updated on workflow completion (Story 6.7 AC1/AC7)"
+      files:
+        - "crates/qa-pms-api/src/routes/workflows.rs"
+        - "crates/qa-pms-time/src/aggregates.rs"
+        - "migrations/20260105000002_time_aggregates_schema.sql"
+      evidence: |
+        - Aggregation functions existed (record_workflow_completion + SQL functions) but were not invoked from workflow completion.
+        - Dashboard endpoints prefer time_daily_aggregates; without updates, dashboards fall back to less accurate calculations.
+      fix_applied: |
+        - Wired `record_workflow_completion()` into `POST /api/v1/workflows/{id}/complete` (background task)
+        - Computes actual_seconds from time_sessions and estimated_seconds from workflow template steps
+        - Derives deterministic UUIDv5 for user_id from workflow instance user_id string (to satisfy UUID schema)
+
   # 🟢 LOW SEVERITY - Nice to Fix
   low_severity:
     - id: CR-LOW-001
@@ -698,3 +948,25 @@ code_review_action_items:
       file: "crates/qa-pms-ai/src/provider.rs"
       description: "context_window: 128000 → 128_000"
       fix: "Adicionar separadores de milhares"
+
+    - id: CR-LOW-007
+      status: pending
+      title: "SetupComplete error UX: group validation errors by step/category"
+      file: "frontend/src/pages/Setup/steps/SetupComplete.tsx"
+      fix: "Group by error.step and show section headers"
+
+    - id: CR-LOW-008
+      status: pending
+      title: "SetupComplete should display optional integration validation warnings"
+      files:
+        - "frontend/src/pages/Setup/steps/SetupComplete.tsx"
+        - "crates/qa-pms-api/src/routes/setup.rs"
+      fix: "Render startupValidation results (optional integrations) as warnings instead of silent pass"
+
+    - id: CR-LOW-009
+      status: pending
+      title: "SetupComplete could display configPath to aid support/troubleshooting"
+      files:
+        - "frontend/src/pages/Setup/steps/SetupComplete.tsx"
+        - "crates/qa-pms-api/src/routes/setup.rs"
+      fix: "Show configPath on success (copy-to-clipboard)"

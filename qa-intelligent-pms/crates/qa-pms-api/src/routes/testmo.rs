@@ -2,12 +2,7 @@
 //!
 //! Endpoints for interacting with Testmo test management.
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    routing::post,
-    Json, Router,
-};
+use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;

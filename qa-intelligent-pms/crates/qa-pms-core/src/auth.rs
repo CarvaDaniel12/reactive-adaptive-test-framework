@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn test_stored_tokens_new() {
         let tokens = StoredTokens::new("jira", "access123", "refresh456", 3600);
-        
+
         assert_eq!(tokens.integration, "jira");
         assert_eq!(tokens.access_token, "access123");
         assert_eq!(tokens.refresh_token, "refresh456");
@@ -180,11 +180,11 @@ mod tests {
     #[test]
     fn test_stored_tokens_expiry() {
         let mut tokens = StoredTokens::new("jira", "access", "refresh", 3600);
-        
+
         // Not expired
         assert!(!tokens.is_expired());
         assert!(tokens.seconds_until_expiry() > 3500);
-        
+
         // Simulate expiration
         tokens.expires_at = Utc::now() - chrono::Duration::seconds(1);
         assert!(tokens.is_expired());
@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn test_expires_within() {
         let tokens = StoredTokens::new("jira", "access", "refresh", 300);
-        
+
         // Should expire within 5 minutes
         assert!(tokens.expires_within(300));
         // Should not expire within 1 second

@@ -23,7 +23,6 @@ pub enum ErrorStatus {
     Dismissed,
 }
 
-
 impl std::fmt::Display for ErrorStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -51,7 +50,6 @@ pub enum ErrorSeverity {
     /// Critical severity - immediate action required
     Critical,
 }
-
 
 impl std::fmt::Display for ErrorSeverity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -82,7 +80,6 @@ pub enum ErrorSource {
     #[default]
     Unknown,
 }
-
 
 impl std::fmt::Display for ErrorSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -436,7 +433,7 @@ pub struct PaginatedResponse<T: Serialize> {
 
 impl<T: Serialize> PaginatedResponse<T> {
     /// Create a new paginated response.
-    #[must_use] 
+    #[must_use]
     pub fn new(items: Vec<T>, total: i64, page: i32, per_page: i32) -> Self {
         let total_pages = ((total as f64) / f64::from(per_page)).ceil() as i32;
         Self {

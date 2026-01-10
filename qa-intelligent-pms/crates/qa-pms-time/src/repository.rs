@@ -110,12 +110,10 @@ pub async fn resume_session(pool: &PgPool, session_id: Uuid) -> Result<(), sqlx:
 
 /// Get a time session by ID.
 pub async fn get_session(pool: &PgPool, session_id: Uuid) -> Result<TimeSession, sqlx::Error> {
-    sqlx::query_as::<_, TimeSession>(
-        r"SELECT * FROM time_sessions WHERE id = $1",
-    )
-    .bind(session_id)
-    .fetch_one(pool)
-    .await
+    sqlx::query_as::<_, TimeSession>(r"SELECT * FROM time_sessions WHERE id = $1")
+        .bind(session_id)
+        .fetch_one(pool)
+        .await
 }
 
 /// Get active session for a workflow.

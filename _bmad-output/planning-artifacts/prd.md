@@ -1001,9 +1001,1317 @@ Este PRD será considerado **bem-sucedido** quando:
 
 ---
 
+## Epic 16: Reports Enhancement
+
+**Epic Goal:** Expand reporting capabilities with advanced filtering, custom templates, and automated scheduling to support deep analysis and recurring needs.
+
+### Story 16.1: Advanced Report Filtering and Search
+
+**As a** QA (Ana),
+**I want to** filter and search reports by multiple criteria,
+**So that** I can find specific reports quickly for analysis and trend identification.
+
+**Acceptance Criteria:**
+
+**Given** multiple reports exist in the system
+**When** user accesses Reports section
+**Then** they can filter by:
+- Date range (custom ranges, presets: last 7/30/90 days, this year, this quarter)
+- Ticket type (Bug Fix, Feature Test, Regression Test, etc.)
+- Project/Component
+- Specific QA (if manager role)
+- Workflow template used
+- Report status (Draft, Final, Archived)
+**And** search functionality allows full-text search across:
+- Report titles and descriptions
+- Test cases covered
+- Strategies used
+- Notes and observations
+**And** filtered/search results can be exported as CSV for external analysis
+**And** filters can be saved as presets for quick access
+
+### Story 16.2: Custom Report Templates
+
+**As a** PM/PO (Carlos/Juliana),
+**I want to** create and manage custom report templates,
+**So that** reports match organizational needs and formats.
+
+**Acceptance Criteria:**
+
+**Given** user has PM/PO role
+**When** they access Report Templates management
+**Then** they can:
+- Create new template with:
+  - Template name and description
+  - Custom sections (e.g., Executive Summary, Bug Analysis, Test Coverage, ROI)
+  - Charts to include (line charts, bar charts, pie charts, heatmaps)
+  - Data fields to include (specific metrics, aggregated calculations)
+  - Export formats (PDF, HTML, Excel, CSV)
+- Edit existing templates
+- Clone templates from defaults
+- Delete unused templates
+- Set default template for specific report types
+**And** templates can be shared with team members
+**And** template changes are versioned for audit purposes
+**And** when generating a report, user can select from available templates
+
+### Story 16.3: Report Scheduling and Automation
+
+**As a** QA Manager (Roberto),
+**I want to** schedule automatic report generation and distribution,
+**So that** stakeholders receive regular updates without manual effort.
+
+**Acceptance Criteria:**
+
+**Given** user has PM or QA Manager role
+**When** they configure scheduled reports
+**Then** they can:
+- Set schedule frequency: Daily, Weekly, Bi-weekly, Monthly, Quarterly
+- Select report template or custom report type
+- Define filters for scheduled report (e.g., "All tickets completed last week by QA team")
+- Configure distribution:
+  - Email recipients (multiple)
+  - Distribution time
+  - Format (PDF attachment or HTML email)
+- Enable/disable specific schedules
+- View history of scheduled reports and their delivery status
+**And** scheduled reports are generated automatically at configured times
+**And** generation failures are logged and notified to admins
+**And** report recipients can unsubscribe/manage their preferences
+
+---
+
+## Epic 17: Audit Logging
+
+**Epic Goal:** Implement comprehensive audit logging system for security, compliance, and forensic analysis of all system activities.
+
+### Story 17.1: Comprehensive Audit Log Storage
+
+**As a** Security Engineer,
+**I want to** store all audit events with detailed context in database,
+**So that** we have complete forensic records for security investigations.
+
+**Acceptance Criteria:**
+
+**Given** any system action occurs
+**When** action is performed
+**Then** system logs:
+- Event ID and timestamp
+- User ID who performed action
+- Action type (login, logout, create, read, update, delete, export, etc.)
+- Resource affected (ticket ID, workflow ID, report ID, etc.)
+- IP address and user agent
+- Success/failure status
+- Before/after state for changes
+- Session ID for correlating related events
+**And** audit logs are stored in dedicated database table with proper indexing
+**And** sensitive data (passwords, API keys) is never logged, only audit trail of access/changes
+**And** logs are immutable (create-only, no updates/deletes)
+
+### Story 17.2: Audit Event Categories and Taxonomy
+
+**As a** Compliance Officer,
+**I want to** classify audit events into categories for analysis,
+**So that** we can generate compliance reports and identify patterns.
+
+**Acceptance Criteria:**
+
+**Given** audit events are being logged
+**When** system processes audit events
+**Then** each event is categorized into:
+- Authentication events (login, logout, failed attempts, MFA, password change)
+- Authorization events (permission denied, role changes, RBAC modifications)
+- Data access events (ticket read, report generation, data export)
+- Data modification events (workflow create/update, note changes, status changes)
+- Configuration events (integration setup, system settings, API key management)
+- System events (backup, restore, maintenance, errors)
+- Integration events (Jira API calls, Postman searches, Splunk queries)
+**And** taxonomy is configurable and extensible
+**And** each category has severity levels (INFO, WARNING, CRITICAL)
+**And** compliance reports can be generated per category
+**And** categories support regulatory mappings (e.g., GDPR, SOC2, ISO27001)
+
+### Story 17.3: Audit Log Search and Filtering
+
+**As a** Security Auditor,
+**I want to** search and filter audit logs efficiently,
+**So that** I can investigate incidents and generate compliance reports.
+
+**Acceptance Criteria:**
+
+**Given** extensive audit log history exists
+**When** auditor performs search
+**Then** they can filter by:
+- Date and time range
+- Event category
+- User ID
+- Action type
+- Resource type (ticket, workflow, report, system)
+- Severity level
+- Success/failure status
+- IP address
+- Specific keywords in notes
+**And** search results show:
+- Pagination (100 records per page)
+- Total count of matching events
+- Export options (CSV, PDF)
+- Related events grouped by session or correlation ID
+**And** performance: search completes < 2 seconds for common filters
+**And** audit logs have TTL configuration (e.g., 90 days) before archival
+
+### Story 17.4: Audit Report Generation
+
+**As a** Compliance Officer,
+**I want to** generate standardized audit reports for regulatory compliance,
+**So that** we can demonstrate security practices during audits.
+
+**Acceptance Criteria:**
+
+**Given** audit logs are comprehensive
+**When** user requests audit report
+**Then** system can generate:
+- User Activity Report: Logins, actions performed, time ranges
+- Access Violation Report: Failed logins, permission denials, suspicious patterns
+- Configuration Changes Report: Settings modifications, integration changes, RBAC updates
+- Data Export Report: All data exports with who authorized and what data
+- Compliance Report: Events mapped to regulatory requirements (GDPR, SOC2, etc.)
+**And** reports are customizable by date range and filters
+**And** reports are generated in PDF with digital signatures
+**And** reports can be scheduled for automatic delivery (see Story 16.3)
+**And** report generation is logged as audit event
+
+### Story 17.5: Audit Log Retention and Archival
+
+**As a** System Administrator,
+**I want to** automatically archive old audit logs and configure retention policies,
+**So that** database performance is maintained while preserving historical records.
+
+**Acceptance Criteria:**
+
+**Given** retention policies are configured
+**When** audit logs reach age threshold
+**Then** system automatically:
+- Archives old logs to cold storage (S3, separate database)
+- Updates index to point to archived location
+- Removes from hot storage after verification
+**And** retention policies can be configured per:
+- Event category (e.g., authentication events: 1 year, system events: 90 days)
+- Severity (e.g., CRITICAL events: 5 years, INFO: 90 days)
+- Compliance requirements override default retention
+**And** archive integrity is verified with checksums
+**And** logs can be restored from archive on demand (with authorization)
+**And** archival process is logged as system event
+
+### Story 17.6: Real-time Audit Monitoring Dashboard
+
+**As a** Security Analyst,
+**I want to** monitor audit events in real-time with alerts,
+**So that** I can detect and respond to security incidents immediately.
+
+**Acceptance Criteria:**
+
+**Given** audit events are being generated
+**When** security analyst accesses Audit Dashboard
+**Then** they see:
+- Live feed of recent audit events (last 100)
+- Real-time charts showing:
+  - Authentication attempts (success vs failure)
+  - Top users by activity volume
+  - Failed access attempts by IP
+  - Critical events (permission denied, config changes)
+- Alert configuration for:
+  - Failed login threshold (e.g., 5 failed attempts in 10 minutes)
+  - Unusual time access (e.g., outside business hours)
+  - New location (different IP than usual)
+  - Critical system events
+**And** alerts are sent via:
+  - In-app notifications
+  - Email (to security team)
+  - Webhook integration (SIEM systems)
+**And** dashboard has drill-down capability to view full event details
+**And** real-time monitoring performance: < 1 second latency
+
+### Story 17.7: Compliance Export for Audits
+
+**As a** Compliance Officer,
+**I want to** export audit data in formats required by auditors,
+**So that** external audits can be completed efficiently.
+
+**Acceptance Criteria:**
+
+**Given** auditor requests audit export
+**When** authorized user generates export
+**Then** system supports:
+- Export formats: JSON, CSV, XML, PDF
+- Filtering by date range, category, user
+- Anonymization option (mask user IDs for GDPR compliance)
+- Digital signature on exported files
+- Metadata export:
+  - System version and configuration snapshot
+  - Data retention policy in effect
+  - Archive status for requested period
+**And** export includes:
+- Complete event log (based on filters)
+- User accounts and their roles at time of export
+- System configuration and RBAC snapshot
+- Integration status and configurations
+**And** export is logged as audit event with requester and timestamp
+**And** large exports are generated asynchronously with download link
+
+---
+
+## Epic 18: User Experience Improvements
+
+**Epic Goal:** Enhance UX based on user feedback and identified gaps to increase adoption and efficiency.
+
+### Story 18.1: Onboarding Wizard Enhancement
+
+**As a** New User,
+**I want to** a comprehensive onboarding wizard that guides me through initial setup,
+**So that** I can start using the framework effectively without confusion.
+
+**Acceptance Criteria:**
+
+**Given** new user logs in for first time
+**When** they access Onboarding Wizard
+**Then** wizard provides:
+- Multi-step process with progress indicator
+- Step 1: Profile setup (name, role, timezone, preferences)
+- Step 2: Integration setup (guided through Jira, Postman, Testmo, Splunk)
+- Step 3: Workflow template selection and customization
+- Step 4: First workflow guided execution
+- Step 5: Dashboard tour and features overview
+**And** each step has:
+- Clear explanations and examples
+- Visual tooltips for technical terms
+- Validation before proceeding to next step
+- Ability to skip steps (for advanced users)
+- "Back" navigation to revisit previous steps
+**And** wizard can be paused and resumed
+**And** completion generates personalized quick-start guide
+
+### Story 18.2: Interactive Tutorials and Walkthroughs
+
+**As a** QA (Ana),
+**I want to** access interactive tutorials that simulate real workflows,
+**So that** I can learn by doing, not just reading documentation.
+
+**Acceptance Criteria:**
+
+**Given** user wants to learn framework features
+**When** they access Tutorials section
+**Then** they find:
+- Interactive tutorials with:
+  - Mock ticket data
+  - Simulated integrations (returns predefined responses)
+  - Step-by-step guided execution
+  - Real-time feedback and hints
+- Video tutorials for key workflows
+- Interactive quizzes to test understanding
+- Progress tracking (which tutorials completed)
+**And** tutorials are contextual:
+- "New to framework" - complete walkthrough
+- "Specific feature" - focused tutorial
+- "Advanced usage" - power user tips
+**And** users can bookmark tutorials for quick access
+**And** tutorial completion awards badges/achievements
+
+### Story 18.3: Keyboard Shortcuts and Hotkeys
+
+**As a** Power User (Ana),
+**I want to** use keyboard shortcuts for common actions,
+**So that** I can work faster without mouse navigation.
+
+**Acceptance Criteria:**
+
+**Given** user is using the dashboard or workflow interface
+**When** they press keyboard shortcuts
+**Then** shortcuts execute common actions:
+- Global shortcuts:
+  - `Ctrl/Cmd + K`: Quick search (tickets, reports, help)
+  - `Ctrl/Cmd + Shift + W`: Start new workflow from ticket
+  - `Ctrl/Cmd + D`: Open dashboard
+  - `Ctrl/Cmd + T`: Open time tracker
+  - `Ctrl/Cmd + R`: Generate report
+  - `Escape`: Cancel/exit current action
+- Workflow shortcuts:
+  - `1-9`: Jump to specific workflow step
+  - `Space`: Start/pause timer
+  - `Enter`: Complete current step with notes
+  - `Shift + S`: Save progress
+  - `N/P`: Next/previous ticket
+- Dashboard shortcuts:
+  - `1-4`: Switch between dashboard tabs
+  - `R`: Refresh data
+  - `F`: Open filters
+**And** shortcuts are customizable per user
+**And** help modal displays current shortcut assignments
+**And** shortcuts don't conflict with browser/system shortcuts
+
+### Story 18.4: Drag-and-Drop Workflow Customization
+
+**As a** QA Lead,
+**I want to** customize workflow templates using drag-and-drop,
+**So that** I can create workflows that match our team's process.
+
+**Acceptance Criteria:**
+
+**Given** user is editing workflow template
+**When** they access template customization
+**Then** they can:
+- Add steps from library (drag from sidebar)
+- Remove steps (drag to trash area or delete key)
+- Reorder steps (drag up/down)
+- Edit step details inline
+- Add conditional logic (if/else branches)
+- Insert section dividers and labels
+**And** customization includes:
+- Visual workflow preview
+- Duplicate template functionality
+- Save as new template
+- Revert to original template
+**And** drag-and-drop works smoothly with visual feedback
+**And** changes are validated before saving
+
+### Story 18.5: Dark Mode Support
+
+**As a** User,
+**I want to** switch between light and dark mode,
+**So that** I can use the framework comfortably in different lighting conditions.
+
+**Acceptance Criteria:**
+
+**Given** system supports theming
+**When** user toggles theme
+**Then** interface switches between:
+- Light mode (default)
+- Dark mode
+- System preference (sync with OS)
+**And** theme selection persists across sessions
+**And** dark mode uses high-contrast colors for readability
+**And** all UI components respect theme:
+- Dashboards
+- Charts and graphs (appropriate colors for each mode)
+- Modals and dialogs
+- Tables and lists
+**And** theme switch is accessible from:
+- Settings menu
+- Keyboard shortcut (Ctrl/Cmd + D)
+- User profile dropdown
+
+### Story 18.6: Responsive Mobile Improvements
+
+**As a** QA on mobile/tablet,
+**I want to** access and use key features on mobile devices,
+**So that** I can manage workflows while away from desktop.
+
+**Acceptance Criteria:**
+
+**Given** user accesses framework from mobile device
+**When** they navigate the interface
+**Then** responsive design provides:
+- Touch-optimized interface (larger tap targets)
+- Bottom navigation bar for easy thumb access
+- Simplified dashboard views (KPI cards, not complex charts)
+- Mobile workflow execution:
+  - Vertical layout for steps
+  - Swipe gestures for step navigation
+  - One-tap timer controls
+- Mobile-specific features:
+  - Offline mode indicator
+  - Quick actions menu (start workflow, recent tickets)
+- And desktop features are accessible via:
+  - Collapsible navigation menu
+  - Desktop mode toggle (if user prefers)
+**And** mobile interface works on:
+  - iOS Safari and Chrome
+  - Android Chrome and Firefox
+  - Tablet browsers
+
+### Story 18.7: Accessibility (WCAG 2.1 AA) Compliance
+
+**As a** User with accessibility needs,
+**I want to** use the framework with assistive technologies,
+**So that** I can perform my job independently.
+
+**Acceptance Criteria:**
+
+**Given** user accesses framework with screen reader or keyboard
+**When** they navigate the interface
+**Then** accessibility features include:
+- Semantic HTML structure (headings, landmarks, ARIA labels)
+- Keyboard navigation (visible focus, logical tab order, no keyboard traps)
+- Screen reader announcements for:
+  - Page loads
+  - Dynamic content changes
+  - Form validation errors
+  - Workflow step completion
+- Color contrast ratio ≥ 4.5:1 (WCAG AA)
+- Text can be resized up to 200% without breaking layout
+- Interactive elements have visible focus indicators
+- Error messages are associated with form fields (not just visual)
+- Alt text for images and icons
+- Skip links for repeated navigation
+- ARIA live regions for dynamic content
+**And** accessibility is tested with:
+  - Screen readers (NVDA, JAWS, VoiceOver)
+  - Keyboard-only navigation
+  - High contrast mode
+
+### Story 18.8: Performance Optimizations for Large Datasets
+
+**As a** User with large data volume,
+**I want to** search and filter large datasets quickly,
+**So that** I can find information without long waits.
+
+**Acceptance Criteria:**
+
+**Given** user searches or filters large datasets (10,000+ records)
+**When** they apply filters or search
+**Then** performance optimizations ensure:
+- Search results appear < 2 seconds
+- Virtual scrolling for large lists (render visible items only)
+- Debounced search input (300ms delay)
+- Lazy loading for filtered results
+- Indexing for common search fields (ticket title, component, tags)
+- Server-side pagination (100 items per page)
+- Loading skeletons/shimmers while fetching
+- Query result count estimation
+- And data caching for repeated queries (see Epic 14.4)
+
+### Story 18.9: Personalized Dashboard Widgets
+
+**As a** User,
+**I want to** customize my dashboard with relevant widgets,
+**So that** I see what matters most to me.
+
+**Acceptance Criteria:**
+
+**Given** user accesses dashboard customization
+**When** they configure widgets
+**Then** they can:
+- Add widgets from library:
+  - KPI cards (tickets completed, avg time, efficiency)
+  - Charts (tickets over time, bug trends, component health)
+  - Lists (recent tickets, active workflows, alerts)
+  - Quick actions (start workflow, create report)
+- Remove widgets
+- Resize widgets (drag handles)
+- Reorder widgets (drag-and-drop)
+- Configure widget data (filters, date range, metrics)
+- Create widget presets (saved configurations)
+**And** dashboard remembers customization per user
+**And** widgets are reactive and update in real-time
+**And** widgets can be shared with team members
+
+### Story 18.10: Notification Preferences and Channels
+
+**As a** User,
+**I want to** customize how and where I receive notifications,
+**So that** I stay informed without being overwhelmed.
+
+**Acceptance Criteria:**
+
+**Given** user accesses notification settings
+**When** they configure preferences
+**Then** they can set:
+- Notification types to enable:
+  - Workflow completion reminders
+  - Pattern alerts (time excess, consecutive problems)
+  - Integration status changes
+  - Report ready notifications
+  - Assigned tickets (if applicable)
+- Channel preferences per type:
+  - In-app notifications (toast)
+  - Email (with digest options: immediate, daily, weekly)
+  - Browser push notifications (permission required)
+  - Webhook (for custom integrations)
+- Frequency throttling (e.g., max 1 email per 10 minutes for same type)
+- Quiet hours (no notifications during configured times)
+- Priority levels (critical alerts always delivered, lower priority can be batched)
+**And** notification history is viewable
+**And** users can manage which team members receive notifications
+
+### Story 18.11: Offline Mode Enhancements
+
+**As a** User with unreliable connectivity,
+**I want to** use framework features while offline,
+**So that** I can continue working during network issues.
+
+**Acceptance Criteria:**
+
+**Given** user has spotty or no internet connection
+**When** they access framework
+**Then** offline mode provides:
+- Read access to previously loaded data:
+  - Cached tickets list
+  - Workflow templates
+  - Recent reports
+- Ability to create/edit workflows (saved locally)
+- Time tracking functionality (works offline)
+- Notes capture (saved locally)
+- Clear offline indicator in UI
+- Sync status (what's saved locally, what needs to sync)
+**And** when connection returns:
+- Automatic sync of offline changes
+- Conflict resolution (if multiple users edited same item)
+- Notifications of sync status
+**And** data integrity is maintained (no duplicates or data loss)
+
+### Story 18.12: User Feedback and In-App Voting
+
+**As a** User,
+**I want to** provide feedback and vote on features,
+**So that** I can influence product direction.
+
+**Acceptance Criteria:**
+
+**Given** user wants to provide feedback
+**When** they access Feedback feature
+**Then** they can:
+- Submit feature requests with:
+  - Title and description
+  - Category (enhancement, bug, workflow improvement)
+  - Priority (low, medium, high)
+  - Attachments (screenshots, logs)
+- Vote on existing feedback (upvote/downvote)
+- Comment on feedback items
+- Filter feedback by status (planned, in progress, completed, declined)
+- And feedback is categorized:
+  - Workflow improvements
+  - Integration issues
+  - UX suggestions
+  - Performance problems
+**And** users can see:
+  - Most voted feedback items
+  - Feature requests with their votes
+  - Status updates on items they voted on
+**And** feedback influences roadmap (PM reviews for prioritization)
+
+---
+
+## Epic 19: Advanced Features
+
+**Epic Goal:** Implement advanced features to maximize framework value and prepare for enterprise scale and AI evolution.
+
+### Story 19.1: Workflow Marketplace and Sharing
+
+**As a** QA Community Member,
+**I want to** share and discover workflow templates from a marketplace,
+**So that** we can leverage best practices across organizations.
+
+**Acceptance Criteria:**
+
+**Given** user accesses Workflow Marketplace
+**When** they browse templates
+**Then** they can:
+- Search marketplace by:
+  - Keywords
+  - Ticket type (Bug Fix, Regression, etc.)
+  - Industry (PMS, Healthcare, Finance, etc.)
+  - Popularity and rating
+- Preview template structure before importing
+- Import templates with one click
+- Rate templates (1-5 stars) and leave reviews
+- Share own templates (with optional attribution)
+- Filter by verified templates (reviewed by maintainers)
+**And** templates include:
+- Author attribution
+- Usage statistics (downloads, active installs)
+- Version history
+- License type (MIT, proprietary, etc.)
+**And** marketplace has:
+- Trending templates section
+- New templates feed
+- Integration with existing workflow templates (favorites)
+
+### Story 19.2: Advanced AI-Powered Test Suggestions
+
+**As a** QA (Ana),
+**I want to** AI to suggest comprehensive test cases beyond simple Gherkin parsing,
+**So that** I can discover edge cases I might miss.
+
+**Acceptance Criteria:**
+
+**Given** AI is configured (Epic 13)
+**When** QA analyzes a ticket
+**Then** AI provides:
+- Comprehensive test suggestions including:
+  - Happy path scenarios
+  - Edge cases (boundary values, empty inputs, extreme values)
+  - Negative testing (invalid inputs, permissions, error conditions)
+  - Integration points testing (API failures, timeout scenarios)
+  - Performance testing scenarios (load conditions, stress tests)
+- Test data suggestions for edge cases
+- Risk score for each suggested test case
+- Coverage analysis (what percentage of requirements are covered)
+**And** suggestions are:
+- Categorized by type (functional, edge, integration, performance)
+- Prioritized by risk and importance
+- One-click add to workflow steps or notes
+**And** AI learning improves based on:
+- Which suggestions are accepted/rejected
+- Bug reports from suggested tests (if missed)
+- User feedback on suggestion quality
+
+### Story 19.3: Automated Test Generation from Requirements
+
+**As a** QA (Ana),
+**I want to** AI to automatically generate test cases from requirement documents,
+**So that** I can rapidly create comprehensive test plans.
+
+**Acceptance Criteria:**
+
+**Given** user uploads or links requirement documents (Jira tickets, specs, PRDs)
+**When** they trigger AI test generation
+**Then** system generates:
+- Full test suite with:
+  - Test case ID
+  - Title and description
+  - Pre-conditions
+  - Test steps (Given/When/Then format)
+  - Expected results
+  - Priority and risk score
+- Test data suggestions
+- Traceability matrix (which test covers which requirement)
+- Coverage analysis by requirement area
+**And** generated test suite can be:
+- Reviewed and edited manually
+- Imported into workflow as test steps
+- Exported to Testmo/Postman for execution
+**And** generation maintains quality:
+- Clear test objectives
+- No duplicate test cases
+- Proper grouping (smoke tests, regression tests, etc.)
+
+### Story 19.4: Predictive Bug Risk Scoring
+
+**As a** QA (Ana),
+**I want to** see AI-predicted risk scores for tickets I'm about to test,
+**So that** I can prioritize and allocate effort accordingly.
+
+**Acceptance Criteria:**
+
+**Given** user views ticket list or selects a ticket
+**When** AI risk scoring is enabled
+**Then** system displays:
+- Risk score (1-10 scale) for each ticket
+- Risk level indicator:
+  - 🟢 Low (1-3): Simple, well-tested component
+  - 🟡 Medium (4-6): Moderate complexity, recent changes
+  - 🔴 High (7-8): Complex, new features, high-risk area
+  - 🔴🔴 Critical (9-10): Very complex, known issues
+- Risk factors breakdown:
+  - Component risk (historical bug rate)
+  - Code churn (recent changes)
+  - Test coverage (if known)
+  - Integration complexity
+- Suggested time allocation (adjusted from baseline based on risk)
+**And** risk scores are:
+- Updated based on completed tickets (learning from actual vs estimated)
+- Visible in ticket list and detail views
+- Exportable as risk report
+
+### Story 19.5: Intelligent Test Case Prioritization
+
+**As a** QA (Ana),
+**I want to** AI to suggest which test cases to execute first based on risk and value,
+**So that** I find critical bugs early in testing.
+
+**Acceptance Criteria:**
+
+**Given** AI has generated comprehensive test cases (Story 19.3)
+**When** user starts test execution workflow
+**Then** AI suggests test case order:
+- Priority order based on:
+  - Risk score (highest first)
+  - Business impact (user-facing vs backend)
+  - Prerequisite dependencies (test A must pass before test B)
+  - Historical bug density in area
+- Visual indication in workflow (numbered steps with priority badges)
+- Ability to reorder manually if user disagrees
+- "Critical path" highlighting (tests that cover most risk)
+**And** prioritization adapts based on:
+- Early test failures (if critical test fails, reprioritize related tests)
+- Time pressure (focus on high-impact tests when time is limited)
+
+### Story 19.6: Cross-Team Collaboration Features
+
+**As a** Team Member,
+**I want to** collaborate with other QAs on workflows and findings,
+**So that** we share knowledge and avoid duplicate testing.
+
+**Acceptance Criteria:**
+
+**Given** user is working on a ticket or workflow
+**When** they use collaboration features
+**Then** they can:
+- Share workflow with specific team members
+- @mention team members in notes and comments
+- See real-time collaboration status:
+  - Who is currently viewing this ticket/workflow
+  - Who has completed workflow execution
+  - Notes and comments from collaborators
+- Receive notifications for:
+  - @mentions
+  - Workflow shares
+  - Comment replies
+**And** collaboration includes:
+- Conflict resolution (if two users edit same workflow)
+- Activity feed per ticket/workflow
+- Export collaboration history as report
+**And** permissions are configurable:
+- Read-only access vs full collaboration
+- Team-based sharing (share with entire team at once)
+
+### Story 19.7: Multi-Tenant Support
+
+**As a** Enterprise Administrator,
+**I want to** isolate data for different organizations or teams,
+**So that** multiple companies can use the same framework instance securely.
+
+**Acceptance Criteria:**
+
+**Given** system supports multi-tenancy
+**When** user with admin role configures tenants
+**Then** they can:
+- Create tenant with:
+  - Organization name
+  - Custom branding (logo, colors)
+  - User domains (email domains for auto-assignment)
+- Configure per-tenant settings:
+  - Integration endpoints (different Jira/Postman instances)
+  - Custom workflow templates
+  - RBAC policies
+- View tenant metrics and reports (isolated)
+**And** data isolation ensures:
+- Users only see their tenant's data
+- Audit logs separated by tenant
+- Resource quotas per tenant (users, storage, API calls)
+**And** tenant management includes:
+- Onboarding flow for new tenants
+- Tenant health monitoring
+- Billing/usage metrics per tenant
+
+### Story 19.8: Advanced RBAC with Dynamic Permissions
+
+**As a** Security Administrator,
+**I want to** define granular permissions and dynamic roles,
+**So that** access control adapts to evolving organizational structure.
+
+**Acceptance Criteria:**
+
+**Given** admin manages RBAC system
+**When** they configure permissions
+**Then** they can:
+- Define fine-grained permissions:
+  - Resource-level (tickets, workflows, reports, settings)
+  - Action-level (create, read, update, delete, export)
+  - Condition-based (own records, team records, all records)
+- Create dynamic roles:
+  - Add/remove permissions from roles
+  - Create custom roles beyond standard ones
+  - Inherit permissions from parent roles
+  - Set role precedence
+- Define permission templates (groups of related permissions)
+- Implement attribute-based access control (ABAC):
+  - Role + location + team + project-based permissions
+  - Time-based access (e.g., contractor access only during contract)
+**And** RBAC system provides:
+- Permission conflict detection
+- What-if analysis (see what access a user would have with proposed changes)
+- Audit trail of permission changes
+- Bulk user role assignment
+
+### Story 19.9: API Rate Limiting per User/Team
+
+**As a** API Administrator,
+**I want to** rate limit API calls per user or team,
+**So that** I can prevent abuse and ensure fair resource allocation.
+
+**Acceptance Criteria:**
+
+**Given** rate limiting is configured
+**When** users make API calls
+**Then** system enforces:
+- Per-user rate limits:
+  - Different limits per role (admin: higher, QA: standard)
+  - Quotas per endpoint type (read vs write)
+  - Time windows (per minute, per hour, per day)
+- Per-team limits:
+  - Aggregate team quota
+  - Burst allowance for spikes
+- Rate limit headers in responses:
+  - `X-RateLimit-Limit`
+  - `X-RateLimit-Remaining`
+  - `X-RateLimit-Reset` (timestamp)
+- Behavior when exceeded:
+  - HTTP 429 Too Many Requests
+  - `Retry-After` header
+  - Clear error messages
+**And** rate limits are:
+- Configurable via settings
+- Adjustable per tenant (multi-tenant)
+- Viewable in admin dashboard with usage statistics
+- Alertable when thresholds approached
+
+### Story 19.10: Webhook System for Integrations
+
+**As a** DevOps Engineer,
+**I want to** configure webhooks for framework events,
+**So that** I can integrate with external systems and automation tools.
+
+**Acceptance Criteria:**
+
+**Given** webhook system is available
+**When** admin configures webhooks
+**Then** they can:
+- Subscribe to events:
+  - Workflow completed
+  - Report generated
+  - Pattern detected
+  - User created/updated/deleted
+  - Integration status changed
+  - Audit events
+- Configure per-webhook:
+  - Target URL
+  - Event types to deliver
+  - Authentication (secret for signature verification)
+  - Retry policy (attempts, backoff)
+  - Active/inactive toggle
+- Webhook payloads include:
+  - Event type and timestamp
+  - Full event data (relevant to event type)
+  - Tenant ID (multi-tenant)
+  - Signature verification (HMAC)
+**And** system provides:
+- Webhook delivery logs (success, failure, retry count)
+- Test webhook functionality (ping/trigger test event)
+- Dashboard showing webhook status and recent deliveries
+
+### Story 19.11: Sandbox Environment for Safe Testing
+
+**As a** QA (Ana),
+**I want to** a sandbox environment to test workflows without affecting production data,
+**So that** I can experiment safely.
+
+**Acceptance Criteria:**
+
+**Given** sandbox environment is configured
+**When** user accesses sandbox
+**Then** they can:
+- Switch between production and sandbox mode
+- Work with isolated test data:
+  - Sample tickets
+  - Mocked integrations (return predefined responses)
+  - Clean database state
+- Test workflows with same UI as production
+- Execute workflows in sandbox without affecting production metrics
+- Promote sandbox workflows to production (if valid)
+**And** sandbox features:
+- Data reset/clear functionality
+- Integration simulation tools (simulate failures, timeouts)
+- Performance testing tools (load test workflows)
+- Share sandbox state with team members
+**And** sandbox is:
+- Clearly labeled (visual indicators, banner)
+- Data isolated from production
+- Easy to reset
+
+### Story 19.12: Performance Analytics and Tuning
+
+**As a** DevOps Engineer,
+**I want to** detailed performance analytics and tuning recommendations,
+**So that** I can optimize system efficiency.
+
+**Acceptance Criteria:**
+
+**Given** system is collecting performance metrics
+**When** user accesses Performance Analytics
+**Then** they see:
+- Database performance:
+  - Query execution times (slowest queries)
+  - Index utilization
+  - Cache hit/miss ratios
+- API performance:
+  - Response times by endpoint
+  - Error rates and trends
+  - Throughput metrics (requests per second)
+- Integration performance:
+  - Latency per integration (Jira, Postman, Testmo, Splunk)
+  - Connection pool usage
+  - Retry rates and success rates
+- Resource usage:
+  - CPU, memory, disk I/O trends
+  - Network bandwidth utilization
+**And** analytics provide:
+- AI-powered tuning recommendations (e.g., "Add index to column X", "Increase cache TTL")
+- Performance anomaly detection (sudden degradation alerts)
+- Export metrics for external tools (Grafana, Datadog)
+- Historical performance trends
+- Benchmark comparison (current vs previous week/month)
+
+---
+
+## Epic 20: Documentation & Process
+
+**Epic Goal:** Create comprehensive documentation and process resources to support adoption, onboarding, and knowledge sharing.
+
+### Story 20.1: Complete Developer Documentation
+
+**As a** Developer (Future team members),
+**I want to** comprehensive technical documentation,
+**So that** I can understand, extend, and maintain the codebase.
+
+**Acceptance Criteria:**
+
+**Given** documentation is being created
+**When** developer accesses docs
+**Then** they find:
+- Complete API documentation (OpenAPI/Swagger for all endpoints)
+- Architecture documentation:
+  - System design decisions
+  - Component responsibilities and interactions
+  - Data flow diagrams
+  - Deployment architecture
+- Code examples for common tasks:
+  - Adding new integrations
+  - Creating custom workflow templates
+  - Extending the dashboard
+- Testing documentation:
+  - How to run tests
+  - Test data setup
+  - Integration test examples
+**And** documentation is:
+- Generated from code (`cargo doc` + inline documentation)
+- Versioned with release notes
+- Searchable (full-text search across all docs)
+- Available online and offline (downloadable)
+
+### Story 20.2: Internal Process Documentation
+
+**As a** Team Member,
+**I want to** documented processes for common workflows and operations,
+**So that** we follow consistent, repeatable procedures.
+
+**Acceptance Criteria:**
+
+**Given** process documentation exists
+**When** team member accesses processes
+**Then** they find documentation for:
+- QA workflow execution (step-by-step guide)
+- Bug reporting process
+- Report generation process
+- Integration troubleshooting steps
+- New feature onboarding
+- Release deployment process
+**And** processes include:
+- Flowcharts or decision trees
+- RACI matrices (Responsible, Accountable, Consulted, Informed)
+- Checklists for key steps
+- Common scenarios and decisions
+- Links to related tools and templates
+
+### Story 20.3: User Training Materials
+
+**As a** Trainer/Team Lead,
+**I want to** structured training materials for different user roles,
+**So that** team adoption is efficient and consistent.
+
+**Acceptance Criteria:**
+
+**Given** training materials are available
+**When** user accesses training
+**Then** they find role-specific content:
+- For QA Engineers:
+  - Quick start guide (first day checklist)
+  - Workflow execution walkthrough
+  - Integration setup guide
+  - Dashboard navigation
+  - Common troubleshooting
+- For PM/PO:
+  - Dashboard usage for insights
+  - Report interpretation guide
+  - Managing teams and permissions
+  - Roadmap planning with data
+- For Developers:
+  - Adding integrations
+  - Creating workflow templates
+  - Extending the UI
+**And** materials include:
+- Video tutorials
+- Interactive exercises
+- Knowledge check quizzes
+- Quick reference cards
+- FAQ section
+
+### Story 20.4: Video Tutorials and Screencasts
+
+**As a** User,
+**I want to** watch video tutorials for common workflows,
+**So that** I can learn by seeing exactly how to do it.
+
+**Acceptance Criteria:**
+
+**Given** video tutorials are available
+**When** user accesses tutorial library
+**Then** they find:
+- Short-form tutorials (2-5 minutes) for:
+  - Quick start
+  - Specific feature usage
+  - Common issues and solutions
+- Long-form tutorials (10-20 minutes) for:
+  - Complete workflow walkthroughs
+  - Advanced features
+  - Integration setup
+**And** videos include:
+- Screencast of actual UI
+- Step-by-step explanations
+- Captions for accessibility
+- Chapter markers and timestamps
+- Related links (documentation, templates)
+- Downloadable for offline viewing
+
+### Story 20.5: FAQ and Knowledge Base Portal
+
+**As a** User,
+**I want to** search a knowledge base for common questions and issues,
+**So that** I can self-serve without waiting for support.
+
+**Acceptance Criteria:**
+
+**Given** knowledge base exists
+**When** user searches FAQ
+**Then** they find:
+- Categorized FAQs:
+  - Getting started
+  - Integration setup
+  - Workflow execution
+  - Reports and dashboards
+  - Troubleshooting
+- Each FAQ includes:
+  - Question
+  - Step-by-step solution
+  - Screenshots or diagrams
+  - Related articles links
+  - "Was this helpful?" feedback
+**And** KB features:
+- Full-text search with autocomplete
+- Popular articles section
+- Recently viewed articles
+- Article rating and helpful votes
+- Suggest "Contact support" if no solution found
+
+### Story 20.6: Release Notes and Changelog
+
+**As a** User,
+**I want to** see what's new in each release,
+**So that** I can understand changes and learn new features.
+
+**Acceptance Criteria:**
+
+**Given** a new version is released
+**When** user views release notes
+**Then** they see:
+- Version number and release date
+- New features (with descriptions)
+- Enhancements and improvements
+- Bug fixes (with issue references)
+- Breaking changes (with migration guide)
+- Known issues and workarounds
+- Upgrade instructions
+**And** changelog is:
+- Filterable by version
+- Available in-app and online
+- Includes links to documentation for new features
+- Subscribeable (email digest of releases)
+
+### Story 20.7: API Documentation Portal
+
+**As a** Developer/Integrator,
+**I want to** interactive API documentation portal,
+**So that** I can explore and test APIs easily.
+
+**Acceptance Criteria:**
+
+**Given** API documentation portal is available
+**When** developer accesses it
+**Then** they find:
+- Interactive API explorer:
+  - Endpoint list grouped by resource
+  - Request/response examples (try in browser)
+  - Parameter documentation with validation rules
+  - Authentication requirements
+- OpenAPI specification download (YAML/JSON)
+- Postman collection export (click to import)
+- Try-it-out feature:
+  - Live API calls to demo environment
+  - Request builder (auto-fill authentication)
+  - Response viewer with syntax highlighting
+**And** portal includes:
+- Webhook documentation (payloads, authentication)
+- Rate limiting information
+- Error code reference
+- SDK examples (if applicable)
+
+### Story 20.8: Integration Guides for New Tools
+
+**As a** DevOps Engineer,
+**I want to** guides for integrating new testing tools,
+**So that** we can extend framework capabilities.
+
+**Acceptance Criteria:**
+
+**Given** integration guides exist
+**When** developer or integrator accesses them
+**Then** they find:
+- Integration template for new tools:
+  - Authentication flow (OAuth, API key, etc.)
+  - Adapter interface specification (required methods)
+  - Data mapping (tool format ↔ framework format)
+  - Step-by-step implementation guide
+- Example implementations:
+  - Code samples in Rust
+  - Configuration file examples (YAML)
+  - Mock responses for testing
+**And** guides include:
+- Testing checklist for new integration
+- Common pitfalls and solutions
+- Performance considerations
+- Security requirements (encryption, secrets management)
+
+### Story 20.9: Troubleshooting Guides
+
+**As a** Support Engineer/User,
+**I want to** detailed troubleshooting guides for common issues,
+**So that** I can resolve problems quickly without support tickets.
+
+**Acceptance Criteria:**
+
+**Given** troubleshooting guides exist
+**When** user encounters an issue
+**Then** they find guides for:
+- Common error messages with solutions
+- Integration issues:
+  - Authentication failures
+  - Connection timeouts
+  - API endpoint changes
+- Performance issues:
+  - Slow dashboard loads
+  - High memory usage
+  - Database query slowness
+- Workflow issues:
+  - Timer not starting
+  - Steps not saving
+  - Report generation failures
+**And** each guide includes:
+- Root cause analysis
+- Step-by-step resolution
+- Verification steps (how to confirm fix worked)
+- Preventive measures (how to avoid recurrence)
+- Escalation criteria (when to contact support)
+
+### Story 20.10: Best Practices and Patterns Library
+
+**As a** QA or Developer,
+**I want to** documented best practices and design patterns,
+**So that** we follow proven approaches.
+
+**Acceptance Criteria:**
+
+**Given** best practices library exists
+**When** user accesses it
+**Then** they find:
+- QA best practices:
+  - Test case design patterns
+  - Workflow structuring guidelines
+  - Time estimation techniques
+  - Bug reporting standards
+- Development best practices:
+  - Rust code patterns (see Epic 14)
+  - Error handling strategies
+  - Testing approaches
+  - Security guidelines
+- Integration patterns:
+  - Adapter pattern for external tools
+  - Retry and backoff strategies
+  - Data transformation approaches
+**And** library includes:
+- Code examples (before/after)
+- Anti-patterns (what NOT to do)
+- Design rationale (why this pattern works)
+- Applicability context (when to use, when not)
+
+### Story 20.11: Security Documentation
+
+**As a** Security Engineer/Administrator,
+**I want to** comprehensive security documentation,
+**So that** we maintain secure operations and compliance.
+
+**Acceptance Criteria:**
+
+**Given** security documentation is available
+**When** user accesses security docs
+**Then** they find:
+- Authentication and authorization documentation:
+  - How JWT works (Epic 15)
+  - RBAC configuration
+  - OAuth flows
+- Encryption documentation:
+  - What data is encrypted and how
+  - Key management best practices
+  - Encryption algorithms used (AES-256-GCM)
+- Compliance guidelines:
+  - Audit logging requirements
+  - Data retention policies
+  - Regulatory considerations (GDPR, etc.)
+- Security checklist:
+  - Before deployment verification steps
+  - Regular security review process
+  - Incident response procedures
+**And** documentation is:
+- Access-controlled (sensitive docs require authentication)
+- Regularly updated
+- Versioned with security patches
+
+### Story 20.12: Documentation Versioning and Search
+
+**As a** User,
+**I want to** search across all documentation and see relevant versions,
+**So that** I can find current information quickly.
+
+**Acceptance Criteria:**
+
+**Given** documentation is versioned and searchable
+**When** user searches documentation
+**Then** they can:
+- Search across all doc types:
+  - Developer docs
+  - User guides
+  - Troubleshooting
+  - Best practices
+  - Security docs
+- Use advanced search:
+  - Boolean operators (AND, OR, NOT)
+  - Filters by doc type, version, date
+  - Wildcard and fuzzy search
+- See search results with:
+  - Document type badge
+  - Version indicator
+  - Last updated date
+  - Relevance score
+  - Preview snippet
+- And documentation management:
+  - Each doc has version history
+  - "Latest version" always available
+  - Deprecated docs marked but searchable
+  - Version comparison (what changed between versions)
+
+---
+
 **PRD Workflow Completed: 2026-01-01**
 
 **Document Location:** `_bmad-output/planning-artifacts/prd.md`
 
-**Status:** ✅ Complete and Ready for Next Steps
+**Status:** ✅ Complete with Epics 1-20 Ready for Next Steps
 

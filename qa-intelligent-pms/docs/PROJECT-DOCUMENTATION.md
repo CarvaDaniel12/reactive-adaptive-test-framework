@@ -178,6 +178,7 @@ The main API server built with Axum. Handles HTTP routing, middleware, and reque
 | `splunk.rs` | `/api/splunk/*` | Log queries |
 | `support.rs` | `/api/support/*` | Error logs, diagnostics |
 | `ai.rs` | `/api/ai/*` | AI companion features |
+| `ai/anomalies.rs` | `/api/v1/ai/anomalies/*` | Anomaly detection, trends |
 
 ### qa-pms-core
 
@@ -248,7 +249,7 @@ Pattern detection and alerting system.
 
 ### qa-pms-ai
 
-AI companion with BYOK (Bring Your Own Key) support.
+AI companion with BYOK (Bring Your Own Key) support and anomaly detection.
 
 **Supported Providers:**
 - OpenAI (GPT-4, GPT-4o)
@@ -262,6 +263,13 @@ AI companion with BYOK (Bring Your Own Key) support.
 - Gherkin acceptance criteria analysis
 - Test suggestion generation
 - Contextual chatbot
+- **Anomaly Detection (Story 31.9)**: Statistical anomaly detection for workflows
+  - Z-score based detection (2σ threshold for warnings, 3σ for critical)
+  - Baseline metrics tracking (30-day moving average from historical data)
+  - Performance degradation detection (execution time > baseline + 2σ)
+  - Unusual execution time detection (z-score > 2.0 in both directions)
+  - Automatic alerting with rate limiting and severity filtering
+  - Historical baseline loading (last 30 executions per template)
 
 ---
 
@@ -364,6 +372,10 @@ All API endpoints require authentication via session or API key.
 | POST | `/api/ai/chat` | Send chat message |
 | POST | `/api/ai/semantic-search` | Semantic test search |
 | POST | `/api/ai/analyze-gherkin` | Analyze Gherkin criteria |
+| POST | `/api/v1/ai/check-anomalies` | Check anomalies for workflow execution |
+| GET | `/api/v1/ai/anomalies` | List anomalies (with filters: date_range, type, severity) |
+| GET | `/api/v1/ai/anomalies/:id` | Get anomaly details |
+| GET | `/api/v1/ai/anomalies/trends` | Get anomaly trends (frequency, severity distribution) |
 
 ---
 
@@ -411,6 +423,25 @@ CREATE TABLE ai_configs (
     enabled BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Anomalies (Story 31.9: Anomaly Detection)
+CREATE TABLE anomalies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workflow_instance_id UUID REFERENCES workflow_instances(id),
+    anomaly_type VARCHAR(50) NOT NULL,
+    severity VARCHAR(20) NOT NULL DEFAULT 'info',
+    description TEXT NOT NULL,
+    metrics JSONB NOT NULL DEFAULT '{}',
+    affected_entities TEXT[],
+    investigation_steps TEXT[],
+    detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_anomalies_workflow_instance ON anomalies(workflow_instance_id);
+CREATE INDEX idx_anomalies_type ON anomalies(anomaly_type);
+CREATE INDEX idx_anomalies_severity ON anomalies(severity);
+CREATE INDEX idx_anomalies_detected_at ON anomalies(detected_at DESC);
 ```
 
 ---

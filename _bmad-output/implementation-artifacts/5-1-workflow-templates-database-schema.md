@@ -36,28 +36,28 @@ So that workflows can be stored and customized.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create workflow migration file (AC: #1, #2, #3, #4, #5)
-  - [ ] 1.1: Create `workflow_templates` table
-  - [ ] 1.2: Create `workflow_instances` table
-  - [ ] 1.3: Create `workflow_step_results` table
-  - [ ] 1.4: Add indexes for performance
-  - [ ] 1.5: Add foreign key constraints
+- [x] Task 1: Create workflow migration file (AC: #1, #2, #3, #4, #5)
+  - [x] 1.1: Create `workflow_templates` table
+  - [x] 1.2: Create `workflow_instances` table
+  - [x] 1.3: Create `workflow_step_results` table
+  - [x] 1.4: Add indexes for performance
+  - [x] 1.5: Add foreign key constraints
 
-- [ ] Task 2: Create Rust types in qa-pms-workflow (AC: #6)
-  - [ ] 2.1: Create WorkflowTemplate struct
-  - [ ] 2.2: Create WorkflowInstance struct
-  - [ ] 2.3: Create WorkflowStepResult struct
-  - [ ] 2.4: Create WorkflowStatus enum
-  - [ ] 2.5: Create StepStatus enum
+- [x] Task 2: Create Rust types in qa-pms-workflow (AC: #6)
+  - [x] 2.1: Create WorkflowTemplate struct
+  - [x] 2.2: Create WorkflowInstance struct
+  - [x] 2.3: Create WorkflowStepResult struct
+  - [x] 2.4: Create WorkflowStatus enum
+  - [x] 2.5: Create StepStatus enum
 
-- [ ] Task 3: Create WorkflowStep type for steps_json (AC: #6)
-  - [ ] 3.1: Define WorkflowStep struct (name, description, estimated_minutes)
-  - [ ] 3.2: Implement serialization/deserialization
+- [x] Task 3: Create WorkflowStep type for steps_json (AC: #6)
+  - [x] 3.1: Define WorkflowStep struct (name, description, estimated_minutes)
+  - [x] 3.2: Implement serialization/deserialization
 
-- [ ] Task 4: Add repository functions (AC: #6)
-  - [ ] 4.1: Create template CRUD functions
-  - [ ] 4.2: Create instance CRUD functions
-  - [ ] 4.3: Create step result functions
+- [x] Task 4: Add repository functions (AC: #6)
+  - [x] 4.1: Create template CRUD functions
+  - [x] 4.2: Create instance CRUD functions
+  - [x] 4.3: Create step result functions
 
 ## Dev Notes
 
@@ -455,9 +455,10 @@ N/A
 - Foreign keys with ON DELETE CASCADE for step results
 - Triggers for auto-updating updated_at columns
 - Rust types with FromRow derives for SQLx
-- WorkflowStatus and StepStatus enums with string conversion
+- WorkflowStatus and StepStatus enums with string conversion (DB strings)
 - Repository functions using dynamic queries (sqlx::query_as)
 - 4 unit tests passing
+- 2026-01-07 hardening: removed expect/unwrap to pass clippy -D warnings (workflow crate)
 
 ### File List
 
@@ -465,3 +466,9 @@ N/A
 - crates/qa-pms-workflow/src/types.rs (new)
 - crates/qa-pms-workflow/src/repository.rs (new)
 - crates/qa-pms-workflow/src/lib.rs (updated)
+
+## Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] Remove expect() in production workflow repository (JSON serialization in create_template/links) [crates/qa-pms-workflow/src/repository.rs]
+- [x] [AI-Review][MED] Make cargo clippy -- -D warnings pass for qa-pms-workflow (unwrap/expect + clippy lint fixes) [crates/qa-pms-workflow]
+- [x] [AI-Review][MED] Update this story's Tasks/Subtasks checkboxes to reflect actual completion and align with sprint-status tracking [_bmad-output/implementation-artifacts/5-1-workflow-templates-database-schema.md]

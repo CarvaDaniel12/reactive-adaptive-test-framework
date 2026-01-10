@@ -63,7 +63,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # Time & IDs
 chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.11", features = ["v4", "serde"] }
+uuid = { version = "1.11", features = ["v4", "v5", "serde"] }
 
 # Environment
 dotenvy = "0.15"
@@ -96,7 +96,20 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 all = "warn"
-pedantic = { level = "allow", priority = -1 }
-nursery = { level = "allow", priority = -1 }
+pedantic = "warn"
+nursery = "warn"
 unwrap_used = "warn"
 expect_used = "warn"
+# Allow precision loss casts for metrics - these don't need full precision
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_possible_wrap = "allow"
+cast_sign_loss = "allow"
+# Allow string format patterns - they're clearer than write!
+format_push_string = "allow"
+# Allow missing docs for now - will add incrementally
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+# Other reasonable allows
+module_name_repetitions = "allow"
+must_use_candidate = "allow"

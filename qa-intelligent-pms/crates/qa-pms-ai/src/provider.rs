@@ -44,7 +44,7 @@ pub struct AIClient {
 
 impl AIClient {
     /// Create a new AI client.
-    #[must_use] 
+    #[must_use]
     pub fn new(provider: Box<dyn AIProvider>, model: String) -> Self {
         Self { provider, model }
     }
@@ -62,8 +62,9 @@ impl AIClient {
             ProviderType::Deepseek => Box::new(DeepseekProvider::new(api_key)),
             ProviderType::Zai => Box::new(ZaiProvider::new(api_key)),
             ProviderType::Custom => {
-                let base_url = custom_base_url
-                    .ok_or_else(|| AIError::InvalidApiKey("Custom provider requires base URL".into()))?;
+                let base_url = custom_base_url.ok_or_else(|| {
+                    AIError::InvalidApiKey("Custom provider requires base URL".into())
+                })?;
                 Box::new(CustomProvider::new(api_key, base_url))
             }
         };
@@ -85,20 +86,20 @@ impl AIClient {
     }
 
     /// Get the provider type.
-    #[must_use] 
+    #[must_use]
     pub fn provider_type(&self) -> ProviderType {
         self.provider.provider_type()
     }
 
     /// Get the model.
-    #[must_use] 
+    #[must_use]
     pub fn model(&self) -> &str {
         &self.model
     }
 }
 
 /// Get available models for all providers.
-#[must_use] 
+#[must_use]
 pub fn get_all_provider_models() -> Vec<ProviderModels> {
     vec![
         ProviderModels {
@@ -140,7 +141,7 @@ pub struct OpenAIProvider {
 
 impl OpenAIProvider {
     /// Create a new `OpenAI` provider.
-    #[must_use] 
+    #[must_use]
     pub fn new(api_key: SecretString) -> Self {
         Self {
             client: Client::new(),
@@ -150,7 +151,7 @@ impl OpenAIProvider {
     }
 
     /// Get default models.
-    #[must_use] 
+    #[must_use]
     pub fn default_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
@@ -237,7 +238,10 @@ impl AIProvider for OpenAIProvider {
         let response = self
             .client
             .post(format!("{}/chat/completions", self.base_url))
-            .header("Authorization", format!("Bearer {}", self.api_key.expose_secret()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.api_key.expose_secret()),
+            )
             .header("Content-Type", "application/json")
             .json(&request)
             .timeout(Duration::from_secs(30))
@@ -303,7 +307,10 @@ impl AIProvider for OpenAIProvider {
         let response = self
             .client
             .post(format!("{}/chat/completions", self.base_url))
-            .header("Authorization", format!("Bearer {}", self.api_key.expose_secret()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.api_key.expose_secret()),
+            )
             .header("Content-Type", "application/json")
             .json(&request)
             .timeout(Duration::from_secs(60))
@@ -359,7 +366,7 @@ pub struct AnthropicProvider {
 
 impl AnthropicProvider {
     /// Create a new Anthropic provider.
-    #[must_use] 
+    #[must_use]
     pub fn new(api_key: SecretString) -> Self {
         Self {
             client: Client::new(),
@@ -369,7 +376,7 @@ impl AnthropicProvider {
     }
 
     /// Get default models.
-    #[must_use] 
+    #[must_use]
     pub fn default_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
@@ -470,7 +477,10 @@ impl AIProvider for AnthropicProvider {
         } else {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            warn!("Anthropic connection test failed: {} - {}", status, error_text);
+            warn!(
+                "Anthropic connection test failed: {} - {}",
+                status, error_text
+            );
 
             if status.as_u16() == 401 {
                 return Err(AIError::InvalidApiKey("Invalid Anthropic API key".into()));
@@ -574,7 +584,7 @@ pub struct DeepseekProvider {
 
 impl DeepseekProvider {
     /// Create a new Deepseek provider.
-    #[must_use] 
+    #[must_use]
     pub fn new(api_key: SecretString) -> Self {
         let mut inner = OpenAIProvider::new(api_key);
         inner.base_url = "https://api.deepseek.com".to_string();
@@ -582,7 +592,7 @@ impl DeepseekProvider {
     }
 
     /// Get default models.
-    #[must_use] 
+    #[must_use]
     pub fn default_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
@@ -633,7 +643,7 @@ pub struct ZaiProvider {
 
 impl ZaiProvider {
     /// Create a new z.ai provider.
-    #[must_use] 
+    #[must_use]
     pub fn new(api_key: SecretString) -> Self {
         let mut inner = OpenAIProvider::new(api_key);
         inner.base_url = "https://api.z.ai/v1".to_string();
@@ -641,7 +651,7 @@ impl ZaiProvider {
     }
 
     /// Get default models.
-    #[must_use] 
+    #[must_use]
     pub fn default_models() -> Vec<ModelInfo> {
         vec![ModelInfo {
             id: "z-1".to_string(),
@@ -684,7 +694,7 @@ pub struct CustomProvider {
 
 impl CustomProvider {
     /// Create a new custom provider.
-    #[must_use] 
+    #[must_use]
     pub fn new(api_key: SecretString, base_url: String) -> Self {
         let mut inner = OpenAIProvider::new(api_key);
         inner.base_url = base_url;

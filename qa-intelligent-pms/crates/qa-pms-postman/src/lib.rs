@@ -11,8 +11,8 @@
 
 mod client;
 mod error;
-mod types;
 pub mod health;
+mod types;
 
 pub use client::PostmanClient;
 pub use error::PostmanError;

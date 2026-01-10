@@ -5,6 +5,7 @@
 use anyhow::{Context, Result};
 use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
+use tracing;
 
 /// Application settings loaded from environment.
 #[derive(Debug, Clone)]
@@ -30,6 +31,8 @@ pub struct ServerSettings {
     pub host: String,
     /// Port to listen on
     pub port: u16,
+    /// Graceful shutdown timeout in seconds (default: 30, min: 1, max: 300)
+    pub shutdown_timeout_secs: Option<u64>,
 }
 
 impl Default for ServerSettings {
@@ -37,7 +40,24 @@ impl Default for ServerSettings {
         Self {
             host: "127.0.0.1".to_string(),
             port: 3000,
+            shutdown_timeout_secs: None, // Default 30 seconds applied in shutdown_timeout()
         }
+    }
+}
+
+impl ServerSettings {
+    /// Get graceful shutdown timeout in seconds.
+    ///
+    /// Returns configured value, or default of 30 seconds if not set.
+    /// Validates and clamps value to 1-300 seconds range.
+    #[must_use]
+    pub fn shutdown_timeout(&self) -> u64 {
+        const DEFAULT_TIMEOUT_SECS: u64 = 30;
+        const MIN_TIMEOUT_SECS: u64 = 1;
+        const MAX_TIMEOUT_SECS: u64 = 300;
+
+        let timeout = self.shutdown_timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS);
+        timeout.clamp(MIN_TIMEOUT_SECS, MAX_TIMEOUT_SECS)
     }
 }
 
@@ -147,12 +167,28 @@ impl Settings {
         // Load .env file (ignore if not present)
         let _ = dotenvy::dotenv();
 
+        let shutdown_timeout_secs = std::env::var("QA_PMS_SHUTDOWN_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| {
+                s.parse::<u64>()
+                    .ok()
+                    .filter(|&v| (1..=300).contains(&v))
+                    .or_else(|| {
+                        tracing::warn!(
+                            "QA_PMS_SHUTDOWN_TIMEOUT_SECS={} is invalid (must be 1-300), using default 30s",
+                            s
+                        );
+                        None
+                    })
+            });
+
         let server = ServerSettings {
             host: std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
             port: std::env::var("PORT")
                 .unwrap_or_else(|_| "3000".to_string())
                 .parse()
                 .context("PORT must be a valid number")?,
+            shutdown_timeout_secs,
         };
 
         let database = DatabaseSettings {
@@ -194,9 +230,7 @@ impl Settings {
 
         // API Token auth (preferred - simpler)
         let email = std::env::var("JIRA_EMAIL").ok();
-        let api_token = std::env::var("JIRA_API_TOKEN")
-            .ok()
-            .map(SecretString::from);
+        let api_token = std::env::var("JIRA_API_TOKEN").ok().map(SecretString::from);
 
         // OAuth auth (alternative)
         let client_id = std::env::var("JIRA_CLIENT_ID").ok();
@@ -272,5 +306,41 @@ mod tests {
         let masked = db.url_masked();
         assert!(!masked.contains("secret123"));
         assert!(masked.contains("****"));
+    }
+
+    #[test]
+    fn test_server_shutdown_timeout_default() {
+        let server = ServerSettings::default();
+        assert_eq!(server.shutdown_timeout(), 30);
+    }
+
+    #[test]
+    fn test_server_shutdown_timeout_configured() {
+        let server = ServerSettings {
+            host: "127.0.0.1".to_string(),
+            port: 3000,
+            shutdown_timeout_secs: Some(60),
+        };
+        assert_eq!(server.shutdown_timeout(), 60);
+    }
+
+    #[test]
+    fn test_server_shutdown_timeout_clamped_min() {
+        let server = ServerSettings {
+            host: "127.0.0.1".to_string(),
+            port: 3000,
+            shutdown_timeout_secs: Some(0),
+        };
+        assert_eq!(server.shutdown_timeout(), 1); // Clamped to minimum
+    }
+
+    #[test]
+    fn test_server_shutdown_timeout_clamped_max() {
+        let server = ServerSettings {
+            host: "127.0.0.1".to_string(),
+            port: 3000,
+            shutdown_timeout_secs: Some(500),
+        };
+        assert_eq!(server.shutdown_timeout(), 300); // Clamped to maximum
     }
 }

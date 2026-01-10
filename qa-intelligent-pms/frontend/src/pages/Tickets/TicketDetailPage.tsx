@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { RelatedTests } from "@/components/search";
 import { TemplateSelectionDialog } from "@/components/workflow";
+import { TestGenerator } from "@/components/ai";
 import { useActiveWorkflow, useCreateWorkflow, useToast } from "@/hooks";
 import type { WorkflowTemplate } from "@/hooks/useWorkflow";
 import { TicketMetadata } from "./TicketMetadata";
@@ -200,38 +201,44 @@ export function TicketDetailPage() {
           </h1>
         </div>
 
-        {/* Start/Resume Workflow Button */}
-        <button
-          onClick={handleStartWorkflow}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 text-white 
-                   rounded-lg transition-colors font-medium shadow-sm
-                   hover:shadow-md flex-shrink-0 ${
-                     activeWorkflowData?.exists
-                       ? "bg-amber-500 hover:bg-amber-600"
-                       : "bg-primary-600 hover:bg-primary-700"
-                   }`}
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Generate Tests Button (Task 5.2) */}
+          <TestGenerator ticketKey={ticket.key} ticketTitle={ticket.title} />
+          
+          {/* Start/Resume Workflow Button */}
+          <button
+            onClick={handleStartWorkflow}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 text-white 
+                     rounded-lg transition-colors font-medium shadow-sm
+                     hover:shadow-md shrink-0 ${
+                       activeWorkflowData?.exists
+                         ? "bg-amber-500 hover:bg-amber-600"
+                         : "bg-primary-600 hover:bg-primary-700"
+                     }`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          {activeWorkflowData?.exists ? "Resume Workflow" : "Start Workflow"}
-        </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {activeWorkflowData?.exists ? "Resume Workflow" : "Start Workflow"}
+          </button>
+        </div>
       </div>
 
       {/* Metadata */}

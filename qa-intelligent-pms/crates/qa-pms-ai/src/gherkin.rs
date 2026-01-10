@@ -15,7 +15,7 @@ pub struct GherkinAnalyzer {
 
 impl GherkinAnalyzer {
     /// Create a new Gherkin analyzer.
-    #[must_use] 
+    #[must_use]
     pub const fn new(client: AIClient) -> Self {
         Self { client }
     }
@@ -218,7 +218,7 @@ impl GherkinAnalyzer {
     }
 
     /// Perform a fallback analysis (when AI is unavailable).
-    #[must_use] 
+    #[must_use]
     pub fn fallback_analysis(input: &GherkinInput) -> GherkinAnalysisResult {
         let mut scenarios = Vec::new();
         let mut edge_cases = Vec::new();
@@ -242,15 +242,21 @@ impl GherkinAnalyzer {
                     });
                 }
                 if let Some(ref mut scenario) = current_scenario {
-                    scenario.given.push(trimmed.trim_start_matches("Given ").to_string());
+                    scenario
+                        .given
+                        .push(trimmed.trim_start_matches("Given ").to_string());
                 }
             } else if trimmed.starts_with("When") {
                 if let Some(ref mut scenario) = current_scenario {
-                    scenario.when.push(trimmed.trim_start_matches("When ").to_string());
+                    scenario
+                        .when
+                        .push(trimmed.trim_start_matches("When ").to_string());
                 }
             } else if trimmed.starts_with("Then") {
                 if let Some(ref mut scenario) = current_scenario {
-                    scenario.then.push(trimmed.trim_start_matches("Then ").to_string());
+                    scenario
+                        .then
+                        .push(trimmed.trim_start_matches("Then ").to_string());
                 }
             } else if trimmed.starts_with("And") {
                 if let Some(ref mut scenario) = current_scenario {

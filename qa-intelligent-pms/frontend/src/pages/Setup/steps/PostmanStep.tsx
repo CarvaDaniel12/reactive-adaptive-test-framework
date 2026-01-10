@@ -3,7 +3,7 @@
  *
  * Collects Postman API key and tests connection.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { WizardStepHeader } from "@/components/wizard/WizardStepHeader";
 import { WizardNavigation } from "@/components/wizard/WizardNavigation";
 import {
@@ -30,6 +30,13 @@ export function PostmanStep() {
   const [connectionState, setConnectionState] = useState<ConnectionState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [workspaceCount, setWorkspaceCount] = useState<number | null>(null);
+
+  // Rehydrate from persisted store when available
+  useEffect(() => {
+    if (postmanData) {
+      setApiKey(postmanData.apiKey ?? "");
+    }
+  }, [postmanData]);
 
   // Validation - Postman API keys are typically 64 chars starting with PMAK-
   const isKeyValid = apiKey.trim().length >= 32;
@@ -118,6 +125,7 @@ export function PostmanStep() {
               onChange={(e) => handleFieldChange(e.target.value)}
               placeholder="PMAK-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
               className="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-lg
+                text-neutral-900 placeholder:text-neutral-400
                 focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                 transition-colors font-mono text-sm"
             />

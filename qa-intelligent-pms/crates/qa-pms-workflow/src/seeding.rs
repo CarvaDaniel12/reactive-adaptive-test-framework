@@ -12,7 +12,7 @@ use crate::types::WorkflowStep;
 // ============================================================================
 
 /// Bug Fix workflow template steps.
-#[must_use] 
+#[must_use]
 pub fn bug_fix_template_steps() -> Vec<WorkflowStep> {
     vec![
         WorkflowStep {
@@ -44,7 +44,7 @@ pub fn bug_fix_template_steps() -> Vec<WorkflowStep> {
 }
 
 /// Feature Test workflow template steps.
-#[must_use] 
+#[must_use]
 pub fn feature_test_template_steps() -> Vec<WorkflowStep> {
     vec![
         WorkflowStep {
@@ -76,7 +76,7 @@ pub fn feature_test_template_steps() -> Vec<WorkflowStep> {
 }
 
 /// Regression Test workflow template steps.
-#[must_use] 
+#[must_use]
 pub fn regression_template_steps() -> Vec<WorkflowStep> {
     vec![
         WorkflowStep {
@@ -154,14 +154,17 @@ pub async fn seed_default_templates(pool: &PgPool) -> Result<SeedingResult, sqlx
         .await?;
 
         if exists {
-            debug!(template = template.name, "Default template already exists, skipping");
+            debug!(
+                template = template.name,
+                "Default template already exists, skipping"
+            );
             result.skipped += 1;
             continue;
         }
 
         // Create the template
         let steps = (template.steps_fn)();
-        let steps_json = serde_json::to_value(&steps).expect("Failed to serialize steps");
+        let steps_json = sqlx::types::Json(steps);
 
         sqlx::query(
             r"
@@ -176,7 +179,10 @@ pub async fn seed_default_templates(pool: &PgPool) -> Result<SeedingResult, sqlx
         .execute(pool)
         .await?;
 
-        info!(template = template.name, "Created default workflow template");
+        info!(
+            template = template.name,
+            "Created default workflow template"
+        );
         result.created += 1;
     }
 
@@ -236,8 +242,16 @@ mod tests {
             regression_template_steps(),
         ] {
             for step in steps {
-                assert!(!step.description.is_empty(), "Step {} has empty description", step.name);
-                assert!(step.estimated_minutes > 0, "Step {} has invalid time", step.name);
+                assert!(
+                    !step.description.is_empty(),
+                    "Step {} has empty description",
+                    step.name
+                );
+                assert!(
+                    step.estimated_minutes > 0,
+                    "Step {} has invalid time",
+                    step.name
+                );
             }
         }
     }
@@ -245,15 +259,24 @@ mod tests {
     #[test]
     fn test_total_estimated_times() {
         // Bug fix: 15 + 20 + 30 + 20 + 10 = 95 minutes
-        let bug_total: i32 = bug_fix_template_steps().iter().map(|s| s.estimated_minutes).sum();
+        let bug_total: i32 = bug_fix_template_steps()
+            .iter()
+            .map(|s| s.estimated_minutes)
+            .sum();
         assert_eq!(bug_total, 95);
 
         // Feature: 15 + 45 + 30 + 30 + 15 = 135 minutes
-        let feature_total: i32 = feature_test_template_steps().iter().map(|s| s.estimated_minutes).sum();
+        let feature_total: i32 = feature_test_template_steps()
+            .iter()
+            .map(|s| s.estimated_minutes)
+            .sum();
         assert_eq!(feature_total, 135);
 
         // Regression: 20 + 60 + 30 + 15 = 125 minutes
-        let regression_total: i32 = regression_template_steps().iter().map(|s| s.estimated_minutes).sum();
+        let regression_total: i32 = regression_template_steps()
+            .iter()
+            .map(|s| s.estimated_minutes)
+            .sum();
         assert_eq!(regression_total, 125);
     }
 }

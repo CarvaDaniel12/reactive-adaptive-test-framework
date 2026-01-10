@@ -48,7 +48,7 @@ pub enum AIError {
 
 impl AIError {
     /// Check if this error should trigger a fallback to non-AI behavior.
-    #[must_use] 
+    #[must_use]
     pub const fn should_fallback(&self) -> bool {
         matches!(
             self,

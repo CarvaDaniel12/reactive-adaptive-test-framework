@@ -221,10 +221,13 @@ pub struct SearchResponse {
     /// List of tickets
     pub issues: Vec<JiraTicket>,
     /// Total number of matching tickets
+    #[serde(default)]
     pub total: u32,
     /// Starting index
+    #[serde(default)]
     pub start_at: u32,
     /// Maximum results per page
+    #[serde(default)]
     pub max_results: u32,
 }
 
@@ -237,6 +240,19 @@ pub struct TicketFilters {
     pub assignee: Option<String>,
     /// Filter by project key
     pub project: Option<String>,
+    /// Filter by sprint scope (requires Jira Software)
+    pub sprint: Option<SprintFilter>,
+}
+
+/// Sprint filter for Jira Software JQL.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SprintFilter {
+    /// Tickets in currently open sprints.
+    Open,
+    /// Tickets in closed sprints.
+    Closed,
+    /// Tickets in future sprints.
+    Future,
 }
 
 // ============================================================================
@@ -378,7 +394,9 @@ impl JiraTicketsClient {
     /// Build the authorization header value.
     fn auth_header(&self) -> String {
         match &self.auth {
-            JiraAuth::ApiToken { email, api_token, .. } => {
+            JiraAuth::ApiToken {
+                email, api_token, ..
+            } => {
                 let credentials = format!("{email}:{api_token}");
                 format!("Basic {}", BASE64.encode(credentials.as_bytes()))
             }
@@ -391,7 +409,11 @@ impl JiraTicketsClient {
     /// Get a display name for logging (hides sensitive data).
     fn display_name(&self) -> String {
         match &self.auth {
-            JiraAuth::ApiToken { instance_url, email, .. } => {
+            JiraAuth::ApiToken {
+                instance_url,
+                email,
+                ..
+            } => {
                 format!("{instance_url} ({email})")
             }
             JiraAuth::OAuth { cloud_id, .. } => {
@@ -445,7 +467,23 @@ impl JiraTicketsClient {
             anyhow::bail!("Jira API error: {status} - {body}");
         }
 
-        let search_response: SearchResponse = response.json().await?;
+        // Parse body manually so we can include a useful snippet on decode errors.
+        let status = response.status();
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("<missing>")
+            .to_string();
+        let body = response.text().await.unwrap_or_default();
+
+        let search_response: SearchResponse = serde_json::from_str(&body).map_err(|e| {
+            let snippet: String = body.chars().take(800).collect();
+            anyhow::anyhow!(
+                "error decoding response body (status={status}, content-type={content_type}). \
+                 parse_error={e}. body_snippet={snippet}"
+            )
+        })?;
 
         debug!(
             total = search_response.total,
@@ -458,6 +496,14 @@ impl JiraTicketsClient {
 
     /// Build JQL query from filters.
     fn build_jql(filters: &TicketFilters) -> String {
+        // Jira Cloud may reject "unbounded" JQL queries (no restrictions).
+        // To keep the UX sane for first-time users, we apply a default time
+        // window restriction only when no other restrictions are present.
+        //
+        // Note: This is intentionally conservative; it can be made configurable
+        // once the UI exposes a "time range" filter.
+        const DEFAULT_UPDATED_WINDOW_DAYS: i32 = 30;
+
         let mut clauses = Vec::new();
 
         if let Some(project) = &filters.project {
@@ -483,17 +529,22 @@ impl JiraTicketsClient {
             }
         }
 
-        let base = if clauses.is_empty() {
-            String::new()
-        } else {
-            clauses.join(" AND ")
-        };
-
-        if base.is_empty() {
-            "ORDER BY updated DESC".to_string()
-        } else {
-            format!("{base} ORDER BY updated DESC")
+        if let Some(sprint) = filters.sprint {
+            let clause = match sprint {
+                SprintFilter::Open => "Sprint in openSprints()",
+                SprintFilter::Closed => "Sprint in closedSprints()",
+                SprintFilter::Future => "Sprint in futureSprints()",
+            };
+            clauses.push(clause.to_string());
         }
+
+        // If still empty, add a default time window to avoid unbounded queries.
+        if clauses.is_empty() {
+            clauses.push(format!("updated >= -{DEFAULT_UPDATED_WINDOW_DAYS}d"));
+        }
+
+        let base = clauses.join(" AND ");
+        format!("{base} ORDER BY updated DESC")
     }
 
     /// Update the access token (after refresh).
@@ -501,7 +552,11 @@ impl JiraTicketsClient {
     ///
     /// Only works for OAuth-based clients.
     pub fn update_token(&mut self, access_token: String) {
-        if let JiraAuth::OAuth { access_token: ref mut token, .. } = self.auth {
+        if let JiraAuth::OAuth {
+            access_token: ref mut token,
+            ..
+        } = self.auth
+        {
             *token = access_token;
         }
     }
@@ -723,7 +778,18 @@ mod tests {
     fn test_build_jql_empty_filters() {
         let filters = TicketFilters::default();
         let jql = JiraTicketsClient::build_jql(&filters);
-        assert_eq!(jql, "ORDER BY updated DESC");
+        assert_eq!(jql, "updated >= -30d ORDER BY updated DESC");
+    }
+
+    #[test]
+    fn test_build_jql_with_open_sprint() {
+        let filters = TicketFilters {
+            sprint: Some(SprintFilter::Open),
+            ..Default::default()
+        };
+        let jql = JiraTicketsClient::build_jql(&filters);
+        assert!(jql.contains("Sprint in openSprints()"));
+        assert!(jql.ends_with("ORDER BY updated DESC"));
     }
 
     #[test]
@@ -775,6 +841,7 @@ mod tests {
             statuses: vec!["Open".to_string()],
             assignee: Some("user@example.com".to_string()),
             project: Some("TEST".to_string()),
+            sprint: None,
         };
         let jql = JiraTicketsClient::build_jql(&filters);
         assert!(jql.contains("project = \"TEST\""));
@@ -892,7 +959,8 @@ mod tests {
             }
         }"#;
 
-        let ticket: TicketDetail = serde_json::from_str(json).expect("Failed to parse ticket detail");
+        let ticket: TicketDetail =
+            serde_json::from_str(json).expect("Failed to parse ticket detail");
         assert_eq!(ticket.key, "PROJ-456");
         assert_eq!(ticket.fields.summary, "Detailed ticket");
         assert!(ticket.fields.description.is_some());
@@ -940,7 +1008,8 @@ mod tests {
             }
         }"#;
 
-        let ticket: TicketDetail = serde_json::from_str(json).expect("Failed to parse ticket with comments");
+        let ticket: TicketDetail =
+            serde_json::from_str(json).expect("Failed to parse ticket with comments");
         assert!(ticket.fields.comment.is_some());
         let comments = ticket.fields.comment.unwrap();
         assert_eq!(comments.total, 1);
@@ -979,7 +1048,8 @@ mod tests {
             }
         }"#;
 
-        let ticket: TicketDetail = serde_json::from_str(json).expect("Failed to parse ticket with attachments");
+        let ticket: TicketDetail =
+            serde_json::from_str(json).expect("Failed to parse ticket with attachments");
         assert!(ticket.fields.attachment.is_some());
         let attachments = ticket.fields.attachment.unwrap();
         assert_eq!(attachments.len(), 1);

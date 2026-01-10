@@ -8,8 +8,8 @@
 use sqlx::PgPool;
 use tracing::info;
 
-use crate::types::{DetectedPattern, WorkflowAnalysisData, Severity, NewPattern, PatternType};
 use crate::repository::PatternRepository;
+use crate::types::{DetectedPattern, NewPattern, PatternType, Severity, WorkflowAnalysisData};
 
 /// Time excess threshold (50% over estimate).
 const TIME_EXCESS_THRESHOLD: f64 = 0.5;
@@ -35,12 +35,15 @@ impl PatternDetector {
     /// Run pattern detection after a workflow completion.
     ///
     /// This should be called in the background after each workflow completes.
-    pub async fn analyze_workflow(&self, workflow_id: uuid::Uuid) -> anyhow::Result<Vec<DetectedPattern>> {
+    pub async fn analyze_workflow(
+        &self,
+        workflow_id: uuid::Uuid,
+    ) -> anyhow::Result<Vec<DetectedPattern>> {
         let mut detected = Vec::new();
 
         // Get workflow data
         let workflow_data = self.get_workflow_data(workflow_id).await?;
-        
+
         // 1. Check for time excess
         if let Some(pattern) = self.detect_time_excess(&workflow_data).await? {
             detected.push(pattern);
@@ -65,8 +68,11 @@ impl PatternDetector {
         Ok(detected)
     }
 
-    async fn get_workflow_data(&self, workflow_id: uuid::Uuid) -> anyhow::Result<WorkflowAnalysisData> {
-        let row: (uuid::Uuid, String, String, i64, Option<i64>, Option<String>, chrono::DateTime<chrono::Utc>) = 
+    async fn get_workflow_data(
+        &self,
+        workflow_id: uuid::Uuid,
+    ) -> anyhow::Result<WorkflowAnalysisData> {
+        let row: (uuid::Uuid, String, String, i64, Option<i64>, Option<String>, chrono::DateTime<chrono::Utc>) =
             sqlx::query_as(
                 r"
                 SELECT 
@@ -111,7 +117,10 @@ impl PatternDetector {
     }
 
     /// Detect time excess pattern (>50% over estimate).
-    async fn detect_time_excess(&self, data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
+    async fn detect_time_excess(
+        &self,
+        data: &WorkflowAnalysisData,
+    ) -> anyhow::Result<Option<DetectedPattern>> {
         let Some(estimated) = data.estimated_duration_seconds else {
             return Ok(None);
         };
@@ -120,7 +129,8 @@ impl PatternDetector {
             return Ok(None);
         }
 
-        let excess_percent = (data.actual_duration_seconds as f64 - estimated as f64) / estimated as f64;
+        let excess_percent =
+            (data.actual_duration_seconds as f64 - estimated as f64) / estimated as f64;
 
         if excess_percent <= TIME_EXCESS_THRESHOLD {
             return Ok(None);
@@ -164,7 +174,10 @@ impl PatternDetector {
     }
 
     /// Detect consecutive problems (3+ tickets with same issue).
-    async fn detect_consecutive_problems(&self, _data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
+    async fn detect_consecutive_problems(
+        &self,
+        _data: &WorkflowAnalysisData,
+    ) -> anyhow::Result<Option<DetectedPattern>> {
         // Get last 5 completed workflows
         let recent: Vec<(String, Option<String>)> = sqlx::query_as(
             r"
@@ -186,7 +199,7 @@ impl PatternDetector {
 
         // Extract keywords from notes and find common factors
         let keywords = self.extract_common_keywords(&recent);
-        
+
         if keywords.is_empty() {
             return Ok(None);
         }
@@ -219,7 +232,9 @@ impl PatternDetector {
             title: format!("Recurring issue: {common_keyword}"),
             description: Some(format!(
                 "{} of the last {} tickets mention '{}'",
-                count, recent.len(), common_keyword
+                count,
+                recent.len(),
+                common_keyword
             )),
             affected_tickets: affected,
             common_factor: Some(common_keyword),
@@ -241,7 +256,10 @@ impl PatternDetector {
     }
 
     /// Detect spike in tickets for an area.
-    async fn detect_spike(&self, data: &WorkflowAnalysisData) -> anyhow::Result<Option<DetectedPattern>> {
+    async fn detect_spike(
+        &self,
+        data: &WorkflowAnalysisData,
+    ) -> anyhow::Result<Option<DetectedPattern>> {
         // Compare today's count to 7-day average
         let stats: Option<(i64, f64)> = sqlx::query_as(
             r"
@@ -319,10 +337,12 @@ impl PatternDetector {
     fn extract_common_keywords(&self, data: &[(String, Option<String>)]) -> Vec<(String, usize)> {
         use std::collections::HashMap;
 
-        let stop_words = ["the", "a", "an", "is", "was", "were", "been", "be", "have", "has", 
-                         "had", "do", "does", "did", "will", "would", "could", "should",
-                         "and", "or", "but", "if", "then", "else", "when", "at", "by",
-                         "for", "with", "about", "to", "from", "in", "on", "of", "it", "this"];
+        let stop_words = [
+            "the", "a", "an", "is", "was", "were", "been", "be", "have", "has", "had", "do",
+            "does", "did", "will", "would", "could", "should", "and", "or", "but", "if", "then",
+            "else", "when", "at", "by", "for", "with", "about", "to", "from", "in", "on", "of",
+            "it", "this",
+        ];
 
         let mut keyword_counts: HashMap<String, usize> = HashMap::new();
 

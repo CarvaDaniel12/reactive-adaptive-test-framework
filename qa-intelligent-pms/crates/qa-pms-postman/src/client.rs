@@ -95,8 +95,9 @@ impl PostmanClient {
 
             if status.is_success() {
                 let body = response.text().await?;
-                serde_json::from_str(&body)
-                    .map_err(|e| PostmanError::Parse(format!("{}: {}", e, &body[..200.min(body.len())])))
+                serde_json::from_str(&body).map_err(|e| {
+                    PostmanError::Parse(format!("{}: {}", e, &body[..200.min(body.len())]))
+                })
             } else if status == reqwest::StatusCode::UNAUTHORIZED {
                 Err(PostmanError::Unauthorized)
             } else if status == reqwest::StatusCode::NOT_FOUND {
@@ -178,10 +179,7 @@ impl PostmanClient {
             None => "/collections".to_string(),
         };
 
-        debug!(
-            workspace_id = workspace_id,
-            "Listing Postman collections"
-        );
+        debug!(workspace_id = workspace_id, "Listing Postman collections");
 
         let response: CollectionsResponse = self.request(&endpoint).await?;
         debug!(count = response.collections.len(), "Retrieved collections");
@@ -296,10 +294,7 @@ fn calculate_match_score(text: &str, keywords: &[String]) -> f32 {
         if text_lower.contains(&keyword_lower) {
             score += 1.0;
             // Bonus for exact word match
-            if text_lower
-                .split_whitespace()
-                .any(|w| w == keyword_lower)
-            {
+            if text_lower.split_whitespace().any(|w| w == keyword_lower) {
                 score += 0.5;
             }
         }
@@ -312,7 +307,11 @@ fn calculate_match_score(text: &str, keywords: &[String]) -> f32 {
 fn search_requests(collection: &Collection, keywords: &[String]) -> Vec<String> {
     let mut matches = Vec::new();
 
-    fn search_items(items: &[crate::types::CollectionItem], keywords: &[String], matches: &mut Vec<String>) {
+    fn search_items(
+        items: &[crate::types::CollectionItem],
+        keywords: &[String],
+        matches: &mut Vec<String>,
+    ) {
         for item in items {
             if let Some(name) = &item.name {
                 if calculate_match_score(name, keywords) > 0.0 {
@@ -359,7 +358,10 @@ mod tests {
 
     #[test]
     fn test_calculate_match_score_multiple_keywords() {
-        let score = calculate_match_score("User Authentication API", &["user".to_string(), "auth".to_string()]);
+        let score = calculate_match_score(
+            "User Authentication API",
+            &["user".to_string(), "auth".to_string()],
+        );
         assert!(score >= 2.0);
     }
 

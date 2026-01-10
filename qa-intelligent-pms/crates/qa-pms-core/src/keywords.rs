@@ -7,28 +7,26 @@ use std::collections::HashMap;
 /// Common stop words to filter out from keyword extraction.
 const STOP_WORDS: &[&str] = &[
     // Articles and pronouns
-    "a", "an", "the", "i", "me", "my", "we", "our", "you", "your", "he", "she", "it", "its",
-    "they", "them", "their", "this", "that", "these", "those", "who", "what", "which",
+    "a", "an", "the", "i", "me", "my", "we", "our", "you", "your", "he", "she", "it", "its", "they",
+    "them", "their", "this", "that", "these", "those", "who", "what", "which",
     // Prepositions
-    "to", "of", "in", "for", "on", "with", "at", "by", "from", "as", "into", "through",
-    "during", "before", "after", "above", "below", "up", "down", "out", "off", "over",
-    "under", "between", "about", "against", "within", "without",
-    // Conjunctions
+    "to", "of", "in", "for", "on", "with", "at", "by", "from", "as", "into", "through", "during",
+    "before", "after", "above", "below", "up", "down", "out", "off", "over", "under", "between",
+    "about", "against", "within", "without", // Conjunctions
     "and", "but", "or", "nor", "so", "yet", "if", "because", "although", "unless", "until",
-    "while", "when", "where", "whether",
-    // Verbs (common)
-    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does",
-    "did", "will", "would", "could", "should", "may", "might", "must", "shall", "can",
-    "need", "dare", "get", "got", "make", "made", "let", "see", "seen", "know", "known",
+    "while", "when", "where", "whether", // Verbs (common)
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "will", "would", "could", "should", "may", "might", "must", "shall", "can", "need", "dare",
+    "get", "got", "make", "made", "let", "see", "seen", "know", "known",
     // Adverbs and adjectives
-    "again", "further", "then", "once", "here", "there", "now", "also", "just", "only",
-    "very", "too", "more", "most", "less", "least", "much", "many", "some", "any", "all",
-    "each", "every", "both", "few", "other", "such", "no", "not", "own", "same", "than",
+    "again", "further", "then", "once", "here", "there", "now", "also", "just", "only", "very",
+    "too", "more", "most", "less", "least", "much", "many", "some", "any", "all", "each", "every",
+    "both", "few", "other", "such", "no", "not", "own", "same", "than",
     // QA-specific common words to filter (too generic)
     "test", "tests", "testing", "tested", "qa", "bug", "bugs", "issue", "issues", "ticket",
     "tickets", "case", "cases", "step", "steps", "expected", "actual", "result", "results",
-    "verify", "check", "ensure", "confirm", "validate", "should", "must", "given", "when",
-    "then", "scenario", "feature",
+    "verify", "check", "ensure", "confirm", "validate", "should", "must", "given", "when", "then",
+    "scenario", "feature",
 ];
 
 /// Keyword extractor for contextual search.
@@ -174,10 +172,8 @@ mod tests {
     #[test]
     fn test_extract_from_ticket_title_only() {
         let extractor = KeywordExtractor::default();
-        let keywords = extractor.extract_from_ticket(
-            "Login authentication fails with invalid credentials",
-            None,
-        );
+        let keywords = extractor
+            .extract_from_ticket("Login authentication fails with invalid credentials", None);
 
         assert!(keywords.contains(&"login".to_string()));
         assert!(keywords.contains(&"authentication".to_string()));
@@ -269,9 +265,7 @@ mod tests {
     #[test]
     fn test_ranks_by_frequency() {
         let extractor = KeywordExtractor::default();
-        let keywords = extractor.extract(&[
-            "payment payment payment login login error",
-        ]);
+        let keywords = extractor.extract(&["payment payment payment login login error"]);
 
         // "payment" appears 3 times, should be first
         assert_eq!(keywords[0], "payment");
@@ -282,9 +276,7 @@ mod tests {
     #[test]
     fn test_respects_max_keywords() {
         let extractor = KeywordExtractor::new(3, 3);
-        let keywords = extractor.extract(&[
-            "apple banana cherry date elderberry fig grape",
-        ]);
+        let keywords = extractor.extract(&["apple banana cherry date elderberry fig grape"]);
 
         assert_eq!(keywords.len(), 3);
     }
@@ -302,9 +294,7 @@ mod tests {
     #[test]
     fn test_qa_specific_stop_words() {
         let extractor = KeywordExtractor::default();
-        let keywords = extractor.extract(&[
-            "Test case for verify login feature scenario",
-        ]);
+        let keywords = extractor.extract(&["Test case for verify login feature scenario"]);
 
         // QA-specific stop words should be filtered
         assert!(!keywords.contains(&"test".to_string()));
@@ -339,7 +329,7 @@ mod tests {
         assert!(keywords.contains(&"payment".to_string()));
         // "checkout" appears twice
         assert!(keywords.contains(&"checkout".to_string()));
-        // "error" appears twice  
+        // "error" appears twice
         assert!(keywords.contains(&"error".to_string()));
         // "returns" appears twice
         assert!(keywords.contains(&"returns".to_string()));

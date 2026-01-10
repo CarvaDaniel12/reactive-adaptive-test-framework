@@ -3,7 +3,7 @@
  *
  * Collects Testmo credentials and tests connection.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { WizardStepHeader } from "@/components/wizard/WizardStepHeader";
 import { WizardNavigation } from "@/components/wizard/WizardNavigation";
 import {
@@ -31,6 +31,14 @@ export function TestmoStep() {
   const [connectionState, setConnectionState] = useState<ConnectionState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [projectCount, setProjectCount] = useState<number | null>(null);
+
+  // Rehydrate from persisted store when available
+  useEffect(() => {
+    if (testmoData) {
+      setInstanceUrl(testmoData.instanceUrl ?? "");
+      setApiKey(testmoData.apiKey ?? "");
+    }
+  }, [testmoData]);
 
   // Validation
   const isUrlValid =
@@ -123,6 +131,7 @@ export function TestmoStep() {
             onChange={(e) => handleFieldChange(setInstanceUrl)(e.target.value)}
             placeholder="https://your-company.testmo.net"
             className={`w-full px-3 py-2 border rounded-lg transition-colors
+              text-neutral-900 placeholder:text-neutral-400
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               ${
                 instanceUrl && !isUrlValid
@@ -153,6 +162,7 @@ export function TestmoStep() {
               onChange={(e) => handleFieldChange(setApiKey)(e.target.value)}
               placeholder="Your Testmo API key"
               className="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-lg
+                text-neutral-900 placeholder:text-neutral-400
                 focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                 transition-colors"
             />

@@ -13,13 +13,16 @@ pub struct SemanticSearchService {
 
 impl SemanticSearchService {
     /// Create a new semantic search service.
-    #[must_use] 
+    #[must_use]
     pub const fn new(client: AIClient) -> Self {
         Self { client }
     }
 
     /// Analyze a ticket and generate semantic search queries.
-    pub async fn analyze(&self, input: SemanticSearchInput) -> Result<SemanticSearchResult, AIError> {
+    pub async fn analyze(
+        &self,
+        input: SemanticSearchInput,
+    ) -> Result<SemanticSearchResult, AIError> {
         let prompt = self.build_prompt(&input);
 
         let messages = vec![
@@ -46,7 +49,10 @@ impl SemanticSearchService {
 
     /// Build the prompt for semantic analysis.
     fn build_prompt(&self, input: &SemanticSearchInput) -> String {
-        let mut prompt = format!("Analyze this ticket for test search:\n\nTitle: {}\n", input.title);
+        let mut prompt = format!(
+            "Analyze this ticket for test search:\n\nTitle: {}\n",
+            input.title
+        );
 
         if let Some(desc) = &input.description {
             prompt.push_str(&format!("\nDescription:\n{desc}\n"));
@@ -110,11 +116,7 @@ impl SemanticSearchService {
                 if let Some(bracket_end) = rest[bracket_start..].find(']') {
                     let items_str = &rest[bracket_start + 1..bracket_start + bracket_end];
                     for item in items_str.split(',') {
-                        let cleaned = item
-                            .trim()
-                            .trim_matches('"')
-                            .trim_matches('\'')
-                            .to_string();
+                        let cleaned = item.trim().trim_matches('"').trim_matches('\'').to_string();
                         if !cleaned.is_empty() {
                             results.push(cleaned);
                         }
@@ -127,7 +129,7 @@ impl SemanticSearchService {
     }
 
     /// Perform a fallback keyword-based search (when AI is unavailable).
-    #[must_use] 
+    #[must_use]
     pub fn fallback_search(input: &SemanticSearchInput) -> SemanticSearchResult {
         let mut queries = Vec::new();
         let mut key_concepts = Vec::new();
@@ -213,7 +215,10 @@ mod tests {
         let result = SemanticSearchService::fallback_search(&input);
 
         assert!(!result.queries.is_empty());
-        assert!(result.test_areas.iter().any(|a| a.contains("API") || a.contains("Authentication")));
+        assert!(result
+            .test_areas
+            .iter()
+            .any(|a| a.contains("API") || a.contains("Authentication")));
     }
 
     #[test]

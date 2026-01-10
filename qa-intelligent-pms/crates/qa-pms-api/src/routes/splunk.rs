@@ -19,8 +19,8 @@ use uuid::Uuid;
 use crate::app::AppState;
 use qa_pms_core::error::ApiError;
 use qa_pms_splunk::{
-    CreateTemplateInput, PreparedQuery, QueryTemplate, QueryTemplateService,
-    TemplateCategory, UpdateTemplateInput, LogEntry,
+    CreateTemplateInput, LogEntry, PreparedQuery, QueryTemplate, QueryTemplateService,
+    TemplateCategory, UpdateTemplateInput,
 };
 
 type ApiResult<T> = Result<T, ApiError>;
@@ -258,10 +258,10 @@ pub async fn list_templates(
     Query(query): Query<ListTemplatesQuery>,
 ) -> ApiResult<Json<TemplatesListResponse>> {
     let service = QueryTemplateService::new(state.db.clone());
-    
+
     // TODO: Get user_id from auth context
     let user_id: Option<Uuid> = None;
-    
+
     let templates = service
         .list_templates(query.category, user_id)
         .await
@@ -295,16 +295,13 @@ pub async fn get_template(
     Path(id): Path<Uuid>,
 ) -> ApiResult<Json<TemplateResponse>> {
     let service = QueryTemplateService::new(state.db.clone());
-    
-    let template = service
-        .get_template(id)
-        .await
-        .map_err(|e| match e {
-            qa_pms_splunk::SplunkError::TemplateNotFound(_) => {
-                ApiError::NotFound(format!("Template {id} not found"))
-            }
-            _ => ApiError::Internal(anyhow::anyhow!("Failed to get template: {e}")),
-        })?;
+
+    let template = service.get_template(id).await.map_err(|e| match e {
+        qa_pms_splunk::SplunkError::TemplateNotFound(_) => {
+            ApiError::NotFound(format!("Template {id} not found"))
+        }
+        _ => ApiError::Internal(anyhow::anyhow!("Failed to get template: {e}")),
+    })?;
 
     Ok(Json(template.into()))
 }
@@ -326,10 +323,10 @@ pub async fn create_template(
     Json(req): Json<CreateTemplateRequest>,
 ) -> ApiResult<Json<TemplateResponse>> {
     let service = QueryTemplateService::new(state.db.clone());
-    
+
     // TODO: Get user_id from auth context
     let user_id = Uuid::new_v4(); // Placeholder
-    
+
     let input = CreateTemplateInput {
         name: req.name,
         description: req.description,
@@ -341,9 +338,7 @@ pub async fn create_template(
         .create_template(input, user_id)
         .await
         .map_err(|e| match e {
-            qa_pms_splunk::SplunkError::InvalidTemplate(msg) => {
-                ApiError::Validation(msg)
-            }
+            qa_pms_splunk::SplunkError::InvalidTemplate(msg) => ApiError::Validation(msg),
             _ => ApiError::Internal(anyhow::anyhow!("Failed to create template: {e}")),
         })?;
 
@@ -372,10 +367,10 @@ pub async fn update_template(
     Json(req): Json<UpdateTemplateRequest>,
 ) -> ApiResult<Json<TemplateResponse>> {
     let service = QueryTemplateService::new(state.db.clone());
-    
+
     // TODO: Get user_id from auth context
     let user_id = Uuid::new_v4(); // Placeholder
-    
+
     let input = UpdateTemplateInput {
         name: req.name,
         description: req.description,
@@ -390,9 +385,7 @@ pub async fn update_template(
             qa_pms_splunk::SplunkError::TemplateNotFound(_) => {
                 ApiError::NotFound(format!("Template {id} not found"))
             }
-            qa_pms_splunk::SplunkError::InvalidTemplate(msg) => {
-                ApiError::Validation(msg)
-            }
+            qa_pms_splunk::SplunkError::InvalidTemplate(msg) => ApiError::Validation(msg),
             _ => ApiError::Internal(anyhow::anyhow!("Failed to update template: {e}")),
         })?;
 
@@ -419,10 +412,10 @@ pub async fn delete_template(
     Path(id): Path<Uuid>,
 ) -> ApiResult<axum::http::StatusCode> {
     let service = QueryTemplateService::new(state.db.clone());
-    
+
     // TODO: Get user_id from auth context
     let user_id = Uuid::new_v4(); // Placeholder
-    
+
     service
         .delete_template(id, user_id)
         .await
@@ -430,9 +423,7 @@ pub async fn delete_template(
             qa_pms_splunk::SplunkError::TemplateNotFound(_) => {
                 ApiError::NotFound(format!("Template {id} not found"))
             }
-            qa_pms_splunk::SplunkError::InvalidTemplate(msg) => {
-                ApiError::Validation(msg)
-            }
+            qa_pms_splunk::SplunkError::InvalidTemplate(msg) => ApiError::Validation(msg),
             _ => ApiError::Internal(anyhow::anyhow!("Failed to delete template: {e}")),
         })?;
 
@@ -457,7 +448,7 @@ pub async fn prepare_query(
     Json(req): Json<PrepareQueryRequest>,
 ) -> ApiResult<Json<PrepareQueryResponse>> {
     let service = QueryTemplateService::new(state.db.clone());
-    
+
     let now = Utc::now();
     let time_start = req.time_start.unwrap_or_else(|| now - Duration::hours(24));
     let time_end = req.time_end.unwrap_or(now);
@@ -474,7 +465,13 @@ pub async fn prepare_query(
             })?;
 
         service
-            .prepare_query(&template, &req.placeholders, time_start, time_end, req.index.clone())
+            .prepare_query(
+                &template,
+                &req.placeholders,
+                time_start,
+                time_end,
+                req.index.clone(),
+            )
             .map_err(|e| match e {
                 qa_pms_splunk::SplunkError::MissingPlaceholder(p) => {
                     ApiError::Validation(format!("Missing placeholder value: {p}"))
@@ -528,14 +525,14 @@ pub async fn execute_query(
     Json(req): Json<ExecuteQueryRequest>,
 ) -> ApiResult<Json<ExecuteQueryResponse>> {
     let start_time = std::time::Instant::now();
-    
+
     // TODO: Get user_id from auth context
     let user_id = Uuid::new_v4();
 
     // Generate mock log entries for demonstration
     let mock_entries = generate_mock_logs(&req.query, req.limit as usize);
     let total_count = mock_entries.len() as i64;
-    
+
     let execution_time_ms = start_time.elapsed().as_millis() as i64;
 
     // Save to query history
@@ -671,7 +668,11 @@ fn generate_mock_logs(query: &str, limit: usize) -> Vec<LogEntry> {
     let now = Utc::now();
     let levels = ["INFO", "WARN", "ERROR", "DEBUG"];
     let hosts = ["app-server-01", "app-server-02", "api-gateway", "worker-01"];
-    let sources = ["/var/log/app.log", "/var/log/api.log", "/var/log/worker.log"];
+    let sources = [
+        "/var/log/app.log",
+        "/var/log/api.log",
+        "/var/log/worker.log",
+    ];
 
     let messages = if query.to_lowercase().contains("error") {
         vec![

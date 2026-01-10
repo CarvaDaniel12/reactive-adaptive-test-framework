@@ -140,14 +140,8 @@ impl RequestUrl {
                 if let Some(raw) = raw {
                     raw.clone()
                 } else {
-                    let host_str = host
-                        .as_ref()
-                        .map(|h| h.join("."))
-                        .unwrap_or_default();
-                    let path_str = path
-                        .as_ref()
-                        .map(|p| p.join("/"))
-                        .unwrap_or_default();
+                    let host_str = host.as_ref().map(|h| h.join(".")).unwrap_or_default();
+                    let path_str = path.as_ref().map(|p| p.join("/")).unwrap_or_default();
                     format!("{host_str}/{path_str}")
                 }
             }
@@ -203,7 +197,11 @@ mod tests {
     fn test_request_url_complex_without_raw() {
         let url = RequestUrl::Complex {
             raw: None,
-            host: Some(vec!["api".to_string(), "example".to_string(), "com".to_string()]),
+            host: Some(vec![
+                "api".to_string(),
+                "example".to_string(),
+                "com".to_string(),
+            ]),
             path: Some(vec!["users".to_string(), "123".to_string()]),
         };
         assert_eq!(url.as_string(), "api.example.com/users/123");

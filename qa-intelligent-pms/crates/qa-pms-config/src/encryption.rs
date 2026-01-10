@@ -114,10 +114,8 @@ mod tests {
 
     fn test_encryptor() -> Encryptor {
         // Test key: 256 bits = 64 hex characters
-        Encryptor::from_hex_key(
-            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-        )
-        .expect("Failed to create test encryptor")
+        Encryptor::from_hex_key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+            .expect("Failed to create test encryptor")
     }
 
     #[test]

@@ -1,9 +1,11 @@
 /**
  * Jira Integration configuration step (Step 2).
  *
- * Collects OAuth credentials and tests connection to Jira API.
+ * Supports two auth methods:
+ * 1. API Token (recommended) - Email + API Token
+ * 2. OAuth 2.0 (advanced) - Client ID + Client Secret
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { WizardStepHeader } from "@/components/wizard/WizardStepHeader";
 import { WizardNavigation } from "@/components/wizard/WizardNavigation";
 import {
@@ -11,6 +13,8 @@ import {
   type ConnectionState,
 } from "@/components/wizard/ConnectionStatus";
 import { useWizardStore } from "@/stores/wizardStore";
+
+type AuthMethod = "api_token" | "oauth";
 
 interface JiraTestResponse {
   success: boolean;
@@ -22,10 +26,23 @@ export function JiraStep() {
   const { formData, setStepData } = useWizardStore();
   const jiraData = formData.jira;
 
-  // Form state
+  const initialAuthMethod: AuthMethod =
+    jiraData?.authMethod ??
+    (jiraData?.clientId || jiraData?.clientSecret ? "oauth" : "api_token");
+  // Auth method selection
+  const [authMethod, setAuthMethod] = useState<AuthMethod>(initialAuthMethod);
+
+  // Form state - common
   const [instanceUrl, setInstanceUrl] = useState(jiraData?.instanceUrl ?? "");
+
+  // Form state - API Token
+  const [email, setEmail] = useState(jiraData?.email ?? "");
+  const [apiToken, setApiToken] = useState(jiraData?.apiToken ?? "");
+
+  // Form state - OAuth
   const [clientId, setClientId] = useState(jiraData?.clientId ?? "");
   const [clientSecret, setClientSecret] = useState(jiraData?.clientSecret ?? "");
+
   const [showSecret, setShowSecret] = useState(false);
 
   // Connection test state
@@ -33,11 +50,37 @@ export function JiraStep() {
   const [errorMessage, setErrorMessage] = useState("");
   const [projectCount, setProjectCount] = useState<number | null>(null);
 
+  // Rehydrate from persisted store when available
+  useEffect(() => {
+    if (jiraData) {
+      setInstanceUrl(jiraData.instanceUrl ?? "");
+      setEmail(jiraData.email ?? "");
+      setApiToken(jiraData.apiToken ?? "");
+      setClientId(jiraData.clientId ?? "");
+      setClientSecret(jiraData.clientSecret ?? "");
+      const inferredMethod: AuthMethod =
+        jiraData.authMethod ??
+        (jiraData.clientId || jiraData.clientSecret ? "oauth" : "api_token");
+      setAuthMethod(inferredMethod);
+    }
+  }, [jiraData]);
+
   // Validation
   const isUrlValid =
     instanceUrl.trim().startsWith("https://") && instanceUrl.includes(".");
-  const isFormValid =
-    isUrlValid && clientId.trim().length > 0 && clientSecret.trim().length > 0;
+
+  const isApiTokenValid =
+    isUrlValid &&
+    email.trim().length > 0 &&
+    email.includes("@") &&
+    apiToken.trim().length > 0;
+
+  const isOAuthValid =
+    isUrlValid &&
+    clientId.trim().length > 0 &&
+    clientSecret.trim().length > 0;
+
+  const isFormValid = authMethod === "api_token" ? isApiTokenValid : isOAuthValid;
   const hasTestedSuccessfully = connectionState === "success";
 
   // Reset connection state when form changes
@@ -61,14 +104,23 @@ export function JiraStep() {
     setProjectCount(null);
 
     try {
+      const body =
+        authMethod === "api_token"
+          ? {
+              instanceUrl: instanceUrl.trim(),
+              email: email.trim(),
+              apiToken: apiToken.trim(),
+            }
+          : {
+              instanceUrl: instanceUrl.trim(),
+              clientId: clientId.trim(),
+              clientSecret: clientSecret.trim(),
+            };
+
       const response = await fetch("/api/v1/setup/integrations/jira/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          instanceUrl: instanceUrl.trim(),
-          clientId: clientId.trim(),
-          clientSecret: clientSecret.trim(),
-        }),
+        body: JSON.stringify(body),
       });
 
       const data: JiraTestResponse = await response.json();
@@ -79,8 +131,10 @@ export function JiraStep() {
         // Save to wizard store
         setStepData("jira", {
           instanceUrl: instanceUrl.trim(),
-          clientId: clientId.trim(),
-          clientSecret: clientSecret.trim(),
+          authMethod,
+          ...(authMethod === "api_token"
+            ? { email: email.trim(), apiToken: apiToken.trim() }
+            : { clientId: clientId.trim(), clientSecret: clientSecret.trim() }),
         });
       } else {
         setConnectionState("error");
@@ -96,7 +150,7 @@ export function JiraStep() {
     <div>
       <WizardStepHeader
         title="Jira Integration"
-        description="Connect to your Jira Cloud instance using OAuth 2.0"
+        description="Connect to your Jira Cloud instance"
       />
 
       <div className="space-y-4">
@@ -115,6 +169,7 @@ export function JiraStep() {
             onChange={(e) => handleFieldChange(setInstanceUrl)(e.target.value)}
             placeholder="https://your-company.atlassian.net"
             className={`w-full px-3 py-2 border rounded-lg transition-colors
+              text-neutral-900 placeholder:text-neutral-400
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               ${
                 instanceUrl && !isUrlValid
@@ -129,62 +184,208 @@ export function JiraStep() {
           )}
         </div>
 
-        {/* Client ID */}
+        {/* Auth Method Selection */}
         <div>
-          <label
-            htmlFor="clientId"
-            className="block text-sm font-medium text-neutral-700 mb-1"
-          >
-            OAuth Client ID <span className="text-error-500">*</span>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Authentication Method
           </label>
-          <input
-            id="clientId"
-            type="text"
-            value={clientId}
-            onChange={(e) => handleFieldChange(setClientId)(e.target.value)}
-            placeholder="Your OAuth 2.0 Client ID"
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg
-              focus:ring-2 focus:ring-primary-500 focus:border-primary-500
-              transition-colors"
-          />
-        </div>
-
-        {/* Client Secret */}
-        <div>
-          <label
-            htmlFor="clientSecret"
-            className="block text-sm font-medium text-neutral-700 mb-1"
-          >
-            OAuth Client Secret <span className="text-error-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              id="clientSecret"
-              type={showSecret ? "text" : "password"}
-              value={clientSecret}
-              onChange={(e) =>
-                handleFieldChange(setClientSecret)(e.target.value)
-              }
-              placeholder="Your OAuth 2.0 Client Secret"
-              className="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-lg
-                focus:ring-2 focus:ring-primary-500 focus:border-primary-500
-                transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowSecret(!showSecret)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500
-                hover:text-neutral-700 transition-colors"
-              aria-label={showSecret ? "Hide secret" : "Show secret"}
-            >
-              {showSecret ? (
-                <EyeClosedIcon className="w-5 h-5" />
-              ) : (
-                <EyeOpenIcon className="w-5 h-5" />
-              )}
-            </button>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="authMethod"
+                value="api_token"
+                checked={authMethod === "api_token"}
+                onChange={() => {
+                  setAuthMethod("api_token");
+                  setConnectionState("idle");
+                }}
+                className="w-4 h-4 text-primary-500"
+              />
+              <span className="text-sm text-neutral-700">
+                API Token <span className="text-success-600 text-xs">(Recommended)</span>
+              </span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="authMethod"
+                value="oauth"
+                checked={authMethod === "oauth"}
+                onChange={() => {
+                  setAuthMethod("oauth");
+                  setConnectionState("idle");
+                }}
+                className="w-4 h-4 text-primary-500"
+              />
+              <span className="text-sm text-neutral-700">OAuth 2.0</span>
+            </label>
           </div>
         </div>
+
+        {/* API Token Fields */}
+        {authMethod === "api_token" && (
+          <>
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-neutral-700 mb-1"
+              >
+                Jira Email <span className="text-error-500">*</span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => handleFieldChange(setEmail)(e.target.value)}
+                placeholder="your.email@company.com"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg
+                  text-neutral-900 placeholder:text-neutral-400
+                  focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+                  transition-colors"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="apiToken"
+                className="block text-sm font-medium text-neutral-700 mb-1"
+              >
+                API Token <span className="text-error-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="apiToken"
+                  type={showSecret ? "text" : "password"}
+                  value={apiToken}
+                  onChange={(e) => handleFieldChange(setApiToken)(e.target.value)}
+                  placeholder="Your Jira API Token"
+                  className="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-lg
+                    text-neutral-900 placeholder:text-neutral-400
+                    focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+                    transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret(!showSecret)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500
+                    hover:text-neutral-700 transition-colors"
+                  aria-label={showSecret ? "Hide token" : "Show token"}
+                >
+                  {showSecret ? (
+                    <EyeClosedIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeOpenIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* API Token Help */}
+            <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-600">
+              <p className="font-medium mb-2">How to get your API Token:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>
+                  Go to{" "}
+                  <a
+                    href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-500 hover:underline"
+                  >
+                    Atlassian API Tokens
+                  </a>
+                </li>
+                <li>Click "Create API token"</li>
+                <li>Give it a name (e.g., "QA PMS")</li>
+                <li>Copy and paste the token here</li>
+              </ol>
+            </div>
+          </>
+        )}
+
+        {/* OAuth Fields */}
+        {authMethod === "oauth" && (
+          <>
+            <div>
+              <label
+                htmlFor="clientId"
+                className="block text-sm font-medium text-neutral-700 mb-1"
+              >
+                OAuth Client ID <span className="text-error-500">*</span>
+              </label>
+              <input
+                id="clientId"
+                type="text"
+                value={clientId}
+                onChange={(e) => handleFieldChange(setClientId)(e.target.value)}
+                placeholder="Your OAuth 2.0 Client ID"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg
+                  text-neutral-900 placeholder:text-neutral-400
+                  focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+                  transition-colors"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="clientSecret"
+                className="block text-sm font-medium text-neutral-700 mb-1"
+              >
+                OAuth Client Secret <span className="text-error-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="clientSecret"
+                  type={showSecret ? "text" : "password"}
+                  value={clientSecret}
+                  onChange={(e) =>
+                    handleFieldChange(setClientSecret)(e.target.value)
+                  }
+                  placeholder="Your OAuth 2.0 Client Secret"
+                  className="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-lg
+                    text-neutral-900 placeholder:text-neutral-400
+                    focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+                    transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret(!showSecret)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500
+                    hover:text-neutral-700 transition-colors"
+                  aria-label={showSecret ? "Hide secret" : "Show secret"}
+                >
+                  {showSecret ? (
+                    <EyeClosedIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeOpenIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* OAuth Help */}
+            <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-600">
+              <p className="font-medium mb-2">How to get OAuth credentials:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>
+                  Go to{" "}
+                  <a
+                    href="https://developer.atlassian.com/console/myapps/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-500 hover:underline"
+                  >
+                    Atlassian Developer Console
+                  </a>
+                </li>
+                <li>Create a new OAuth 2.0 integration</li>
+                <li>Add the required scopes for Jira access</li>
+                <li>Copy the Client ID and Client Secret</li>
+              </ol>
+            </div>
+          </>
+        )}
 
         {/* Test Connection */}
         <div className="flex items-center gap-4 pt-2">
@@ -219,27 +420,6 @@ export function JiraStep() {
             projectCount ? `Found ${projectCount} projects` : undefined
           }
         />
-
-        {/* Help Section */}
-        <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-600">
-          <p className="font-medium mb-2">How to get OAuth credentials:</p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>
-              Go to{" "}
-              <a
-                href="https://developer.atlassian.com/console/myapps/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-500 hover:underline"
-              >
-                Atlassian Developer Console
-              </a>
-            </li>
-            <li>Create a new OAuth 2.0 integration</li>
-            <li>Add the required scopes for Jira access</li>
-            <li>Copy the Client ID and Client Secret</li>
-          </ol>
-        </div>
       </div>
 
       <WizardNavigation isValid={hasTestedSuccessfully} />

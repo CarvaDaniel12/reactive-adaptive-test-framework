@@ -25,7 +25,6 @@ pub enum HealthStatus {
     Offline,
 }
 
-
 /// Result of a single health check.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,7 +43,7 @@ pub struct HealthCheckResult {
 
 impl HealthCheckResult {
     /// Create an online result with response time.
-    #[must_use] 
+    #[must_use]
     pub fn online(integration: &str, response_time: Duration) -> Self {
         Self {
             integration: integration.to_string(),
@@ -56,7 +55,7 @@ impl HealthCheckResult {
     }
 
     /// Create a degraded result (working but slow or with warnings).
-    #[must_use] 
+    #[must_use]
     pub fn degraded(integration: &str, response_time: Duration, message: &str) -> Self {
         Self {
             integration: integration.to_string(),
@@ -68,7 +67,7 @@ impl HealthCheckResult {
     }
 
     /// Create an offline result with error message.
-    #[must_use] 
+    #[must_use]
     pub fn offline(integration: &str, error: &str) -> Self {
         Self {
             integration: integration.to_string(),
@@ -106,7 +105,7 @@ pub struct IntegrationHealth {
 
 impl IntegrationHealth {
     /// Create a new health state for an integration.
-    #[must_use] 
+    #[must_use]
     pub fn new(integration: &str) -> Self {
         Self {
             integration: integration.to_string(),
@@ -121,13 +120,13 @@ impl IntegrationHealth {
     }
 
     /// Check if the integration is currently down.
-    #[must_use] 
+    #[must_use]
     pub fn is_offline(&self) -> bool {
         self.status == HealthStatus::Offline
     }
 
     /// Get downtime duration if currently offline.
-    #[must_use] 
+    #[must_use]
     pub fn downtime_duration(&self) -> Option<chrono::Duration> {
         self.downtime_start.map(|start| Utc::now() - start)
     }
@@ -178,7 +177,8 @@ mod tests {
 
     #[test]
     fn test_health_check_result_degraded() {
-        let result = HealthCheckResult::degraded("postman", Duration::from_secs(3), "Slow response");
+        let result =
+            HealthCheckResult::degraded("postman", Duration::from_secs(3), "Slow response");
         assert_eq!(result.status, HealthStatus::Degraded);
         assert_eq!(result.response_time_ms, Some(3000));
         assert_eq!(result.error_message, Some("Slow response".to_string()));

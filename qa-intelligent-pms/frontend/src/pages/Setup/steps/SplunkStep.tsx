@@ -4,7 +4,7 @@
  * Placeholder - will be fully implemented in Story 2.6.
  * Note: Splunk is manual configuration only (no API test).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WizardStepHeader } from "@/components/wizard/WizardStepHeader";
 import { WizardNavigation } from "@/components/wizard/WizardNavigation";
 import { useWizardStore } from "@/stores/wizardStore";
@@ -17,6 +17,14 @@ export function SplunkStep() {
   const [defaultIndex, setDefaultIndex] = useState(
     splunkData?.defaultIndex ?? ""
   );
+
+  // Rehydrate from persisted store when available
+  useEffect(() => {
+    if (splunkData) {
+      setBaseUrl(splunkData.baseUrl ?? "");
+      setDefaultIndex(splunkData.defaultIndex ?? "");
+    }
+  }, [splunkData]);
 
   const handleBeforeNext = () => {
     if (baseUrl.trim()) {
@@ -59,6 +67,7 @@ export function SplunkStep() {
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://splunk.your-company.com:8089"
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg
+              text-neutral-900 placeholder:text-neutral-400
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               transition-colors"
           />
@@ -81,6 +90,7 @@ export function SplunkStep() {
             onChange={(e) => setDefaultIndex(e.target.value)}
             placeholder="main"
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg
+              text-neutral-900 placeholder:text-neutral-400
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               transition-colors"
           />

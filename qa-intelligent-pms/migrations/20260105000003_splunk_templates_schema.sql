@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS splunk_query_templates (
     query TEXT NOT NULL,
     category VARCHAR(50) NOT NULL DEFAULT 'custom',
     is_system BOOLEAN NOT NULL DEFAULT FALSE,
-    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_by UUID, -- User identifier (no FK for now, users managed externally)
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

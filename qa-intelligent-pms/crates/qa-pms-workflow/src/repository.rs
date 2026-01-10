@@ -103,7 +103,7 @@ pub async fn create_template(
     steps: &[WorkflowStep],
     is_default: bool,
 ) -> Result<WorkflowTemplate, sqlx::Error> {
-    let steps_json = serde_json::to_value(steps).expect("Failed to serialize steps");
+    let steps_json = sqlx::types::Json(steps.to_vec());
 
     sqlx::query_as::<_, WorkflowTemplate>(
         r"
@@ -345,7 +345,7 @@ pub async fn upsert_step_result(
     notes: Option<&str>,
     links: Option<&[StepLink]>,
 ) -> Result<WorkflowStepResult, sqlx::Error> {
-    let links_json = links.map(|l| serde_json::to_value(l).expect("Failed to serialize links"));
+    let links_json = links.map(|l| sqlx::types::Json(l.to_vec()));
 
     let started_at = if status == "in_progress" {
         Some(chrono::Utc::now())

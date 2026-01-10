@@ -7,7 +7,9 @@
 mod ids;
 mod integration;
 mod pagination;
+mod test_case;
 
-pub use ids::{TicketId, UserId, WorkflowId, WorkflowInstanceId, WorkflowStepId};
+pub use ids::{TestCaseId, TicketId, UserId, WorkflowId, WorkflowInstanceId, WorkflowStepId};
 pub use integration::{Integration, IntegrationHealth, IntegrationStatus};
 pub use pagination::{PageInfo, Paginated};
+pub use test_case::{TestCase, TestCaseStatus, TestCaseType, TestPriority, TestRepository};

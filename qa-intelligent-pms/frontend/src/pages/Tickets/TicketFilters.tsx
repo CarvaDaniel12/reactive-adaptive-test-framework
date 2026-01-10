@@ -4,6 +4,8 @@ import { useWizardStore } from "../../stores/wizardStore";
 interface TicketFiltersProps {
   currentStatus: string | undefined;
   onStatusChange: (status: string | undefined) => void;
+  currentSprint: string | undefined;
+  onSprintChange: (sprint: string | undefined) => void;
 }
 
 // Default statuses if none configured
@@ -18,6 +20,8 @@ const DEFAULT_STATUSES = [
 export function TicketFilters({
   currentStatus,
   onStatusChange,
+  currentSprint,
+  onSprintChange,
 }: TicketFiltersProps) {
   const formData = useWizardStore((state) => state.formData);
 
@@ -28,6 +32,77 @@ export function TicketFilters({
 
   return (
     <div className="flex items-center gap-3">
+      {/* Sprint Filter Dropdown */}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <button
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium 
+                       border border-neutral-300 rounded-lg hover:bg-neutral-50 
+                       transition-colors focus:outline-none focus:ring-2 
+                       focus:ring-primary-500 focus:ring-offset-2"
+          >
+            <span>
+              {currentSprint === "open"
+                ? "Active Sprint"
+                : currentSprint === "closed"
+                  ? "Closed Sprints"
+                  : currentSprint === "future"
+                    ? "Future Sprints"
+                    : "All Sprints"}
+            </span>
+            <svg
+              className="w-4 h-4 text-neutral-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+        </DropdownMenu.Trigger>
+
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            className="min-w-[180px] bg-white rounded-lg shadow-lg border border-neutral-200 
+                       py-1 z-50 animate-in fade-in-0 zoom-in-95"
+            sideOffset={5}
+            align="end"
+          >
+            <DropdownMenu.Item
+              className={`px-3 py-2 text-sm cursor-pointer outline-none
+                         hover:bg-neutral-50 transition-colors
+                         ${!currentSprint ? "text-primary-600 font-medium bg-primary-50" : "text-neutral-700"}`}
+              onSelect={() => onSprintChange(undefined)}
+            >
+              All Sprints
+            </DropdownMenu.Item>
+
+            <DropdownMenu.Separator className="h-px bg-neutral-200 my-1" />
+
+            {[
+              { value: "open", label: "Active Sprint" },
+              { value: "closed", label: "Closed Sprints" },
+              { value: "future", label: "Future Sprints" },
+            ].map((s) => (
+              <DropdownMenu.Item
+                key={s.value}
+                className={`px-3 py-2 text-sm cursor-pointer outline-none
+                           hover:bg-neutral-50 transition-colors
+                           ${currentSprint === s.value ? "text-primary-600 font-medium bg-primary-50" : "text-neutral-700"}`}
+                onSelect={() => onSprintChange(s.value)}
+              >
+                {s.label}
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+
       {/* Status Filter Dropdown */}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
@@ -105,9 +180,12 @@ export function TicketFilters({
       </DropdownMenu.Root>
 
       {/* Clear filter button (shown when filter is active) */}
-      {currentStatus && (
+      {(currentStatus || currentSprint) && (
         <button
-          onClick={() => onStatusChange(undefined)}
+          onClick={() => {
+            onStatusChange(undefined);
+            onSprintChange(undefined);
+          }}
           className="p-2 text-neutral-400 hover:text-neutral-600 
                      hover:bg-neutral-100 rounded-lg transition-colors"
           title="Clear filter"

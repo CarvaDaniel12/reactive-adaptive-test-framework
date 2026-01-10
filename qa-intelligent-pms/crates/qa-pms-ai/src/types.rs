@@ -315,18 +315,19 @@ pub struct AIStatus {
 
 impl AIStatus {
     /// Create a status indicating AI is not configured.
-    #[must_use] 
+    #[must_use]
     pub fn not_configured() -> Self {
         Self {
             available: false,
             provider: None,
             model: None,
-            message: "AI not configured. Add your API key in Settings to enable AI features.".to_string(),
+            message: "AI not configured. Add your API key in Settings to enable AI features."
+                .to_string(),
         }
     }
 
     /// Create a status indicating AI is available.
-    #[must_use] 
+    #[must_use]
     pub fn available(provider: ProviderType, model: String) -> Self {
         let message = format!("AI enabled with {} ({})", provider, &model);
         Self {

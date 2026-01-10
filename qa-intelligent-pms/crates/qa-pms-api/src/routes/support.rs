@@ -13,9 +13,10 @@ use uuid::Uuid;
 
 use qa_pms_core::ApiError;
 use qa_pms_support::{
-    CreateErrorLogInput, CreateKbEntryInput, DiagnosticsService, ErrorLog, ErrorLogFilter,
-    ErrorLogSort, ErrorStatus, KnowledgeBaseEntry, KnowledgeBaseService, Pagination, SupportDashboardSummary, SupportRepository, TroubleshootingSuggestion,
-    UpdateErrorStatusInput, UpdateKbEntryInput, DiagnosticsReport,
+    CreateErrorLogInput, CreateKbEntryInput, DiagnosticsReport, DiagnosticsService, ErrorLog,
+    ErrorLogFilter, ErrorLogSort, ErrorStatus, KnowledgeBaseEntry, KnowledgeBaseService,
+    Pagination, SupportDashboardSummary, SupportRepository, TroubleshootingSuggestion,
+    UpdateErrorStatusInput, UpdateKbEntryInput,
 };
 
 use crate::app::AppState;
@@ -36,7 +37,12 @@ pub fn router() -> Router<AppState> {
         .route("/diagnostics/:integration", get(run_diagnostic))
         // Knowledge base
         .route("/kb", get(list_kb_entries).post(create_kb_entry))
-        .route("/kb/:id", get(get_kb_entry).put(update_kb_entry).delete(delete_kb_entry))
+        .route(
+            "/kb/:id",
+            get(get_kb_entry)
+                .put(update_kb_entry)
+                .delete(delete_kb_entry),
+        )
         .route("/kb/:id/rate", post(rate_kb_entry))
 }
 
@@ -67,8 +73,12 @@ pub struct ErrorLogQuery {
     pub per_page: i32,
 }
 
-const fn default_page() -> i32 { 1 }
-const fn default_per_page() -> i32 { 20 }
+const fn default_page() -> i32 {
+    1
+}
+const fn default_per_page() -> i32 {
+    20
+}
 
 /// Response for error log list.
 #[derive(Debug, Serialize, ToSchema)]
@@ -271,7 +281,9 @@ pub async fn list_error_logs(
         per_page: query.per_page,
     };
 
-    let result = repo.list_error_logs(filter, sort, pagination).await
+    let result = repo
+        .list_error_logs(filter, sort, pagination)
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(ErrorLogsResponse {
@@ -302,8 +314,14 @@ pub async fn create_error_log(
     let input = CreateErrorLogInput {
         message: req.message,
         stack_trace: req.stack_trace,
-        severity: req.severity.and_then(|s| parse_severity(&s)).unwrap_or_default(),
-        source: req.source.and_then(|s| parse_source(&s)).unwrap_or_default(),
+        severity: req
+            .severity
+            .and_then(|s| parse_severity(&s))
+            .unwrap_or_default(),
+        source: req
+            .source
+            .and_then(|s| parse_source(&s))
+            .unwrap_or_default(),
         user_id: req.user_id,
         session_id: req.session_id,
         page_url: req.page_url,
@@ -313,7 +331,9 @@ pub async fn create_error_log(
         context: req.context,
     };
 
-    let error = repo.create_or_increment_error(input).await
+    let error = repo
+        .create_or_increment_error(input)
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(error))
@@ -336,11 +356,12 @@ pub async fn get_error_log(
 ) -> ApiResult<Json<ErrorLog>> {
     let repo = SupportRepository::new(state.db.clone());
 
-    let error = repo.get_error_log(id).await
-        .map_err(|e| match e {
-            qa_pms_support::SupportError::ErrorLogNotFound(_) => ApiError::NotFound("Error log not found".into()),
-            _ => ApiError::Internal(e.into()),
-        })?;
+    let error = repo.get_error_log(id).await.map_err(|e| match e {
+        qa_pms_support::SupportError::ErrorLogNotFound(_) => {
+            ApiError::NotFound("Error log not found".into())
+        }
+        _ => ApiError::Internal(e.into()),
+    })?;
 
     Ok(Json(error))
 }
@@ -373,9 +394,13 @@ pub async fn update_error_status(
         kb_entry_id: req.kb_entry_id,
     };
 
-    let error = repo.update_error_status(id, input).await
+    let error = repo
+        .update_error_status(id, input)
+        .await
         .map_err(|e| match e {
-            qa_pms_support::SupportError::ErrorLogNotFound(_) => ApiError::NotFound("Error log not found".into()),
+            qa_pms_support::SupportError::ErrorLogNotFound(_) => {
+                ApiError::NotFound("Error log not found".into())
+            }
             _ => ApiError::Internal(e.into()),
         })?;
 
@@ -400,13 +425,16 @@ pub async fn get_suggestions(
     let repo = SupportRepository::new(state.db.clone());
     let kb_service = KnowledgeBaseService::new(state.db.clone());
 
-    let error = repo.get_error_log(id).await
-        .map_err(|e| match e {
-            qa_pms_support::SupportError::ErrorLogNotFound(_) => ApiError::NotFound("Error log not found".into()),
-            _ => ApiError::Internal(e.into()),
-        })?;
+    let error = repo.get_error_log(id).await.map_err(|e| match e {
+        qa_pms_support::SupportError::ErrorLogNotFound(_) => {
+            ApiError::NotFound("Error log not found".into())
+        }
+        _ => ApiError::Internal(e.into()),
+    })?;
 
-    let suggestions = kb_service.get_suggestions(&error).await
+    let suggestions = kb_service
+        .get_suggestions(&error)
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(SuggestionsResponse { suggestions }))
@@ -426,7 +454,9 @@ pub async fn get_dashboard_summary(
 ) -> ApiResult<Json<DashboardSummaryResponse>> {
     let repo = SupportRepository::new(state.db.clone());
 
-    let summary = repo.get_dashboard_summary().await
+    let summary = repo
+        .get_dashboard_summary()
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(DashboardSummaryResponse { summary }))
@@ -446,7 +476,9 @@ pub async fn run_all_diagnostics(
 ) -> ApiResult<Json<DiagnosticsResponse>> {
     let service = DiagnosticsService::new(state.db.clone());
 
-    let report = service.run_all_diagnostics().await
+    let report = service
+        .run_all_diagnostics()
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(DiagnosticsResponse { report }))
@@ -468,7 +500,9 @@ pub async fn run_diagnostic(
 ) -> ApiResult<Json<qa_pms_support::DiagnosticResult>> {
     let service = DiagnosticsService::new(state.db.clone());
 
-    let result = service.run_diagnostic(&integration).await
+    let result = service
+        .run_diagnostic(&integration)
+        .await
         .map_err(|e| match e {
             qa_pms_support::SupportError::InvalidInput(msg) => ApiError::Validation(msg),
             _ => ApiError::Internal(e.into()),
@@ -498,7 +532,9 @@ pub async fn list_kb_entries(
         per_page: query.per_page,
     };
 
-    let result = repo.list_kb_entries(query.search.as_deref(), pagination).await
+    let result = repo
+        .list_kb_entries(query.search.as_deref(), pagination)
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(KbEntriesResponse {
@@ -535,7 +571,9 @@ pub async fn create_kb_entry(
         tags: req.tags,
     };
 
-    let entry = repo.create_kb_entry(input).await
+    let entry = repo
+        .create_kb_entry(input)
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(entry))
@@ -561,11 +599,12 @@ pub async fn get_kb_entry(
     // Increment view count
     let _ = repo.increment_kb_view(id).await;
 
-    let entry = repo.get_kb_entry(id).await
-        .map_err(|e| match e {
-            qa_pms_support::SupportError::KbEntryNotFound(_) => ApiError::NotFound("KB entry not found".into()),
-            _ => ApiError::Internal(e.into()),
-        })?;
+    let entry = repo.get_kb_entry(id).await.map_err(|e| match e {
+        qa_pms_support::SupportError::KbEntryNotFound(_) => {
+            ApiError::NotFound("KB entry not found".into())
+        }
+        _ => ApiError::Internal(e.into()),
+    })?;
 
     Ok(Json(entry))
 }
@@ -598,11 +637,12 @@ pub async fn update_kb_entry(
         tags: req.tags,
     };
 
-    let entry = repo.update_kb_entry(id, input).await
-        .map_err(|e| match e {
-            qa_pms_support::SupportError::KbEntryNotFound(_) => ApiError::NotFound("KB entry not found".into()),
-            _ => ApiError::Internal(e.into()),
-        })?;
+    let entry = repo.update_kb_entry(id, input).await.map_err(|e| match e {
+        qa_pms_support::SupportError::KbEntryNotFound(_) => {
+            ApiError::NotFound("KB entry not found".into())
+        }
+        _ => ApiError::Internal(e.into()),
+    })?;
 
     Ok(Json(entry))
 }
@@ -624,11 +664,12 @@ pub async fn delete_kb_entry(
 ) -> ApiResult<Json<SuccessResponse>> {
     let repo = SupportRepository::new(state.db.clone());
 
-    repo.delete_kb_entry(id).await
-        .map_err(|e| match e {
-            qa_pms_support::SupportError::KbEntryNotFound(_) => ApiError::NotFound("KB entry not found".into()),
-            _ => ApiError::Internal(e.into()),
-        })?;
+    repo.delete_kb_entry(id).await.map_err(|e| match e {
+        qa_pms_support::SupportError::KbEntryNotFound(_) => {
+            ApiError::NotFound("KB entry not found".into())
+        }
+        _ => ApiError::Internal(e.into()),
+    })?;
 
     Ok(Json(SuccessResponse {
         message: "KB entry deleted successfully".into(),
@@ -653,7 +694,8 @@ pub async fn rate_kb_entry(
 ) -> ApiResult<Json<SuccessResponse>> {
     let repo = SupportRepository::new(state.db.clone());
 
-    repo.rate_kb_entry(id, req.helpful).await
+    repo.rate_kb_entry(id, req.helpful)
+        .await
         .map_err(|e| ApiError::Internal(e.into()))?;
 
     Ok(Json(SuccessResponse {

@@ -7,14 +7,14 @@
 //! - Knowledge base for common issues
 //! - Troubleshooting suggestions
 
-pub mod types;
-pub mod error;
-pub mod repository;
 pub mod diagnostics;
+pub mod error;
 pub mod knowledge_base;
+pub mod repository;
+pub mod types;
 
-pub use types::*;
-pub use error::SupportError;
-pub use repository::SupportRepository;
 pub use diagnostics::DiagnosticsService;
+pub use error::SupportError;
 pub use knowledge_base::KnowledgeBaseService;
+pub use repository::SupportRepository;
+pub use types::*;

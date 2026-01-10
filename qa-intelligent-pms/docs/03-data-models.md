@@ -97,6 +97,92 @@ class LogPattern:
 - `severity`: Determina prioridade de ação
 - `affected_endpoints`: Endpoints que precisam de atenção
 
+### Anomaly
+
+Representa uma anomalia detectada em execuções de workflow.
+
+```rust
+pub struct Anomaly {
+    pub id: Uuid,
+    pub detected_at: DateTime<Utc>,
+    pub anomaly_type: AnomalyType,  // SpikeInFailures, PerformanceDegradation, etc.
+    pub severity: AnomalySeverity,  // Info, Warning, Critical
+    pub description: String,
+    pub metrics: AnomalyMetrics,
+    pub affected_entities: Vec<String>,  // Workflow IDs, ticket IDs
+    pub investigation_steps: Vec<String>,
+}
+
+pub struct AnomalyMetrics {
+    pub current_value: f64,
+    pub baseline_value: f64,
+    pub deviation: f64,
+    pub z_score: f64,  // Standard deviations from mean
+    pub confidence: f64,  // 0.0 to 1.0
+}
+
+pub enum AnomalyType {
+    SpikeInFailures,           // Sudden spike in failures
+    PerformanceDegradation,     // Execution time > baseline + 2σ
+    UnusualExecutionTime,       // Z-score > 2.0 (too fast or too slow)
+    PatternDeviation,           // Deviation from normal behavior
+    ResourceExhaustion,         // Resource exhaustion detected
+    ConsecutiveFailures,        // 3+ consecutive failures
+}
+
+pub enum AnomalySeverity {
+    Info,      // Informational anomaly
+    Warning,   // Attention required
+    Critical,  // Immediate action needed
+}
+```
+
+**Campos importantes**:
+- `z_score`: Medida estatística de desvio (valores > 2.0 indicam anomalia)
+- `baseline_value`: Valor médio histórico (média móvel das últimas 30 execuções)
+- `confidence`: Nível de confiança na detecção (baseado no z-score)
+- `investigation_steps`: Passos sugeridos para investigação
+
+**Tabela no Banco de Dados**:
+```sql
+CREATE TABLE anomalies (
+    id UUID PRIMARY KEY,
+    workflow_instance_id UUID,
+    anomaly_type VARCHAR(50),
+    severity VARCHAR(20),
+    description TEXT,
+    metrics JSONB,
+    affected_entities TEXT[],
+    investigation_steps TEXT[],
+    detected_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ
+);
+```
+
+### BaselineMetrics
+
+Métricas de baseline para detecção estatística de anomalias.
+
+```rust
+pub struct BaselineMetrics {
+    pub failure_rate: MovingAverage,  // Moving average (30-day window)
+    pub execution_time: MovingAverage,
+    pub success_rate: MovingAverage,
+}
+
+pub struct MovingAverage {
+    pub value: f64,        // Current mean
+    pub std_dev: f64,      // Standard deviation
+    pub window_size: usize, // 30 days
+    pub history: Vec<f64>,  // Last N values
+}
+```
+
+**Campos importantes**:
+- `window_size`: 30 execuções (representa ~30 dias)
+- `std_dev`: Calculado para permitir cálculo de z-score
+- Baseline é carregado do histórico do banco de dados a cada detecção
+
 ## Value Objects
 
 ### RiskLevel

@@ -21,6 +21,8 @@ import { PatternsPage } from "./pages/Patterns";
 import { PMDashboardPage } from "./pages/PMDashboard";
 import { SplunkPage } from "./pages/Splunk";
 import { SupportPage } from "./pages/Support";
+import { AnomalyDashboardPage } from "./pages/Anomalies";
+import { AISettingsPage } from "./pages/Settings";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -51,12 +53,7 @@ function ReportsPage() {
 }
 
 function SettingsPage() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-neutral-900">Settings</h2>
-      <p className="text-neutral-600">Application settings and integrations.</p>
-    </div>
-  );
+  return <AISettingsPage />;
 }
 
 function App() {
@@ -95,6 +92,7 @@ function App() {
           <Route path="workflows/:id" element={<WorkflowPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="patterns" element={<PatternsPage />} />
+          <Route path="anomalies" element={<AnomalyDashboardPage />} />
           <Route path="pm-dashboard" element={<PMDashboardPage />} />
           <Route path="splunk" element={<SplunkPage />} />
           <Route path="support" element={<SupportPage />} />

@@ -20,18 +20,9 @@ use utoipa::ToSchema;
 
 use crate::app::AppState;
 use qa_pms_core::error::ApiError;
+use qa_pms_dashboard::{default_period, parse_period, SqlxResultExt};
 
 type ApiResult<T> = Result<T, ApiError>;
-
-trait SqlxResultExt<T> {
-    fn map_internal(self, context: &str) -> Result<T, ApiError>;
-}
-
-impl<T> SqlxResultExt<T> for Result<T, sqlx::Error> {
-    fn map_internal(self, context: &str) -> Result<T, ApiError> {
-        self.map_err(|e| ApiError::Internal(anyhow::anyhow!("{context}: {e}")))
-    }
-}
 
 /// Create the PM dashboard router.
 pub fn router() -> Router<AppState> {
@@ -47,10 +38,6 @@ pub struct PMDashboardQuery {
     /// Period: 7d, 30d, 90d, 1y
     #[serde(default = "default_period")]
     pub period: String,
-}
-
-fn default_period() -> String {
-    "30d".to_string()
 }
 
 /// PM Dashboard response.
@@ -199,39 +186,53 @@ pub async fn export_pm_dashboard(
     let mut csv = String::new();
     csv.push_str("QA Metrics Report\n");
     csv.push_str(&format!("Period,{}\n", query.period));
-    csv.push_str(&format!("Generated,{}\n\n", Utc::now().format("%Y-%m-%d %H:%M UTC")));
-    
+    csv.push_str(&format!(
+        "Generated,{}\n\n",
+        Utc::now().format("%Y-%m-%d %H:%M UTC")
+    ));
+
     csv.push_str("Summary\n");
     csv.push_str("Metric,Value\n");
-    csv.push_str(&format!("Total Tickets Tested,{}\n", summary.total_tickets_tested));
-    csv.push_str(&format!("Total Workflows Completed,{}\n", summary.total_workflows_completed));
+    csv.push_str(&format!(
+        "Total Tickets Tested,{}\n",
+        summary.total_tickets_tested
+    ));
+    csv.push_str(&format!(
+        "Total Workflows Completed,{}\n",
+        summary.total_workflows_completed
+    ));
     csv.push_str(&format!("Active QA Users,{}\n", summary.active_qa_users));
-    csv.push_str(&format!("Avg Time Per Ticket (min),{:.1}\n\n", summary.avg_time_per_ticket_minutes));
-    
+    csv.push_str(&format!(
+        "Avg Time Per Ticket (min),{:.1}\n\n",
+        summary.avg_time_per_ticket_minutes
+    ));
+
     csv.push_str("Bugs Metrics\n");
     csv.push_str("Metric,Value\n");
-    csv.push_str(&format!("Bugs Discovered,{}\n", bugs_metrics.bugs_discovered));
+    csv.push_str(&format!(
+        "Bugs Discovered,{}\n",
+        bugs_metrics.bugs_discovered
+    ));
     csv.push_str(&format!("Bugs Prevented,{}\n", bugs_metrics.bugs_prevented));
-    csv.push_str(&format!("Prevention Rate,{:.1}%\n\n", bugs_metrics.prevention_rate * 100.0));
-    
+    csv.push_str(&format!(
+        "Prevention Rate,{:.1}%\n\n",
+        bugs_metrics.prevention_rate * 100.0
+    ));
+
     csv.push_str("Economy Metrics\n");
     csv.push_str("Metric,Value\n");
     csv.push_str(&format!("Hours Saved,{:.1}\n", economy_metrics.hours_saved));
     csv.push_str(&format!("Cost Saved,${:.2}\n", economy_metrics.cost_saved));
-    csv.push_str(&format!("Bug Prevention Value,${:.2}\n", economy_metrics.bug_prevention_value));
-    csv.push_str(&format!("Total Economy,${:.2}\n", economy_metrics.total_economy));
+    csv.push_str(&format!(
+        "Bug Prevention Value,${:.2}\n",
+        economy_metrics.bug_prevention_value
+    ));
+    csv.push_str(&format!(
+        "Total Economy,${:.2}\n",
+        economy_metrics.total_economy
+    ));
 
     Ok(csv)
-}
-
-fn parse_period(period: &str) -> i64 {
-    match period {
-        "7d" => 7,
-        "30d" => 30,
-        "90d" => 90,
-        "1y" => 365,
-        _ => 30,
-    }
 }
 
 async fn get_pm_summary(pool: &PgPool, days: i64) -> Result<PMSummary, ApiError> {
@@ -526,7 +527,10 @@ async fn get_component_health(pool: &PgPool, days: i64) -> Result<Vec<ComponentH
         .collect())
 }
 
-async fn get_problematic_endpoints(pool: &PgPool, days: i64) -> Result<Vec<ProblematicEndpoint>, ApiError> {
+async fn get_problematic_endpoints(
+    pool: &PgPool,
+    days: i64,
+) -> Result<Vec<ProblematicEndpoint>, ApiError> {
     let start = Utc::now() - Duration::days(days);
 
     // Extract endpoints from workflow notes (looking for API paths like /api/v1/...)
@@ -560,14 +564,19 @@ async fn get_problematic_endpoints(pool: &PgPool, days: i64) -> Result<Vec<Probl
 
     Ok(endpoint_stats
         .into_iter()
-        .map(|(endpoint, issue_count, issues, tickets)| {
-            ProblematicEndpoint {
+        .map(
+            |(endpoint, issue_count, issues, tickets)| ProblematicEndpoint {
                 endpoint,
                 issue_count,
                 common_issues: issues.into_iter().take(3).collect(),
-                trend: if issue_count > 5 { "increasing" } else { "stable" }.to_string(),
+                trend: if issue_count > 5 {
+                    "increasing"
+                } else {
+                    "stable"
+                }
+                .to_string(),
                 affected_tickets: tickets.into_iter().take(5).collect(),
-            }
-        })
+            },
+        )
         .collect())
 }

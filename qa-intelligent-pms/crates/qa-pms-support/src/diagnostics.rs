@@ -16,7 +16,7 @@ pub struct DiagnosticsService {
 
 impl DiagnosticsService {
     /// Create a new diagnostics service.
-    #[must_use] 
+    #[must_use]
     pub fn new(pool: PgPool) -> Self {
         let repo = SupportRepository::new(pool.clone());
         Self { pool, repo }
@@ -56,7 +56,10 @@ impl DiagnosticsService {
     }
 
     /// Run diagnostics for a specific integration.
-    pub async fn run_diagnostic(&self, integration: &str) -> Result<DiagnosticResult, SupportError> {
+    pub async fn run_diagnostic(
+        &self,
+        integration: &str,
+    ) -> Result<DiagnosticResult, SupportError> {
         match integration.to_lowercase().as_str() {
             "database" | "db" => Ok(self.check_database().await),
             "jira" => Ok(self.check_jira().await),
@@ -71,10 +74,8 @@ impl DiagnosticsService {
     /// Check database connectivity and health.
     async fn check_database(&self) -> DiagnosticResult {
         let start = Instant::now();
-        
-        let check_result = sqlx::query("SELECT 1")
-            .execute(&self.pool)
-            .await;
+
+        let check_result = sqlx::query("SELECT 1").execute(&self.pool).await;
 
         let latency_ms = start.elapsed().as_millis() as u64;
         let recent_error_count = self
@@ -115,7 +116,7 @@ impl DiagnosticsService {
 
         // Check if Jira credentials exist
         let creds_exist: Result<(i64,), _> = sqlx::query_as(
-            "SELECT COUNT(*) FROM integration_credentials WHERE integration_type = 'jira'"
+            "SELECT COUNT(*) FROM integration_credentials WHERE integration_type = 'jira'",
         )
         .fetch_one(&self.pool)
         .await;
@@ -136,7 +137,7 @@ impl DiagnosticsService {
                     FROM integration_credentials
                     WHERE integration_type = 'jira'
                     LIMIT 1
-                    "
+                    ",
                 )
                 .fetch_optional(&self.pool)
                 .await;
@@ -169,9 +170,7 @@ impl DiagnosticsService {
                         message: "Could not verify Jira token status".to_string(),
                         latency_ms: Some(latency_ms),
                         recent_error_count,
-                        suggestions: vec![
-                            "Check integration_credentials table".to_string(),
-                        ],
+                        suggestions: vec!["Check integration_credentials table".to_string()],
                         checked_at: Utc::now(),
                     },
                 }
@@ -194,9 +193,7 @@ impl DiagnosticsService {
                 message: format!("Failed to check Jira configuration: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
-                suggestions: vec![
-                    "Check database connectivity".to_string(),
-                ],
+                suggestions: vec!["Check database connectivity".to_string()],
                 checked_at: Utc::now(),
             },
         }
@@ -207,11 +204,10 @@ impl DiagnosticsService {
         let start = Instant::now();
 
         // Check if Postman API key exists
-        let config_exists: Result<(i64,), _> = sqlx::query_as(
-            "SELECT COUNT(*) FROM user_configs WHERE postman_api_key IS NOT NULL"
-        )
-        .fetch_one(&self.pool)
-        .await;
+        let config_exists: Result<(i64,), _> =
+            sqlx::query_as("SELECT COUNT(*) FROM user_configs WHERE postman_api_key IS NOT NULL")
+                .fetch_one(&self.pool)
+                .await;
 
         let latency_ms = start.elapsed().as_millis() as u64;
         let recent_error_count = self
@@ -252,9 +248,7 @@ impl DiagnosticsService {
                 message: format!("Failed to check Postman configuration: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
-                suggestions: vec![
-                    "Check database connectivity".to_string(),
-                ],
+                suggestions: vec!["Check database connectivity".to_string()],
                 checked_at: Utc::now(),
             },
         }
@@ -286,7 +280,10 @@ impl DiagnosticsService {
                 latency_ms: Some(latency_ms),
                 recent_error_count,
                 suggestions: if recent_error_count > 5 {
-                    vec!["High error count detected - verify credentials are still valid".to_string()]
+                    vec![
+                        "High error count detected - verify credentials are still valid"
+                            .to_string(),
+                    ]
                 } else {
                     vec![]
                 },
@@ -310,9 +307,7 @@ impl DiagnosticsService {
                 message: format!("Failed to check Testmo configuration: {e}"),
                 latency_ms: Some(latency_ms),
                 recent_error_count,
-                suggestions: vec![
-                    "Check database connectivity".to_string(),
-                ],
+                suggestions: vec!["Check database connectivity".to_string()],
                 checked_at: Utc::now(),
             },
         }

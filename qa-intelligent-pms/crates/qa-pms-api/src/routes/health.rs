@@ -12,6 +12,8 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, Utc};
+use futures::future::join_all;
+use qa_pms_core::health::HealthCheck;
 use qa_pms_core::IntegrationHealth;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -19,6 +21,7 @@ use tracing::info;
 use utoipa::ToSchema;
 
 use crate::app::AppState;
+use crate::user_config_health::UserConfigHealthCheck;
 
 /// Health check router.
 pub fn router() -> Router<AppState> {
@@ -180,10 +183,27 @@ pub async fn get_integration_health(
         (status = 200, description = "Health check triggered"),
     )
 )]
-pub async fn trigger_health_check(State(_state): State<AppState>) -> StatusCode {
+pub async fn trigger_health_check(State(state): State<AppState>) -> StatusCode {
     info!("Manual health check refresh requested");
-    // Note: In a full implementation, this would trigger the health scheduler
-    // to run checks immediately. For now, we just acknowledge the request.
-    // The next scheduled check will run within 60 seconds.
+
+    // Run an immediate health check using per-user config on disk.
+    // This avoids stale keys from process startup configuration.
+    let mut checks: Vec<std::sync::Arc<dyn HealthCheck>> = Vec::new();
+    if let Some(c) = UserConfigHealthCheck::jira(&state.settings) {
+        checks.push(std::sync::Arc::new(c));
+    }
+    if let Some(c) = UserConfigHealthCheck::postman(&state.settings) {
+        checks.push(std::sync::Arc::new(c));
+    }
+    if let Some(c) = UserConfigHealthCheck::testmo(&state.settings) {
+        checks.push(std::sync::Arc::new(c));
+    }
+
+    let futures: Vec<_> = checks.iter().map(|c| c.check()).collect();
+    let results = join_all(futures).await;
+    for result in results {
+        state.health_store.update(result).await;
+    }
+
     StatusCode::OK
 }

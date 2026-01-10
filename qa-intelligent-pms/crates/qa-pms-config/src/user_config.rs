@@ -293,8 +293,7 @@ impl UserConfig {
 
         // Create parent directories if needed
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)
-                .context("Failed to create config directory")?;
+            std::fs::create_dir_all(parent).context("Failed to create config directory")?;
         }
 
         std::fs::write(path, yaml).context("Failed to write config file")?;
@@ -307,8 +306,7 @@ impl UserConfig {
     ///
     /// Returns an error if the file cannot be read or parsed.
     pub fn from_file(path: &Path) -> Result<Self> {
-        let contents = std::fs::read_to_string(path)
-            .context("Failed to read config file")?;
+        let contents = std::fs::read_to_string(path).context("Failed to read config file")?;
         serde_yaml::from_str(&contents).context("Failed to parse config YAML")
     }
 
@@ -318,8 +316,7 @@ impl UserConfig {
     ///
     /// Returns an error if the config directory cannot be determined.
     pub fn default_path() -> Result<std::path::PathBuf> {
-        let config_dir = dirs::config_dir()
-            .context("Could not determine config directory")?;
+        let config_dir = dirs::config_dir().context("Could not determine config directory")?;
         Ok(config_dir.join("qa-intelligent-pms").join("config.yaml"))
     }
 }
@@ -555,10 +552,8 @@ mod tests {
     use super::*;
 
     fn test_encryptor() -> Encryptor {
-        Encryptor::from_hex_key(
-            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-        )
-        .unwrap()
+        Encryptor::from_hex_key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+            .unwrap()
     }
 
     #[test]
@@ -587,8 +582,14 @@ mod tests {
 
         assert_eq!(config.version, "1.0");
         assert_eq!(config.profile.display_name, "Test User");
-        assert_eq!(config.integrations.jira.instance_url, "https://test.atlassian.net");
-        assert!(matches!(config.integrations.jira.auth_type, JiraAuthType::ApiToken));
+        assert_eq!(
+            config.integrations.jira.instance_url,
+            "https://test.atlassian.net"
+        );
+        assert!(matches!(
+            config.integrations.jira.auth_type,
+            JiraAuthType::ApiToken
+        ));
         assert!(config.integrations.jira.email_encrypted.is_some());
         assert!(config.integrations.jira.api_token_encrypted.is_some());
     }
@@ -619,8 +620,14 @@ mod tests {
 
         assert_eq!(config.version, "1.0");
         assert_eq!(config.profile.display_name, "Test User");
-        assert_eq!(config.integrations.jira.instance_url, "https://test.atlassian.net");
-        assert!(matches!(config.integrations.jira.auth_type, JiraAuthType::OAuth));
+        assert_eq!(
+            config.integrations.jira.instance_url,
+            "https://test.atlassian.net"
+        );
+        assert!(matches!(
+            config.integrations.jira.auth_type,
+            JiraAuthType::OAuth
+        ));
         assert!(config.integrations.jira.client_id_encrypted.is_some());
         assert!(config.integrations.jira.client_secret_encrypted.is_some());
     }
@@ -632,7 +639,7 @@ mod tests {
             profile: UserProfile {
                 display_name: "".to_string(), // Invalid
                 jira_email: "test@example.com".to_string(),
-                ticket_states: vec![],  // Invalid
+                ticket_states: vec![], // Invalid
             },
             integrations: IntegrationsConfig {
                 jira: JiraConfig {

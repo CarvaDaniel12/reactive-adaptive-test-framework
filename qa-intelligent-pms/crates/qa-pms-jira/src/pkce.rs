@@ -28,7 +28,10 @@ impl PkceChallenge {
     pub fn new() -> Self {
         let verifier = generate_code_verifier();
         let challenge = generate_code_challenge(&verifier);
-        Self { verifier, challenge }
+        Self {
+            verifier,
+            challenge,
+        }
     }
 
     /// Get the challenge method string for OAuth requests.

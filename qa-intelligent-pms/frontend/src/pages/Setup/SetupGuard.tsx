@@ -11,7 +11,12 @@ interface SetupGuardProps {
 }
 
 export function SetupGuard({ children }: SetupGuardProps) {
-  const { isComplete } = useWizardStore();
+  const { isComplete, _hasHydrated } = useWizardStore();
+
+  // Wait for persisted state to hydrate to avoid false redirects
+  if (!_hasHydrated) {
+    return null;
+  }
 
   if (!isComplete) {
     return <Navigate to="/setup" replace />;

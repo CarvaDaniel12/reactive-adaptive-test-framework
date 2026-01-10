@@ -7,12 +7,12 @@
 //! - Consecutive Problem: 3+ tickets with same component/issue
 //! - Spike: Sudden increase in tickets for an area
 
-pub mod types;
+pub mod alerts;
 pub mod detector;
 pub mod repository;
-pub mod alerts;
+pub mod types;
 
-pub use types::*;
+pub use alerts::AlertService;
 pub use detector::PatternDetector;
 pub use repository::PatternRepository;
-pub use alerts::AlertService;
+pub use types::*;

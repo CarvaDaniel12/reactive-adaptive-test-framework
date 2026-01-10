@@ -28,7 +28,7 @@ pub enum WorkflowStatus {
 impl WorkflowStatus {
     /// Convert from database string.
     #[must_use]
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_db_str(s: &str) -> Self {
         match s {
             "active" => Self::Active,
             "paused" => Self::Paused,
@@ -67,7 +67,7 @@ pub enum StepStatus {
 impl StepStatus {
     /// Convert from database string.
     #[must_use]
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_db_str(s: &str) -> Self {
         match s {
             "pending" => Self::Pending,
             "in_progress" => Self::InProgress,
@@ -187,7 +187,7 @@ impl WorkflowInstance {
     /// Get the workflow status as enum.
     #[must_use]
     pub fn status_enum(&self) -> WorkflowStatus {
-        WorkflowStatus::from_str(&self.status)
+        WorkflowStatus::from_db_str(&self.status)
     }
 
     /// Check if workflow is active.
@@ -235,7 +235,7 @@ impl WorkflowStepResult {
     /// Get the step status as enum.
     #[must_use]
     pub fn status_enum(&self) -> StepStatus {
-        StepStatus::from_str(&self.status)
+        StepStatus::from_db_str(&self.status)
     }
 
     /// Get the links if any.
@@ -291,49 +291,51 @@ mod tests {
 
     #[test]
     fn test_workflow_status_conversion() {
-        assert_eq!(WorkflowStatus::from_str("active"), WorkflowStatus::Active);
-        assert_eq!(WorkflowStatus::from_str("paused"), WorkflowStatus::Paused);
+        assert_eq!(WorkflowStatus::from_db_str("active"), WorkflowStatus::Active);
+        assert_eq!(WorkflowStatus::from_db_str("paused"), WorkflowStatus::Paused);
         assert_eq!(
-            WorkflowStatus::from_str("completed"),
+            WorkflowStatus::from_db_str("completed"),
             WorkflowStatus::Completed
         );
         assert_eq!(
-            WorkflowStatus::from_str("cancelled"),
+            WorkflowStatus::from_db_str("cancelled"),
             WorkflowStatus::Cancelled
         );
-        assert_eq!(WorkflowStatus::from_str("unknown"), WorkflowStatus::Active);
+        assert_eq!(WorkflowStatus::from_db_str("unknown"), WorkflowStatus::Active);
     }
 
     #[test]
     fn test_step_status_conversion() {
-        assert_eq!(StepStatus::from_str("pending"), StepStatus::Pending);
-        assert_eq!(StepStatus::from_str("in_progress"), StepStatus::InProgress);
-        assert_eq!(StepStatus::from_str("completed"), StepStatus::Completed);
-        assert_eq!(StepStatus::from_str("skipped"), StepStatus::Skipped);
-        assert_eq!(StepStatus::from_str("unknown"), StepStatus::Pending);
+        assert_eq!(StepStatus::from_db_str("pending"), StepStatus::Pending);
+        assert_eq!(StepStatus::from_db_str("in_progress"), StepStatus::InProgress);
+        assert_eq!(StepStatus::from_db_str("completed"), StepStatus::Completed);
+        assert_eq!(StepStatus::from_db_str("skipped"), StepStatus::Skipped);
+        assert_eq!(StepStatus::from_db_str("unknown"), StepStatus::Pending);
     }
 
     #[test]
-    fn test_workflow_step_serialization() {
+    fn test_workflow_step_serialization() -> Result<(), serde_json::Error> {
         let step = WorkflowStep {
             name: "Test Step".to_string(),
             description: "Do something".to_string(),
             estimated_minutes: 15,
         };
 
-        let json = serde_json::to_string(&step).unwrap();
+        let json = serde_json::to_string(&step)?;
         assert!(json.contains("\"name\":\"Test Step\""));
         assert!(json.contains("\"estimatedMinutes\":15"));
+        Ok(())
     }
 
     #[test]
-    fn test_step_link_serialization() {
+    fn test_step_link_serialization() -> Result<(), serde_json::Error> {
         let link = StepLink {
             title: "Bug Report".to_string(),
             url: "https://jira.example.com/PROJ-123".to_string(),
         };
 
-        let json = serde_json::to_string(&link).unwrap();
+        let json = serde_json::to_string(&link)?;
         assert!(json.contains("\"title\":\"Bug Report\""));
+        Ok(())
     }
 }

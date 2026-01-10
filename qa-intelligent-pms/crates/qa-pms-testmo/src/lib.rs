@@ -12,8 +12,8 @@
 
 mod client;
 mod error;
-mod types;
 pub mod health;
+mod types;
 
 pub use client::TestmoClient;
 pub use error::TestmoError;

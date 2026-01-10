@@ -164,9 +164,15 @@ mod tests {
     #[test]
     fn test_api_error_codes() {
         assert_eq!(ApiError::NotFound("test".into()).code(), "NOT_FOUND");
-        assert_eq!(ApiError::Validation("test".into()).code(), "VALIDATION_ERROR");
+        assert_eq!(
+            ApiError::Validation("test".into()).code(),
+            "VALIDATION_ERROR"
+        );
         assert_eq!(ApiError::Unauthorized("test".into()).code(), "UNAUTHORIZED");
-        assert_eq!(ApiError::ServiceUnavailable("test".into()).code(), "SERVICE_UNAVAILABLE");
+        assert_eq!(
+            ApiError::ServiceUnavailable("test".into()).code(),
+            "SERVICE_UNAVAILABLE"
+        );
     }
 
     #[test]
@@ -174,7 +180,10 @@ mod tests {
         assert_eq!(ApiError::NotFound("test".into()).status_code(), 404);
         assert_eq!(ApiError::Validation("test".into()).status_code(), 400);
         assert_eq!(ApiError::Unauthorized("test".into()).status_code(), 401);
-        assert_eq!(ApiError::ServiceUnavailable("test".into()).status_code(), 503);
+        assert_eq!(
+            ApiError::ServiceUnavailable("test".into()).status_code(),
+            503
+        );
     }
 
     #[test]

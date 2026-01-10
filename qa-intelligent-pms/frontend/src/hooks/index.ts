@@ -34,3 +34,12 @@ export type {
 
 export { useTimer, formatTime, formatDurationLong } from "./useTimer";
 export type { TimeSession, TimerState } from "./useTimer";
+export { useReport, useReports } from "./useReports";
+export {
+  useAIStatus,
+  useAIConfig,
+  useProviders,
+  useConfigureAI,
+  useTestConnection,
+  useDisableAI,
+} from "./useAI";

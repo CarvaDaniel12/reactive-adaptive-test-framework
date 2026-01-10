@@ -95,6 +95,9 @@ mod tests {
     #[test]
     fn test_error_display() {
         let err = TestmoError::NotFound("/projects/123/cases/456".to_string());
-        assert_eq!(err.to_string(), "Resource not found: /projects/123/cases/456");
+        assert_eq!(
+            err.to_string(),
+            "Resource not found: /projects/123/cases/456"
+        );
     }
 }

@@ -160,6 +160,37 @@ impl From<&str> for TicketId {
     }
 }
 
+/// Test case identifier (usually the Testmo ID or internal ID).
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct TestCaseId(pub String);
+
+impl TestCaseId {
+    /// Create a new test case ID from a string.
+    #[must_use]
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+}
+
+impl std::fmt::Display for TestCaseId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<String> for TestCaseId {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<&str> for TestCaseId {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

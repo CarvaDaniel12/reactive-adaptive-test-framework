@@ -132,11 +132,8 @@ impl StartupValidator {
                 let criticality = *criticality;
                 async move {
                     let name = check.integration_name().to_string();
-                    let result = timeout(
-                        Duration::from_secs(VALIDATION_TIMEOUT_SECS),
-                        check.check(),
-                    )
-                    .await;
+                    let result =
+                        timeout(Duration::from_secs(VALIDATION_TIMEOUT_SECS), check.check()).await;
                     (result, criticality, name)
                 }
             })
@@ -279,7 +276,9 @@ mod tests {
                 HealthStatus::Degraded => {
                     HealthCheckResult::degraded(&self.name, StdDuration::from_secs(3), "Slow")
                 }
-                HealthStatus::Offline => HealthCheckResult::offline(&self.name, "Connection failed"),
+                HealthStatus::Offline => {
+                    HealthCheckResult::offline(&self.name, "Connection failed")
+                }
             }
         }
     }
@@ -298,7 +297,10 @@ mod tests {
     async fn test_all_online() {
         let validator = StartupValidator::new()
             .add_critical(Arc::new(MockHealthCheck::new("jira", HealthStatus::Online)))
-            .add_optional(Arc::new(MockHealthCheck::new("postman", HealthStatus::Online)));
+            .add_optional(Arc::new(MockHealthCheck::new(
+                "postman",
+                HealthStatus::Online,
+            )));
 
         let report = validator.validate().await;
 
@@ -311,15 +313,25 @@ mod tests {
     #[tokio::test]
     async fn test_critical_failure_blocks() {
         let validator = StartupValidator::new()
-            .add_critical(Arc::new(MockHealthCheck::new("jira", HealthStatus::Offline)))
-            .add_optional(Arc::new(MockHealthCheck::new("postman", HealthStatus::Online)));
+            .add_critical(Arc::new(MockHealthCheck::new(
+                "jira",
+                HealthStatus::Offline,
+            )))
+            .add_optional(Arc::new(MockHealthCheck::new(
+                "postman",
+                HealthStatus::Online,
+            )));
 
         let report = validator.validate().await;
 
         assert!(!report.valid);
         assert!(report.has_critical_failure);
 
-        let jira = report.results.iter().find(|r| r.integration == "jira").unwrap();
+        let jira = report
+            .results
+            .iter()
+            .find(|r| r.integration == "jira")
+            .unwrap();
         assert!(!jira.success);
         assert!(jira.is_critical);
     }
@@ -328,27 +340,40 @@ mod tests {
     async fn test_optional_failure_allows_continue() {
         let validator = StartupValidator::new()
             .add_critical(Arc::new(MockHealthCheck::new("jira", HealthStatus::Online)))
-            .add_optional(Arc::new(MockHealthCheck::new("postman", HealthStatus::Offline)));
+            .add_optional(Arc::new(MockHealthCheck::new(
+                "postman",
+                HealthStatus::Offline,
+            )));
 
         let report = validator.validate().await;
 
         assert!(report.valid);
         assert!(!report.has_critical_failure);
 
-        let postman = report.results.iter().find(|r| r.integration == "postman").unwrap();
+        let postman = report
+            .results
+            .iter()
+            .find(|r| r.integration == "postman")
+            .unwrap();
         assert!(!postman.success);
         assert!(!postman.is_critical);
     }
 
     #[tokio::test]
     async fn test_degraded_counts_as_success() {
-        let validator = StartupValidator::new()
-            .add_critical(Arc::new(MockHealthCheck::new("jira", HealthStatus::Degraded)));
+        let validator = StartupValidator::new().add_critical(Arc::new(MockHealthCheck::new(
+            "jira",
+            HealthStatus::Degraded,
+        )));
 
         let report = validator.validate().await;
 
         assert!(report.valid);
-        let jira = report.results.iter().find(|r| r.integration == "jira").unwrap();
+        let jira = report
+            .results
+            .iter()
+            .find(|r| r.integration == "jira")
+            .unwrap();
         assert!(jira.success);
     }
 

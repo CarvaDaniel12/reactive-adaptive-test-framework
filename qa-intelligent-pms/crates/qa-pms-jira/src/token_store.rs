@@ -173,7 +173,7 @@ impl FileTokenStore {
 impl TokenStore for FileTokenStore {
     async fn store_tokens(&self, tokens: StoredTokens) -> Result<()> {
         let integration = tokens.integration.clone();
-        
+
         {
             let mut cache = self.cache.write().await;
             cache.insert(integration.clone(), tokens);
@@ -238,23 +238,32 @@ impl Default for InMemoryAuthStateStore {
 impl AuthStateStore for InMemoryAuthStateStore {
     async fn store(&self, state: &str, code_verifier: &str) -> Result<()> {
         let mut states = self.states.write().await;
-        states.insert(state.to_string(), (code_verifier.to_string(), chrono::Utc::now()));
+        states.insert(
+            state.to_string(),
+            (code_verifier.to_string(), chrono::Utc::now()),
+        );
         debug!(state_prefix = &state[..8], "Stored auth state");
         Ok(())
     }
 
     async fn get_and_remove(&self, state: &str) -> Result<Option<String>> {
         let mut states = self.states.write().await;
-        
+
         if let Some((code_verifier, created_at)) = states.remove(state) {
             let age = chrono::Utc::now() - created_at;
-            
+
             if age.num_seconds() > Self::EXPIRY_SECONDS {
-                debug!(state_prefix = &state[..8.min(state.len())], "Auth state expired");
+                debug!(
+                    state_prefix = &state[..8.min(state.len())],
+                    "Auth state expired"
+                );
                 return Ok(None);
             }
 
-            debug!(state_prefix = &state[..8.min(state.len())], "Retrieved and removed auth state");
+            debug!(
+                state_prefix = &state[..8.min(state.len())],
+                "Retrieved and removed auth state"
+            );
             return Ok(Some(code_verifier));
         }
 
@@ -264,17 +273,16 @@ impl AuthStateStore for InMemoryAuthStateStore {
     async fn cleanup_expired(&self) -> Result<()> {
         let mut states = self.states.write().await;
         let now = chrono::Utc::now();
-        
+
         let before = states.len();
-        states.retain(|_, (_, created_at)| {
-            (now - *created_at).num_seconds() <= Self::EXPIRY_SECONDS
-        });
+        states
+            .retain(|_, (_, created_at)| (now - *created_at).num_seconds() <= Self::EXPIRY_SECONDS);
         let removed = before - states.len();
 
         if removed > 0 {
             debug!(removed = removed, "Cleaned up expired auth states");
         }
-        
+
         Ok(())
     }
 }

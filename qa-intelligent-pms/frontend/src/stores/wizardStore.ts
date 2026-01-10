@@ -5,7 +5,7 @@
  * Implements FR-CFG-05: Wizard state persists across browser sessions.
  */
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 /**
  * Step definition for the wizard.
@@ -76,8 +76,13 @@ export interface WizardFormData {
   };
   jira?: {
     instanceUrl: string;
-    clientId: string;
-    clientSecret: string;
+    authMethod?: "api_token" | "oauth";
+    // API Token auth
+    email?: string;
+    apiToken?: string;
+    // OAuth auth
+    clientId?: string;
+    clientSecret?: string;
   };
   postman?: {
     apiKey: string;
@@ -109,6 +114,8 @@ interface WizardState {
   formData: WizardFormData;
   /** Whether setup wizard is complete */
   isComplete: boolean;
+  /** Hydration flag for persisted state */
+  _hasHydrated: boolean;
 }
 
 /**
@@ -134,6 +141,10 @@ interface WizardActions {
   completeWizard: () => void;
   /** Reset wizard to initial state */
   reset: () => void;
+  /** Internal: mark store as hydrated */
+  setHasHydrated: (value: boolean) => void;
+  /** Expose hydration flag */
+  hasHydrated: () => boolean;
   /** Check if a step can be navigated to */
   canNavigateToStep: (stepId: number) => boolean;
   /** Get the current step configuration */
@@ -151,6 +162,7 @@ const initialState: WizardState = {
   skippedSteps: [],
   formData: {},
   isComplete: false,
+  _hasHydrated: false,
 };
 
 /**
@@ -200,7 +212,11 @@ export const useWizardStore = create<WizardStore>()(
 
       completeWizard: () => set({ isComplete: true }),
 
-      reset: () => set(initialState),
+      reset: () => set({ ...initialState, _hasHydrated: true }),
+
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
+
+      hasHydrated: () => get()._hasHydrated,
 
       canNavigateToStep: (stepId) => {
         const { completedSteps, skippedSteps, currentStep } = get();
@@ -242,11 +258,10 @@ export const useWizardStore = create<WizardStore>()(
 
         if (step.key === "jira") {
           const jira = formData.jira;
-          return Boolean(
-            jira?.instanceUrl?.trim() &&
-              jira?.clientId?.trim() &&
-              jira?.clientSecret?.trim()
-          );
+          // Valid if has instance URL and either API Token or OAuth credentials
+          const hasApiToken = Boolean(jira?.email?.trim() && jira?.apiToken?.trim());
+          const hasOAuth = Boolean(jira?.clientId?.trim() && jira?.clientSecret?.trim());
+          return Boolean(jira?.instanceUrl?.trim() && (hasApiToken || hasOAuth));
         }
 
         // Optional steps are valid if they have any data or are empty
@@ -255,6 +270,41 @@ export const useWizardStore = create<WizardStore>()(
     }),
     {
       name: "qa-pms-wizard-state",
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      // Persist only serializable state (avoid actions + hydration flag)
+      partialize: (state) => ({
+        currentStep: state.currentStep,
+        totalSteps: state.totalSteps,
+        completedSteps: state.completedSteps,
+        skippedSteps: state.skippedSteps,
+        formData: state.formData,
+        isComplete: state.isComplete,
+      }),
+      migrate: (persistedState, _fromVersion) => {
+        // v0 -> v1 migration: schema changes were additive; keep what we can.
+        // If anything goes wrong, fall back to a clean state.
+        try {
+          const s = persistedState as Partial<WizardState>;
+          return {
+            ...initialState,
+            ...s,
+            // Ensure new fields exist
+            totalSteps: WIZARD_STEPS.length,
+            _hasHydrated: false,
+          } as WizardState;
+        } catch {
+          return { ...initialState, _hasHydrated: false };
+        }
+      },
+      onRehydrateStorage: () => (state, error) => {
+        // Mark hydration complete regardless of success to avoid blocking UI
+        state?.setHasHydrated?.(true);
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.error("Wizard store hydration failed", error);
+        }
+      },
     }
   )
 );

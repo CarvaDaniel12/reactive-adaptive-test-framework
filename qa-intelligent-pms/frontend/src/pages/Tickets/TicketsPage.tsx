@@ -9,10 +9,12 @@ import type { TicketListResponse } from "./types";
 /** Fetch tickets from API */
 async function fetchTickets(params: {
   status?: string;
+  sprint?: string;
   page: number;
 }): Promise<TicketListResponse> {
   const url = new URL("/api/v1/tickets", window.location.origin);
   if (params.status) url.searchParams.set("status", params.status);
+  if (params.sprint) url.searchParams.set("sprint", params.sprint);
   url.searchParams.set("page", String(params.page));
 
   const res = await fetch(url);
@@ -30,20 +32,21 @@ export function TicketsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const status = searchParams.get("status") || undefined;
+  const sprint = searchParams.get("sprint") || undefined;
   const page = parseInt(searchParams.get("page") || "1", 10);
 
   const loadTickets = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await fetchTickets({ status, page });
+      const result = await fetchTickets({ status, sprint, page });
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load tickets");
     } finally {
       setIsLoading(false);
     }
-  }, [status, page]);
+  }, [status, sprint, page]);
 
   useEffect(() => {
     loadTickets();
@@ -52,6 +55,15 @@ export function TicketsPage() {
   const handleStatusChange = (newStatus: string | undefined) => {
     const params = new URLSearchParams();
     if (newStatus) params.set("status", newStatus);
+    if (sprint) params.set("sprint", sprint);
+    params.set("page", "1");
+    setSearchParams(params);
+  };
+
+  const handleSprintChange = (newSprint: string | undefined) => {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (newSprint) params.set("sprint", newSprint);
     params.set("page", "1");
     setSearchParams(params);
   };
@@ -81,7 +93,9 @@ export function TicketsPage() {
         </div>
         <TicketFilters
           currentStatus={status}
+          currentSprint={sprint}
           onStatusChange={handleStatusChange}
+          onSprintChange={handleSprintChange}
         />
       </div>
 

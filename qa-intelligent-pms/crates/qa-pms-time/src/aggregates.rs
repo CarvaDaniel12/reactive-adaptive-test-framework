@@ -367,7 +367,10 @@ pub async fn get_step_averages(
 }
 
 /// Get user averages by ticket type.
-pub async fn get_user_averages(pool: &PgPool, user_id: Uuid) -> Result<Vec<UserAverage>, sqlx::Error> {
+pub async fn get_user_averages(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Vec<UserAverage>, sqlx::Error> {
     sqlx::query_as::<_, UserAverage>(
         r"
         SELECT * FROM time_user_averages
@@ -472,6 +475,6 @@ pub async fn calculate_efficiency(
     let (actual, estimated) = result;
     match (actual, estimated) {
         (Some(a), Some(e)) if e > 0 => Ok(e as f64 / a as f64), // Inverted: estimated/actual (higher is better)
-        _ => Ok(1.0), // Default to 100% efficiency
+        _ => Ok(1.0),                                           // Default to 100% efficiency
     }
 }

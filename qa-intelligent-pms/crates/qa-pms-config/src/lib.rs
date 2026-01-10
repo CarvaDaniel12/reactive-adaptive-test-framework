@@ -17,6 +17,6 @@ pub use encryption::Encryptor;
 pub use settings::Settings;
 pub use user_config::{
     JiraAuthInput, JiraAuthType, JiraConfig, JiraInput, PostmanConfig, PostmanInput, ProfileInput,
-    SetupWizardInput, SplunkConfig, SplunkInput, TestmoConfig, TestmoInput, UserConfig, UserProfile,
-    ValidationError, ValidationResult,
+    SetupWizardInput, SplunkConfig, SplunkInput, TestmoConfig, TestmoInput, UserConfig,
+    UserProfile, ValidationError, ValidationResult,
 };

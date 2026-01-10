@@ -20,14 +20,16 @@ use tracing::{info, warn};
 use utoipa::{IntoParams, ToSchema};
 
 use crate::app::AppState;
+use crate::user_config_health::jira_tickets_client_from_user_config;
 
 /// Create the tickets router.
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/v1/tickets", get(list_tickets))
-        .route("/api/v1/tickets/{key}", get(get_ticket))
-        .route("/api/v1/tickets/{key}/transitions", get(get_transitions))
-        .route("/api/v1/tickets/{key}/transition", post(transition_ticket))
+        // Axum path params use `:param` syntax (not `{param}`)
+        .route("/api/v1/tickets/:key", get(get_ticket))
+        .route("/api/v1/tickets/:key/transitions", get(get_transitions))
+        .route("/api/v1/tickets/:key/transition", post(transition_ticket))
 }
 
 /// Query parameters for listing tickets.
@@ -43,6 +45,9 @@ pub struct ListTicketsQuery {
     /// Project key filter
     #[param(example = "MYPROJ")]
     pub project: Option<String>,
+    /// Sprint filter: open, closed, future
+    #[param(example = "open")]
+    pub sprint: Option<String>,
     /// Page number (1-indexed, default: 1)
     #[param(example = 1)]
     pub page: Option<u32>,
@@ -254,10 +259,31 @@ pub async fn list_tickets(
         .unwrap_or_default();
 
     // Build filters
+    // Default to "my tickets" when no assignee is provided.
+    let assignee = match query.assignee.as_deref() {
+        None => Some("currentUser()".to_string()),
+        Some("me") | Some("mine") => Some("currentUser()".to_string()),
+        Some("all") => None,
+        Some(other) => Some(other.to_string()),
+    };
+
+    let sprint = match query.sprint.as_deref() {
+        None => None,
+        Some("open") | Some("active") => Some(qa_pms_jira::SprintFilter::Open),
+        Some("closed") => Some(qa_pms_jira::SprintFilter::Closed),
+        Some("future") => Some(qa_pms_jira::SprintFilter::Future),
+        Some(other) => {
+            return Err(ApiError::Validation(format!(
+                "Invalid sprint filter '{other}'. Use: open, closed, future"
+            )));
+        }
+    };
+
     let filters = TicketFilters {
         statuses,
-        assignee: query.assignee,
+        assignee,
         project: query.project,
+        sprint,
     };
 
     info!(
@@ -297,6 +323,13 @@ pub async fn list_tickets(
         })
         .collect();
 
+    // Some Jira instances may omit `total` in the response. Derive a sane fallback.
+    let derived_total = if response.total == 0 {
+        (start_at + tickets.len() as u32).max(tickets.len() as u32)
+    } else {
+        response.total
+    };
+
     let duration = start.elapsed();
     let load_time_ms = duration.as_millis() as u64;
 
@@ -318,10 +351,10 @@ pub async fn list_tickets(
 
     Ok(Json(TicketListResponse {
         tickets,
-        total: response.total,
+        total: derived_total,
         page,
         page_size,
-        has_more: start_at + page_size < response.total,
+        has_more: start_at + page_size < derived_total,
         load_time_ms: Some(load_time_ms),
     }))
 }
@@ -371,9 +404,7 @@ pub async fn get_ticket(
     let description_html = adf_to_html(&ticket.fields.description);
 
     // Detect Gherkin syntax in description
-    let has_gherkin = description_raw
-        .as_ref()
-        .is_some_and(|d| detect_gherkin(d));
+    let has_gherkin = description_raw.as_ref().is_some_and(|d| detect_gherkin(d));
 
     // Convert comments (latest 10)
     let comments: Vec<CommentInfo> = ticket
@@ -604,6 +635,9 @@ pub async fn transition_ticket(
             }
         })?;
 
+    // Invalidate test case cache when ticket is updated (Task 7.3)
+    let _ = crate::routes::ai::test_generation::invalidate_test_case_cache(&state, &key).await;
+
     info!(
         key = %key,
         new_status = %new_status,
@@ -633,8 +667,16 @@ fn get_priority_color(priority: Option<&str>) -> String {
 /// Detect Gherkin syntax in text.
 fn detect_gherkin(text: &str) -> bool {
     const GHERKIN_KEYWORDS: &[&str] = &[
-        "Given ", "When ", "Then ", "And ", "But ", "Scenario:", "Feature:", "Background:",
-        "Scenario Outline:", "Examples:",
+        "Given ",
+        "When ",
+        "Then ",
+        "And ",
+        "But ",
+        "Scenario:",
+        "Feature:",
+        "Background:",
+        "Scenario Outline:",
+        "Examples:",
     ];
     GHERKIN_KEYWORDS.iter().any(|k| text.contains(k))
 }
@@ -918,6 +960,11 @@ fn humanize_bytes(bytes: u64) -> String {
 /// For now, this creates a mock client. In production, it will use
 /// stored OAuth tokens from the setup wizard.
 async fn get_jira_client(state: &AppState) -> Result<JiraTicketsClient, ApiError> {
+    // Prefer per-user config file (setup wizard output). This survives server restarts.
+    if let Some(client) = jira_tickets_client_from_user_config(&state.settings)? {
+        return Ok(client);
+    }
+
     // First, check if we have Jira settings from environment (API Token)
     if let Some(jira_settings) = state.settings.jira.as_ref() {
         if let (Some(email), Some(api_token)) = (&jira_settings.email, &jira_settings.api_token) {
@@ -933,7 +980,10 @@ async fn get_jira_client(state: &AppState) -> Result<JiraTicketsClient, ApiError
     let setup_state = state.setup_store.lock().await;
 
     let jira_config = setup_state.jira.as_ref().ok_or_else(|| {
-        ApiError::Unauthorized("Jira not configured. Please complete setup wizard or set JIRA_URL, JIRA_EMAIL, JIRA_API_TOKEN environment variables.".to_string())
+        ApiError::Unauthorized(
+            "Authentication required: Jira not configured. Please complete the setup wizard."
+                .to_string(),
+        )
     })?;
 
     // Clone all values we need before dropping the lock
@@ -1090,7 +1140,10 @@ mod tests {
             ]
         });
         let result = adf_to_html(&Some(adf));
-        assert_eq!(result, Some("<p><strong>bold text</strong></p>".to_string()));
+        assert_eq!(
+            result,
+            Some("<p><strong>bold text</strong></p>".to_string())
+        );
     }
 
     #[test]

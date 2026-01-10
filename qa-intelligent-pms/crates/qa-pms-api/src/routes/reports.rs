@@ -18,27 +18,20 @@ use qa_pms_workflow::{get_instance, get_step_results, get_template};
 
 use crate::app::AppState;
 use qa_pms_core::error::ApiError;
+use qa_pms_dashboard::SqlxResultExt;
 
 /// Result type alias for API handlers.
 type ApiResult<T> = Result<T, ApiError>;
-
-/// Helper trait to convert sqlx errors to `ApiError`.
-trait SqlxResultExt<T> {
-    fn map_db_err(self) -> Result<T, ApiError>;
-}
-
-impl<T> SqlxResultExt<T> for Result<T, sqlx::Error> {
-    fn map_db_err(self) -> Result<T, ApiError> {
-        self.map_err(|e| ApiError::Internal(e.into()))
-    }
-}
 
 /// Create the reports router.
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/v1/reports", post(generate_report))
         .route("/api/v1/reports/:id", get(get_report))
-        .route("/api/v1/reports/workflow/:workflow_id", get(get_report_by_workflow))
+        .route(
+            "/api/v1/reports/workflow/:workflow_id",
+            get(get_report_by_workflow),
+        )
 }
 
 // ============================================================================
@@ -63,7 +56,6 @@ pub struct ReportContent {
     pub tests_covered: Vec<String>,
     pub strategies: Vec<String>,
 }
-
 
 /// Step in report.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -105,8 +97,7 @@ struct ReportRow {
 
 impl From<ReportRow> for ReportResponse {
     fn from(row: ReportRow) -> Self {
-        let content: ReportContent = serde_json::from_value(row.content)
-            .unwrap_or_default();
+        let content: ReportContent = serde_json::from_value(row.content).unwrap_or_default();
 
         Self {
             id: row.id,

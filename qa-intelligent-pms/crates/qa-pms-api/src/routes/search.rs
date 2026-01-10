@@ -272,15 +272,18 @@ pub async fn search_postman_endpoint(
     let results = search_postman(postman_client, &request.keywords).await;
 
     let mapped_results: Vec<UnifiedSearchResult> = match results {
-        Ok(r) => r.into_iter().map(|r| UnifiedSearchResult {
-            source: r.source,
-            id: r.id,
-            name: r.name,
-            description: r.description,
-            url: r.url,
-            score: r.score,
-            matches: r.matches,
-        }).collect(),
+        Ok(r) => r
+            .into_iter()
+            .map(|r| UnifiedSearchResult {
+                source: r.source,
+                id: r.id,
+                name: r.name,
+                description: r.description,
+                url: r.url,
+                score: r.score,
+                matches: r.matches,
+            })
+            .collect(),
         Err(e) => {
             warn!(error = %e, "Postman search failed");
             vec![]
@@ -333,15 +336,18 @@ pub async fn search_testmo_endpoint(
     let results = search_testmo(testmo_client, testmo_project_id, &request.keywords).await;
 
     let mapped_results: Vec<UnifiedSearchResult> = match results {
-        Ok(r) => r.into_iter().map(|r| UnifiedSearchResult {
-            source: r.source,
-            id: r.id,
-            name: r.name,
-            description: r.description,
-            url: r.url,
-            score: r.score,
-            matches: r.matches,
-        }).collect(),
+        Ok(r) => r
+            .into_iter()
+            .map(|r| UnifiedSearchResult {
+                source: r.source,
+                id: r.id,
+                name: r.name,
+                description: r.description,
+                url: r.url,
+                score: r.score,
+                matches: r.matches,
+            })
+            .collect(),
         Err(e) => {
             warn!(error = %e, "Testmo search failed");
             vec![]
@@ -444,12 +450,17 @@ pub async fn search_all(
 
     // Sort by score descending
     all_results.sort_by(|a, b| {
-        b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal)
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
 
     let duration = start.elapsed();
     if duration.as_secs() > 3 {
-        warn!(duration_ms = duration.as_millis(), "Slow parallel search exceeded 3s");
+        warn!(
+            duration_ms = duration.as_millis(),
+            "Slow parallel search exceeded 3s"
+        );
     }
 
     info!(
@@ -487,14 +498,14 @@ fn create_testmo_client(state: &AppState) -> (Option<TestmoClient>, Option<i64>)
     let Some(testmo_settings) = state.settings.testmo.as_ref() else {
         return (None, None);
     };
-    
+
     let api_key = testmo_settings.api_key.expose_secret();
     let base_url = &testmo_settings.base_url;
-    
+
     if api_key.is_empty() || base_url.is_empty() {
         return (None, None);
     }
-    
+
     let client = TestmoClient::new(base_url.clone(), api_key.clone());
     (Some(client), testmo_settings.project_id)
 }

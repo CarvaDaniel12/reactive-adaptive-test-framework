@@ -213,9 +213,7 @@ impl JiraOAuthClient {
             let body = response.text().await.unwrap_or_default();
             warn!(status = %status, "Token refresh failed");
 
-            return Err(JiraAuthError::RefreshFailed(format!(
-                "{status}: {body}"
-            )));
+            return Err(JiraAuthError::RefreshFailed(format!("{status}: {body}")));
         }
 
         let tokens: TokenResponse = response

@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::types::{NewPattern, DetectedPattern, PatternType, NewAlert, Alert, Severity};
+use crate::types::{Alert, DetectedPattern, NewAlert, NewPattern, PatternType, Severity};
 
 /// Repository for pattern and alert data.
 pub struct PatternRepository {

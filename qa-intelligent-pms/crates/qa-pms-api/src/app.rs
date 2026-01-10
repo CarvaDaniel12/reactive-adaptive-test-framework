@@ -9,9 +9,7 @@ use anyhow::{Context, Result};
 use axum::Router;
 use qa_pms_core::health::HealthCheck;
 use qa_pms_core::HealthStore;
-use qa_pms_jira::JiraHealthCheck;
-use qa_pms_postman::PostmanHealthCheck;
-use qa_pms_testmo::{TestmoClient, TestmoHealthCheck};
+use qa_pms_testmo::TestmoClient;
 use secrecy::ExposeSecret;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -25,9 +23,10 @@ use tracing::info;
 use qa_pms_config::Settings;
 
 use crate::health_scheduler::HealthScheduler;
+use crate::middleware::request_id_middleware;
 use crate::routes;
 use crate::routes::setup::{create_setup_store, SetupStore};
-use crate::startup::StartupValidator;
+use crate::user_config_health::UserConfigHealthCheck;
 
 /// Application state shared across all handlers.
 #[derive(Clone)]
@@ -40,8 +39,6 @@ pub struct AppState {
     pub setup_store: SetupStore,
     /// Integration health store
     pub health_store: Arc<HealthStore>,
-    /// Startup validator for credential checks
-    pub startup_validator: Arc<StartupValidator>,
     /// Testmo client (optional, if configured)
     pub testmo_client: Option<Arc<TestmoClient>>,
     /// Testmo project ID for test runs
@@ -93,9 +90,6 @@ pub async fn create_app(settings: Settings) -> Result<(Router, Option<HealthSche
     // Create health store for integration monitoring
     let health_store = Arc::new(HealthStore::new());
 
-    // Create startup validator with configured integrations
-    let startup_validator = Arc::new(create_startup_validator(&settings));
-
     // Create health scheduler with the same checks for periodic monitoring
     let health_scheduler = create_health_scheduler(&settings, Arc::clone(&health_store));
 
@@ -108,7 +102,6 @@ pub async fn create_app(settings: Settings) -> Result<(Router, Option<HealthSche
         settings: Arc::new(settings),
         setup_store: create_setup_store(),
         health_store,
-        startup_validator,
         testmo_client,
         testmo_project_id,
     };
@@ -134,7 +127,9 @@ pub async fn create_app(settings: Settings) -> Result<(Router, Option<HealthSche
         .with_state(state)
         .layer(
             tower::ServiceBuilder::new()
-                // Tracing for all requests
+                // Request ID middleware MUST be first for correlation
+                .layer(axum::middleware::from_fn(request_id_middleware))
+                // Tracing for all requests (can use request_id from span)
                 .layer(TraceLayer::new_for_http())
                 // Response compression
                 .layer(CompressionLayer::new())
@@ -168,58 +163,6 @@ fn create_testmo_client(settings: &Settings) -> (Option<Arc<TestmoClient>>, Opti
     (Some(Arc::new(client)), testmo_settings.project_id)
 }
 
-/// Create startup validator with configured integrations.
-///
-/// Adds health checks for all integrations with API keys/tokens configured.
-/// Jira is CRITICAL (required), Postman and Testmo are optional.
-fn create_startup_validator(settings: &Settings) -> StartupValidator {
-    let mut validator = StartupValidator::new();
-
-    // Jira - CRITICAL integration (API Token or OAuth)
-    if let Some(jira_settings) = settings.jira.as_ref() {
-        if let (Some(email), Some(api_token)) = (&jira_settings.email, &jira_settings.api_token) {
-            info!("Adding Jira to startup validation (critical, API Token auth)");
-            let check: Arc<dyn HealthCheck> = Arc::new(JiraHealthCheck::with_api_token(
-                jira_settings.instance_url.clone(),
-                email.clone(),
-                api_token.expose_secret().clone(),
-            ));
-            validator = validator.add_critical(check);
-        }
-        // Note: OAuth-based Jira is validated after setup wizard completion
-    }
-
-    // Postman - optional integration (API key based)
-    if let Some(postman_settings) = settings.postman.as_ref() {
-        let api_key = postman_settings.api_key.expose_secret();
-        if !api_key.is_empty() {
-            info!("Adding Postman to startup validation (optional)");
-            let check: Arc<dyn HealthCheck> =
-                Arc::new(PostmanHealthCheck::new(api_key.clone()));
-            validator = validator.add_optional(check);
-        }
-    }
-
-    // Testmo - optional integration (API key based)
-    if let Some(testmo_settings) = settings.testmo.as_ref() {
-        let api_key = testmo_settings.api_key.expose_secret();
-        let base_url = &testmo_settings.base_url;
-        if !api_key.is_empty() && !base_url.is_empty() {
-            info!("Adding Testmo to startup validation (optional)");
-            let check: Arc<dyn HealthCheck> =
-                Arc::new(TestmoHealthCheck::new(base_url.clone(), api_key.clone()));
-            validator = validator.add_optional(check);
-        }
-    }
-
-    info!(
-        check_count = validator.check_count(),
-        "Startup validator configured"
-    );
-
-    validator
-}
-
 /// Create health scheduler for periodic integration monitoring.
 ///
 /// Returns `None` if no integrations are configured for monitoring.
@@ -230,43 +173,22 @@ fn create_health_scheduler(
     let mut scheduler = HealthScheduler::with_defaults(health_store);
     let mut has_checks = false;
 
-    // Jira health check (API Token auth)
-    if let Some(jira_settings) = settings.jira.as_ref() {
-        if let (Some(email), Some(api_token)) = (&jira_settings.email, &jira_settings.api_token) {
-            info!("Adding Jira to health scheduler");
-            let check: Arc<dyn HealthCheck> = Arc::new(JiraHealthCheck::with_api_token(
-                jira_settings.instance_url.clone(),
-                email.clone(),
-                api_token.expose_secret().clone(),
-            ));
-            scheduler = scheduler.add_check(check);
-            has_checks = true;
-        }
+    // Use per-user config file (`UserConfig`) as the source of truth for credentials.
+    // These checks reload config on each run, so they stay in sync after setup.
+    if let Some(check) = UserConfigHealthCheck::jira(settings) {
+        info!("Adding Jira to health scheduler (UserConfig-backed)");
+        scheduler = scheduler.add_check(Arc::new(check) as Arc<dyn HealthCheck>);
+        has_checks = true;
     }
-
-    // Postman health check
-    if let Some(postman_settings) = settings.postman.as_ref() {
-        let api_key = postman_settings.api_key.expose_secret();
-        if !api_key.is_empty() {
-            info!("Adding Postman to health scheduler");
-            let check: Arc<dyn HealthCheck> =
-                Arc::new(PostmanHealthCheck::new(api_key.clone()));
-            scheduler = scheduler.add_check(check);
-            has_checks = true;
-        }
+    if let Some(check) = UserConfigHealthCheck::postman(settings) {
+        info!("Adding Postman to health scheduler (UserConfig-backed)");
+        scheduler = scheduler.add_check(Arc::new(check) as Arc<dyn HealthCheck>);
+        has_checks = true;
     }
-
-    // Testmo health check
-    if let Some(testmo_settings) = settings.testmo.as_ref() {
-        let api_key = testmo_settings.api_key.expose_secret();
-        let base_url = &testmo_settings.base_url;
-        if !api_key.is_empty() && !base_url.is_empty() {
-            info!("Adding Testmo to health scheduler");
-            let check: Arc<dyn HealthCheck> =
-                Arc::new(TestmoHealthCheck::new(base_url.clone(), api_key.clone()));
-            scheduler = scheduler.add_check(check);
-            has_checks = true;
-        }
+    if let Some(check) = UserConfigHealthCheck::testmo(settings) {
+        info!("Adding Testmo to health scheduler (UserConfig-backed)");
+        scheduler = scheduler.add_check(Arc::new(check) as Arc<dyn HealthCheck>);
+        has_checks = true;
     }
 
     if has_checks {

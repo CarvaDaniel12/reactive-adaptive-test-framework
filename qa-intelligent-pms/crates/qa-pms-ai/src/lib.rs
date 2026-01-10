@@ -15,16 +15,27 @@
 //! - **Graceful Fallback**: Works without AI configured
 //! - **Streaming**: Real-time response streaming
 
-pub mod types;
-pub mod error;
-pub mod provider;
+pub mod anomaly_detector;
+pub mod anomaly_repository;
 pub mod chat;
-pub mod semantic;
+pub mod error;
 pub mod gherkin;
+pub mod provider;
+pub mod semantic;
+pub mod test_generator;
+pub mod types;
 
-pub use types::*;
-pub use error::AIError;
-pub use provider::{AIProvider, AIClient};
+pub use anomaly_detector::{
+    Anomaly, AnomalyDetector, AnomalyMetrics, AnomalySeverity, AnomalyType, BaselineMetrics,
+    WorkflowExecution,
+};
+pub use anomaly_repository::{
+    AnomalyCountByDate, AnomalyRepository, SeverityDistribution, WorkflowExecutionData,
+};
 pub use chat::ChatService;
-pub use semantic::SemanticSearchService;
+pub use error::AIError;
 pub use gherkin::GherkinAnalyzer;
+pub use provider::{AIClient, AIProvider};
+pub use semantic::SemanticSearchService;
+pub use test_generator::{GeneratedTestCase, TestGenerator, TicketDetails};
+pub use types::*;

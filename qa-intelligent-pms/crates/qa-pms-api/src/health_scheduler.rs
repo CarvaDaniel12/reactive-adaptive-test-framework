@@ -7,6 +7,7 @@ use qa_pms_core::health::HealthCheck;
 use qa_pms_core::HealthStore;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::watch;
 use tokio::time::interval;
 use tracing::{debug, info};
 
@@ -89,10 +90,7 @@ impl HealthScheduler {
             return;
         }
 
-        debug!(
-            "Running {} health checks",
-            self.checks.len()
-        );
+        debug!("Running {} health checks", self.checks.len());
 
         // Run all checks in parallel
         let futures: Vec<_> = self.checks.iter().map(|c| c.check()).collect();
@@ -113,11 +111,18 @@ impl HealthScheduler {
     /// Start the scheduler as a background task.
     ///
     /// This spawns a tokio task that runs health checks at the configured interval.
-    /// The task runs indefinitely until the application shuts down.
-    pub fn start(self) {
+    /// The task runs until shutdown signal is received via the returned shutdown handle.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `ShutdownHandle` that can be used to gracefully stop the scheduler.
+    #[must_use]
+    pub fn start(self) -> ShutdownHandle {
         let interval_secs = self.config.interval_secs;
         let run_initial = self.config.run_initial_check;
         let check_count = self.checks.len();
+
+        let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
 
         tokio::spawn(async move {
             info!(
@@ -134,10 +139,51 @@ impl HealthScheduler {
             let mut ticker = interval(Duration::from_secs(interval_secs));
 
             loop {
-                ticker.tick().await;
-                self.run_checks().await;
+                tokio::select! {
+                    _ = ticker.tick() => {
+                        self.run_checks().await;
+                    }
+                    _ = shutdown_rx.changed() => {
+                        if *shutdown_rx.borrow() {
+                            info!("Health scheduler received shutdown signal, stopping...");
+                            break;
+                        }
+                    }
+                }
             }
+
+            info!("Health scheduler stopped cleanly");
         });
+
+        ShutdownHandle { shutdown_tx: Some(shutdown_tx) }
+    }
+}
+
+/// Handle for gracefully shutting down the health scheduler.
+#[derive(Debug, Clone)]
+pub struct ShutdownHandle {
+    shutdown_tx: Option<watch::Sender<bool>>,
+}
+
+impl ShutdownHandle {
+    /// Signal the scheduler to shutdown gracefully.
+    ///
+    /// Returns `Ok(())` if the signal was sent successfully.
+    /// Always succeeds - if the scheduler has already shut down, the signal is ignored.
+    pub fn shutdown(&self) -> Result<(), ()> {
+        if let Some(ref tx) = self.shutdown_tx {
+            // Send true to signal shutdown - receiver will detect the change
+            let _ = tx.send(true);
+        }
+        Ok(())
+    }
+}
+
+impl Drop for ShutdownHandle {
+    fn drop(&mut self) {
+        if let Some(ref tx) = self.shutdown_tx {
+            let _ = tx.send(true);
+        }
     }
 }
 

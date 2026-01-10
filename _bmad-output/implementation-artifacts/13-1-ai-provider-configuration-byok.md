@@ -1,6 +1,6 @@
 # Story 13.1: AI Provider Configuration (BYOK)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -47,6 +47,13 @@ So that I can use AI features with my API key.
 - [ ] Task 5: Implement test connection API
 - [ ] Task 6: Encrypt API keys before storage
 - [ ] Task 7: Create disable AI toggle
+
+## Review Follow-ups (AI)
+
+- [ ] [AI-Review][HIGH] Fix ai_configs storage type mismatch (BYTEA vs Encryptor hex string) [migrations/20260105000005_ai_config_schema.sql, crates/qa-pms-api/src/routes/ai.rs]
+- [ ] [AI-Review][HIGH] Fix ai_configs upsert semantics with user_id NULL (multiple rows possible) and implement per-user BYOK storage [crates/qa-pms-api/src/routes/ai.rs]
+- [ ] [AI-Review][HIGH] Add AI Settings UI (provider/model/api key/test/save/disable) or integrate into Setup Wizard [frontend/]
+- [ ] [AI-Review][HIGH] Add rate limiting for /api/v1/ai/* endpoints (tower-governor) [crates/qa-pms-api]
 
 ## Dev Notes
 

@@ -20,8 +20,13 @@ use tracing::{info, warn};
 use utoipa::ToSchema;
 
 use crate::app::AppState;
+use crate::startup::{StartupValidationReport, StartupValidator};
 use qa_pms_core::error::ApiError;
 use qa_pms_core::health::HealthCheck;
+use qa_pms_core::health::HealthStatus;
+use qa_pms_jira::JiraHealthCheck;
+use qa_pms_postman::PostmanHealthCheck;
+use qa_pms_testmo::TestmoHealthCheck;
 
 // ============================================================================
 // Router
@@ -113,6 +118,12 @@ pub struct PostmanTestRequest {
     pub workspace_id: Option<String>,
 }
 
+/// Minimum length for Postman API keys (basic validation).
+const MIN_POSTMAN_API_KEY_LENGTH: usize = 32;
+
+/// Minimum length for OAuth client credentials (basic validation).
+const MIN_OAUTH_CREDENTIAL_LENGTH: usize = 10;
+
 /// Testmo connection test request.
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -173,6 +184,7 @@ impl ConnectionTestResponse {
     }
 
     /// Add workspace count to response.
+    #[cfg(test)]
     const fn with_workspaces(mut self, count: u32) -> Self {
         self.workspace_count = Some(count);
         self
@@ -189,6 +201,9 @@ impl ConnectionTestResponse {
 #[derive(Debug, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CompleteSetupRequest {
+    /// Profile configuration
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<ProfileRequest>,
     /// Jira configuration
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jira: Option<JiraTestRequest>,
@@ -203,6 +218,32 @@ pub struct CompleteSetupRequest {
     pub splunk: Option<SplunkConfigRequest>,
 }
 
+/// Setup validation error returned by the complete setup flow.
+#[derive(Debug, Clone, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SetupValidationError {
+    pub field: String,
+    pub message: String,
+    pub step: String,
+    pub fix_path: String,
+}
+
+impl SetupValidationError {
+    fn new(
+        field: impl Into<String>,
+        message: impl Into<String>,
+        step: impl Into<String>,
+        fix_path: impl Into<String>,
+    ) -> Self {
+        Self {
+            field: field.into(),
+            message: message.into(),
+            step: step.into(),
+            fix_path: fix_path.into(),
+        }
+    }
+}
+
 /// Setup completion response.
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -210,9 +251,15 @@ pub struct CompleteSetupResponse {
     /// Whether setup completed successfully
     pub success: bool,
     /// Validation errors (if any)
-    pub errors: Vec<String>,
+    pub errors: Vec<SetupValidationError>,
     /// Configured integrations
     pub configured_integrations: Vec<String>,
+    /// Path where the YAML config was written (on success)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub config_path: Option<String>,
+    /// Optional startup validation report (health checks) run during completion
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub startup_validation: Option<StartupValidationReport>,
 }
 
 /// Setup status response.
@@ -341,7 +388,7 @@ pub async fn save_profile(
 
     info!(
         display_name = %req.display_name,
-        jira_email = %req.jira_email,
+        jira_email_prefix = %req.jira_email.split('@').next().unwrap_or("unknown"),
         ticket_states_count = req.ticket_states.len(),
         "Profile saved"
     );
@@ -357,7 +404,10 @@ pub async fn save_profile(
 
 /// Test Jira connection.
 ///
-/// Validates the Jira OAuth credentials and returns connection info.
+/// Test Jira connection with API Token (Basic) or OAuth 2.0 credentials.
+///
+/// For API Token auth: validates and tests connection immediately.
+/// For OAuth auth: validates credential format and stores for later OAuth flow completion.
 #[utoipa::path(
     post,
     path = "/api/v1/setup/integrations/jira/test",
@@ -372,22 +422,46 @@ pub async fn test_jira(
     State(state): State<AppState>,
     Json(req): Json<JiraTestRequest>,
 ) -> Result<Json<ConnectionTestResponse>, ApiError> {
-    // Validate URL format
-    if !req.instance_url.starts_with("https://") {
+    // Validate URL format (basic validation without external dependencies)
+    let url_lower = req.instance_url.to_lowercase();
+    if !url_lower.starts_with("https://") {
         return Ok(Json(ConnectionTestResponse::failure(
             "Jira URL must use HTTPS",
         )));
     }
 
-    if !req.instance_url.contains(".atlassian.net") && !req.instance_url.contains("jira") {
-        warn!(url = %req.instance_url, "Jira URL might be invalid");
+    // Basic URL structure validation
+    if url_lower.len() < 12 || !url_lower.contains('.') {
+        return Ok(Json(ConnectionTestResponse::failure(
+            "Invalid Jira URL format",
+        )));
+    }
+
+    // Extract host for validation
+    let host_part = url_lower
+        .strip_prefix("https://")
+        .and_then(|s| s.split('/').next())
+        .unwrap_or("");
+    
+    if host_part.is_empty() || !host_part.contains('.') {
+        return Ok(Json(ConnectionTestResponse::failure(
+            "Jira URL must have a valid host",
+        )));
+    }
+
+    // Warn if URL doesn't look like a Jira instance
+    if !host_part.contains(".atlassian.net") && !host_part.contains("jira") {
+        warn!(url = %req.instance_url, host = %host_part, "Jira URL might be invalid (unexpected host)");
     }
 
     // Check for API Token auth (preferred)
     let has_api_token = req.has_api_token();
     // Check for OAuth auth (alternative)
     let has_oauth_creds = req.client_id.as_ref().is_some_and(|s| !s.trim().is_empty())
-        && req.client_secret.as_ref().is_some_and(|s| !s.trim().is_empty());
+        && req
+            .client_secret
+            .as_ref()
+            .is_some_and(|s| !s.trim().is_empty());
 
     if !has_api_token && !has_oauth_creds {
         return Ok(Json(ConnectionTestResponse::failure(
@@ -397,7 +471,12 @@ pub async fn test_jira(
 
     // Test the connection based on auth method
     if let (Some(email), Some(api_token)) = (&req.email, &req.api_token) {
-        info!(url = %req.instance_url, email = %email, "Testing Jira connection with API Token");
+        let email_prefix = email.split('@').next().unwrap_or("unknown");
+        info!(
+            url = %req.instance_url,
+            email_prefix = %email_prefix,
+            "Testing Jira connection with API Token"
+        );
 
         // Actually test the connection
         let client = qa_pms_jira::JiraHealthCheck::with_api_token(
@@ -412,7 +491,9 @@ pub async fn test_jira(
             && result.status != qa_pms_core::health::HealthStatus::Degraded
         {
             return Ok(Json(ConnectionTestResponse::failure(
-                result.error_message.unwrap_or_else(|| "Connection failed".to_string()),
+                result
+                    .error_message
+                    .unwrap_or_else(|| "Connection failed".to_string()),
             )));
         }
 
@@ -430,18 +511,44 @@ pub async fn test_jira(
             .with_projects(1),
         ))
     } else {
-        // OAuth flow - just validate and store for now
-        info!(url = %req.instance_url, "Storing Jira OAuth credentials (OAuth flow not implemented)");
+        // OAuth flow - validate credentials format before storing
+        if let (Some(client_id), Some(client_secret)) = (&req.client_id, &req.client_secret) {
+            // Basic validation: client_id and client_secret should not be empty
+            if client_id.trim().is_empty() || client_secret.trim().is_empty() {
+                return Ok(Json(ConnectionTestResponse::failure(
+                    "OAuth client_id and client_secret cannot be empty",
+                )));
+            }
 
-        // Store credentials for OAuth flow
+        // Client IDs typically are UUIDs or base64 strings (basic format check)
+        if client_id.len() < MIN_OAUTH_CREDENTIAL_LENGTH
+            || client_secret.len() < MIN_OAUTH_CREDENTIAL_LENGTH
         {
-            let mut setup = state.setup_store.lock().await;
-            setup.jira = Some(req);
+            return Ok(Json(ConnectionTestResponse::failure(format!(
+                "OAuth credentials appear to be invalid (minimum length: {} characters)",
+                MIN_OAUTH_CREDENTIAL_LENGTH
+            ))));
         }
 
-        Ok(Json(
-            ConnectionTestResponse::success("OAuth credentials stored. Complete OAuth flow to connect."),
-        ))
+            info!(
+                url = %req.instance_url,
+                "Storing Jira OAuth credentials (OAuth flow requires access token exchange)"
+            );
+
+            // Store credentials for OAuth flow (will be validated during complete_setup)
+            {
+                let mut setup = state.setup_store.lock().await;
+                setup.jira = Some(req);
+            }
+
+            Ok(Json(ConnectionTestResponse::success(
+                "OAuth credentials validated. Complete OAuth flow to connect.",
+            )))
+        } else {
+            Ok(Json(ConnectionTestResponse::failure(
+                "OAuth credentials incomplete: both client_id and client_secret are required",
+            )))
+        }
     }
 }
 
@@ -466,18 +573,29 @@ pub async fn test_postman(
         return Ok(Json(ConnectionTestResponse::failure("API key is required")));
     }
 
-    if req.api_key.len() < 32 {
-        return Ok(Json(ConnectionTestResponse::failure(
-            "API key appears to be invalid (too short)",
-        )));
+    if req.api_key.len() < MIN_POSTMAN_API_KEY_LENGTH {
+        return Ok(Json(ConnectionTestResponse::failure(format!(
+            "API key appears to be invalid (minimum length: {} characters)",
+            MIN_POSTMAN_API_KEY_LENGTH
+        ))));
     }
 
-    // TODO: Implement actual Postman API test in qa-pms-postman crate (Epic 4)
-    // For now, simulate a successful connection test
     info!(
         workspace_id = ?req.workspace_id,
         "Testing Postman connection"
     );
+
+    let check = PostmanHealthCheck::new(req.api_key.clone());
+    let health = check.check().await;
+
+    let success = matches!(health.status, HealthStatus::Online | HealthStatus::Degraded);
+    if !success {
+        return Ok(Json(ConnectionTestResponse::failure(
+            health
+                .error_message
+                .unwrap_or_else(|| "Postman validation failed".to_string()),
+        )));
+    }
 
     // Store successful test in setup state
     {
@@ -485,9 +603,10 @@ pub async fn test_postman(
         setup.postman = Some(req);
     }
 
-    Ok(Json(
-        ConnectionTestResponse::success("Connected to Postman successfully").with_workspaces(3),
-    ))
+    Ok(Json(ConnectionTestResponse::success(format!(
+        "Connected to Postman successfully (response time: {}ms)",
+        health.response_time_ms.unwrap_or(0)
+    ))))
 }
 
 /// Test Testmo connection.
@@ -506,10 +625,30 @@ pub async fn test_testmo(
     State(state): State<AppState>,
     Json(req): Json<TestmoTestRequest>,
 ) -> Result<Json<ConnectionTestResponse>, ApiError> {
-    // Validate URL format
-    if !req.instance_url.starts_with("https://") {
+    // Validate URL format (consistent with Jira validation)
+    let url_lower = req.instance_url.to_lowercase();
+    if !url_lower.starts_with("https://") {
         return Ok(Json(ConnectionTestResponse::failure(
             "Testmo URL must use HTTPS",
+        )));
+    }
+
+    // Basic URL structure validation
+    if url_lower.len() < 12 || !url_lower.contains('.') {
+        return Ok(Json(ConnectionTestResponse::failure(
+            "Invalid Testmo URL format",
+        )));
+    }
+
+    // Extract host for validation
+    let host_part = url_lower
+        .strip_prefix("https://")
+        .and_then(|s| s.split('/').next())
+        .unwrap_or("");
+    
+    if host_part.is_empty() || !host_part.contains('.') {
+        return Ok(Json(ConnectionTestResponse::failure(
+            "Testmo URL must have a valid host",
         )));
     }
 
@@ -517,9 +656,19 @@ pub async fn test_testmo(
         return Ok(Json(ConnectionTestResponse::failure("API key is required")));
     }
 
-    // TODO: Implement actual Testmo API test in qa-pms-testmo crate (Epic 4)
-    // For now, simulate a successful connection test
     info!(url = %req.instance_url, "Testing Testmo connection");
+
+    let check = TestmoHealthCheck::new(req.instance_url.clone(), req.api_key.clone());
+    let health = check.check().await;
+
+    let success = matches!(health.status, HealthStatus::Online | HealthStatus::Degraded);
+    if !success {
+        return Ok(Json(ConnectionTestResponse::failure(
+            health
+                .error_message
+                .unwrap_or_else(|| "Testmo validation failed".to_string()),
+        )));
+    }
 
     // Store successful test in setup state
     {
@@ -527,111 +676,135 @@ pub async fn test_testmo(
         setup.testmo = Some(req);
     }
 
-    Ok(Json(
-        ConnectionTestResponse::success("Connected to Testmo successfully").with_projects(2),
-    ))
+    Ok(Json(ConnectionTestResponse::success(format!(
+        "Connected to Testmo successfully (response time: {}ms)",
+        health.response_time_ms.unwrap_or(0)
+    ))))
 }
 
-/// Complete setup wizard.
+// ============================================================================
+// Helper Functions for Setup Completion
+// ============================================================================
+
+/// Consolidate setup state from request and store (atomic snapshot to prevent race conditions).
 ///
-/// Validates all configuration and persists to YAML config file.
-#[utoipa::path(
-    post,
-    path = "/api/v1/setup/complete",
-    request_body = CompleteSetupRequest,
-    responses(
-        (status = 200, description = "Setup completion result", body = CompleteSetupResponse),
-        (status = 400, description = "Validation failed", body = qa_pms_core::error::ErrorResponse)
-    ),
-    tag = "Setup"
-)]
-#[allow(clippy::too_many_lines)]
-pub async fn complete_setup(
-    State(state): State<AppState>,
-    Json(req): Json<CompleteSetupRequest>,
-) -> Result<Json<CompleteSetupResponse>, ApiError> {
-    use qa_pms_config::{
-        JiraAuthInput, JiraInput, PostmanInput, ProfileInput, SetupWizardInput, SplunkInput,
-        TestmoInput, UserConfig,
-    };
-    use secrecy::{ExposeSecret, SecretString};
+/// Updates the setup store with any new configuration from the request,
+/// then returns an atomic snapshot of the complete state.
+async fn consolidate_setup_state(
+    setup_store: &SetupStore,
+    req: &CompleteSetupRequest,
+) -> SetupState {
+    // Single atomic operation: update and snapshot in one lock
+    let mut setup = setup_store.lock().await;
+    
+    // Update with profile if provided
+    if let Some(profile) = &req.profile {
+        setup.profile = Some(profile.clone());
+    }
+    
+    // Update with integrations if provided
+    if let Some(jira) = &req.jira {
+        info!(url = %jira.instance_url, "Saving Jira configuration");
+        setup.jira = Some(jira.clone());
+    }
+    if let Some(postman) = &req.postman {
+        info!("Saving Postman configuration");
+        setup.postman = Some(postman.clone());
+    }
+    if let Some(testmo) = &req.testmo {
+        info!(url = %testmo.instance_url, "Saving Testmo configuration");
+        setup.testmo = Some(testmo.clone());
+    }
+    if let Some(splunk) = &req.splunk {
+        info!(
+            base_url = %splunk.base_url,
+            default_index = ?splunk.default_index,
+            "Saving Splunk configuration"
+        );
+        setup.splunk = Some(splunk.clone());
+    }
+    
+    // Return snapshot (clone while holding lock ensures atomicity)
+    setup.clone()
+}
 
+/// Validate basic setup requirements.
+fn validate_setup_requirements(setup: &SetupState) -> Vec<SetupValidationError> {
     let mut errors = Vec::new();
-    let setup = state.setup_store.lock().await;
-
-    // Validate profile is configured
+    
     if setup.profile.is_none() {
-        errors.push("Profile must be configured before completing setup".to_string());
+        errors.push(SetupValidationError::new(
+            "profile",
+            "Profile must be configured before completing setup",
+            "profile",
+            "/setup/profile",
+        ));
     }
-
-    // Validate at least Jira is configured
-    if setup.jira.is_none() && req.jira.is_none() {
-        errors.push("Jira integration is required".to_string());
+    
+    if setup.jira.is_none() {
+        errors.push(SetupValidationError::new(
+            "jira",
+            "Jira integration is required",
+            "jira",
+            "/setup/jira",
+        ));
     }
+    
+    errors
+}
 
-    // If there are validation errors, return them
-    if !errors.is_empty() {
-        return Ok(Json(CompleteSetupResponse {
-            success: false,
-            errors,
-            configured_integrations: setup.configured_integrations(),
-        }));
-    }
-
-    // Update setup state with any new configuration from the request
-    drop(setup); // Release lock
-    {
-        let mut setup = state.setup_store.lock().await;
-
-        if let Some(jira) = req.jira {
-            info!(url = %jira.instance_url, "Saving Jira configuration");
-            setup.jira = Some(jira);
-        }
-        if let Some(postman) = req.postman {
-            info!("Saving Postman configuration");
-            setup.postman = Some(postman);
-        }
-        if let Some(testmo) = req.testmo {
-            info!(url = %testmo.instance_url, "Saving Testmo configuration");
-            setup.testmo = Some(testmo);
-        }
-        if let Some(splunk) = req.splunk {
-            info!(
-                base_url = %splunk.base_url,
-                default_index = ?splunk.default_index,
-                "Saving Splunk configuration"
-            );
-            setup.splunk = Some(splunk);
-        }
-    }
-
-    // Build user config from setup state
-    let setup = state.setup_store.lock().await;
-    let profile = setup.profile.as_ref().ok_or_else(|| {
-        ApiError::Validation("Profile is required".into())
-    })?;
-    let jira = setup.jira.as_ref().ok_or_else(|| {
-        ApiError::Validation("Jira configuration is required".into())
-    })?;
-
-    // Determine Jira auth type based on which credentials are present
+/// Build SetupWizardInput from consolidated setup state.
+fn build_wizard_input(
+    setup: &SetupState,
+) -> Result<qa_pms_config::SetupWizardInput, ApiError> {
+    use qa_pms_config::{
+        JiraAuthInput, JiraInput, PostmanInput, ProfileInput, SplunkInput, TestmoInput,
+    };
+    use secrecy::SecretString;
+    
+    let profile = setup
+        .profile
+        .as_ref()
+        .ok_or_else(|| ApiError::Validation("Profile is required".into()))?;
+    
+    let jira = setup
+        .jira
+        .as_ref()
+        .ok_or_else(|| ApiError::Validation("Jira configuration is required".into()))?;
+    
+    // Determine Jira auth type and validate OAuth if needed
     let jira_auth = if let (Some(email), Some(api_token)) = (&jira.email, &jira.api_token) {
         JiraAuthInput::ApiToken {
             email: email.clone(),
             api_token: SecretString::from(api_token.clone()),
         }
     } else if let (Some(client_id), Some(client_secret)) = (&jira.client_id, &jira.client_secret) {
-        JiraAuthInput::OAuth {
-            client_id: client_id.clone(),
-            client_secret: SecretString::from(client_secret.clone()),
+        // Validate OAuth credentials format
+        if client_id.trim().is_empty() || client_secret.trim().is_empty() {
+            return Err(ApiError::Validation(
+                "OAuth client_id and client_secret cannot be empty".into(),
+            ));
         }
+        if client_id.len() < MIN_OAUTH_CREDENTIAL_LENGTH
+            || client_secret.len() < MIN_OAUTH_CREDENTIAL_LENGTH
+        {
+            return Err(ApiError::Validation(format!(
+                "OAuth credentials appear to be invalid (minimum length: {} characters)",
+                MIN_OAUTH_CREDENTIAL_LENGTH
+            )));
+        }
+        
+        // Block OAuth completion until access token is obtained
+        return Err(ApiError::Validation(
+            "OAuth authentication requires access token exchange. Use API Token authentication or complete OAuth flow first.".into(),
+        ));
     } else {
         return Err(ApiError::Validation(
             "Jira requires either API Token (email + token) or OAuth (client_id + secret)".into(),
         ));
     };
-
-    let wizard_input = SetupWizardInput {
+    
+    Ok(qa_pms_config::SetupWizardInput {
         profile: ProfileInput {
             display_name: profile.display_name.clone(),
             jira_email: profile.jira_email.clone(),
@@ -653,49 +826,196 @@ pub async fn complete_setup(
             base_url: s.base_url.clone(),
             default_index: s.default_index.clone(),
         }),
-    };
+    })
+}
 
-    // Create encryptor using app encryption key
-    let encryptor = qa_pms_config::Encryptor::from_hex_key(
-        state.settings.encryption_key.expose_secret()
-    ).map_err(ApiError::Internal)?;
-
-    // Generate user config with encrypted secrets
-    let user_config = UserConfig::from_wizard_input(wizard_input, &encryptor)
+/// Validate and generate UserConfig from wizard input.
+fn validate_and_generate_config(
+    wizard_input: qa_pms_config::SetupWizardInput,
+    encryptor: &qa_pms_config::Encryptor,
+) -> Result<(qa_pms_config::UserConfig, Vec<SetupValidationError>), ApiError> {
+    use qa_pms_config::UserConfig;
+    
+    let user_config = UserConfig::from_wizard_input(wizard_input, encryptor)
         .map_err(ApiError::Internal)?;
+    
+    let mut validation_errors: Vec<qa_pms_config::ValidationError> = user_config.validate().errors;
+    validation_errors.extend(user_config.validate_decryption(encryptor).errors);
+    
+    let setup_errors: Vec<SetupValidationError> = validation_errors
+        .into_iter()
+        .map(|e| SetupValidationError::new(e.field, e.message, e.step, e.fix_path))
+        .collect();
+    
+    Ok((user_config, setup_errors))
+}
 
-    // Validate the config
-    let validation = user_config.validate();
-    if !validation.success {
-        let error_messages: Vec<String> = validation
-            .errors
-            .iter()
-            .map(|e| format!("{}: {}", e.field, e.message))
-            .collect();
+/// Build startup validator for configured integrations.
+async fn build_startup_validator(
+    setup: &SetupState,
+) -> StartupValidator {
+    let mut validator = StartupValidator::new();
+    
+    // Jira is critical: validate only if API token auth is configured
+    if let Some(jira) = setup.jira.as_ref() {
+        if let (Some(email), Some(api_token)) = (&jira.email, &jira.api_token) {
+            let check = JiraHealthCheck::with_api_token(
+                jira.instance_url.clone(),
+                email.clone(),
+                api_token.clone(),
+            );
+            validator = validator.add_critical(Arc::new(check));
+        }
+        // OAuth not validated here (requires access token exchange)
+    }
+    
+    // Postman + Testmo are optional
+    if let Some(p) = setup.postman.as_ref() {
+        validator = validator.add_optional(Arc::new(PostmanHealthCheck::new(p.api_key.clone())));
+    }
+    if let Some(t) = setup.testmo.as_ref() {
+        validator = validator.add_optional(Arc::new(TestmoHealthCheck::new(
+            t.instance_url.clone(),
+            t.api_key.clone(),
+        )));
+    }
+    
+    validator
+}
+
+/// Complete setup wizard.
+///
+/// Validates all configuration and persists to YAML config file.
+#[utoipa::path(
+    post,
+    path = "/api/v1/setup/complete",
+    request_body = CompleteSetupRequest,
+    responses(
+        (status = 200, description = "Setup completion result", body = CompleteSetupResponse),
+        (status = 400, description = "Validation failed", body = qa_pms_core::error::ErrorResponse)
+    ),
+    tag = "Setup"
+)]
+pub async fn complete_setup(
+    State(state): State<AppState>,
+    Json(req): Json<CompleteSetupRequest>,
+) -> Result<Json<CompleteSetupResponse>, ApiError> {
+    use qa_pms_config::UserConfig;
+    use secrecy::ExposeSecret;
+    
+    // Atomic snapshot: consolidate request + store in single operation
+    let setup = consolidate_setup_state(&state.setup_store, &req).await;
+    
+    // Validate basic requirements
+    let mut errors = validate_setup_requirements(&setup);
+    if !errors.is_empty() {
         return Ok(Json(CompleteSetupResponse {
             success: false,
-            errors: error_messages,
+            errors,
             configured_integrations: setup.configured_integrations(),
+            config_path: None,
+            startup_validation: None,
         }));
     }
-
+    
+    // Build wizard input (includes OAuth validation/blocking)
+    let wizard_input = match build_wizard_input(&setup) {
+        Ok(input) => input,
+        Err(e) => {
+            return Ok(Json(CompleteSetupResponse {
+                success: false,
+                errors: vec![SetupValidationError::new(
+                    "configuration",
+                    e.to_string(),
+                    "complete",
+                    "/setup",
+                )],
+                configured_integrations: setup.configured_integrations(),
+                config_path: None,
+                startup_validation: None,
+            }));
+        }
+    };
+    
+    // Create encryptor and validate/generate config
+    let encryptor = qa_pms_config::Encryptor::from_hex_key(
+        state.settings.encryption_key.expose_secret(),
+    )
+    .map_err(ApiError::Internal)?;
+    
+    let (user_config, config_errors) = match validate_and_generate_config(wizard_input, &encryptor) {
+        Ok((config, errs)) => (config, errs),
+        Err(e) => {
+            return Err(ApiError::Internal(anyhow::anyhow!(
+                "Failed to generate config: {}",
+                e
+            )));
+        }
+    };
+    
+    errors.extend(config_errors);
+    if !errors.is_empty() {
+        return Ok(Json(CompleteSetupResponse {
+            success: false,
+            errors,
+            configured_integrations: setup.configured_integrations(),
+            config_path: None,
+            startup_validation: None,
+        }));
+    }
+    
+    // Run startup validation
+    let validator = build_startup_validator(&setup).await;
+    let startup_validation = if validator.check_count() > 0 {
+        Some(validator.validate().await)
+    } else {
+        None
+    };
+    
+    // Check for critical validation failures
+    if let Some(ref report) = startup_validation {
+        if report.has_critical_failure {
+            for r in &report.results {
+                if r.is_critical && !r.success {
+                    errors.push(SetupValidationError::new(
+                        format!("{}.credentials", r.integration),
+                        r.error_message
+                            .clone()
+                            .unwrap_or_else(|| "Integration validation failed".to_string()),
+                        r.integration.clone(),
+                        format!("/setup/{}", r.integration),
+                    ));
+                }
+            }
+            
+            return Ok(Json(CompleteSetupResponse {
+                success: false,
+                errors,
+                configured_integrations: setup.configured_integrations(),
+                config_path: None,
+                startup_validation,
+            }));
+        }
+    }
+    
     // Write config to file
-    let config_path = UserConfig::default_path()
+    let config_path = UserConfig::default_path().map_err(ApiError::Internal)?;
+    user_config
+        .write_to_file(&config_path)
         .map_err(ApiError::Internal)?;
-
-    user_config.write_to_file(&config_path)
-        .map_err(ApiError::Internal)?;
-
+    
     info!(
         path = %config_path.display(),
         integrations = ?setup.configured_integrations(),
         "Setup completed - config saved"
     );
-
+    
     Ok(Json(CompleteSetupResponse {
         success: true,
         errors: vec![],
         configured_integrations: setup.configured_integrations(),
+        config_path: Some(config_path.display().to_string()),
+        startup_validation,
     }))
 }
 
@@ -795,5 +1115,188 @@ mod tests {
             access_token: None,
         });
         assert!(state.is_complete());
+    }
+
+    #[test]
+    fn test_validate_setup_requirements_empty() {
+        let state = SetupState::default();
+        let errors = validate_setup_requirements(&state);
+        assert_eq!(errors.len(), 2);
+        assert!(errors.iter().any(|e| e.field == "profile"));
+        assert!(errors.iter().any(|e| e.field == "jira"));
+    }
+
+    #[test]
+    fn test_validate_setup_requirements_with_profile() {
+        let mut state = SetupState::default();
+        state.profile = Some(ProfileRequest {
+            display_name: "Test User".to_string(),
+            jira_email: "test@example.com".to_string(),
+            ticket_states: vec!["Ready for QA".to_string()],
+        });
+        let errors = validate_setup_requirements(&state);
+        assert_eq!(errors.len(), 1);
+        assert!(errors.iter().any(|e| e.field == "jira"));
+    }
+
+    #[test]
+    fn test_validate_setup_requirements_complete() {
+        let mut state = SetupState::default();
+        state.profile = Some(ProfileRequest {
+            display_name: "Test User".to_string(),
+            jira_email: "test@example.com".to_string(),
+            ticket_states: vec!["Ready for QA".to_string()],
+        });
+        state.jira = Some(JiraTestRequest {
+            instance_url: "https://test.atlassian.net".to_string(),
+            email: Some("test@example.com".to_string()),
+            api_token: Some("test-token".to_string()),
+            client_id: None,
+            client_secret: None,
+            cloud_id: None,
+            access_token: None,
+        });
+        let errors = validate_setup_requirements(&state);
+        assert!(errors.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_consolidate_setup_state_atomic() {
+        let store = create_setup_store();
+        let req = CompleteSetupRequest {
+            profile: Some(ProfileRequest {
+                display_name: "Test User".to_string(),
+                jira_email: "test@example.com".to_string(),
+                ticket_states: vec!["Ready for QA".to_string()],
+            }),
+            jira: Some(JiraTestRequest {
+                instance_url: "https://test.atlassian.net".to_string(),
+                email: Some("test@example.com".to_string()),
+                api_token: Some("test-token".to_string()),
+                client_id: None,
+                client_secret: None,
+                cloud_id: None,
+                access_token: None,
+            }),
+            postman: None,
+            testmo: None,
+            splunk: None,
+        };
+
+        let snapshot = consolidate_setup_state(&store, &req).await;
+        assert!(snapshot.profile.is_some());
+        assert!(snapshot.jira.is_some());
+        assert_eq!(snapshot.profile.as_ref().unwrap().display_name, "Test User");
+    }
+
+    #[test]
+    fn test_build_wizard_input_with_api_token() {
+        let mut setup = SetupState::default();
+        setup.profile = Some(ProfileRequest {
+            display_name: "Test User".to_string(),
+            jira_email: "test@example.com".to_string(),
+            ticket_states: vec!["Ready for QA".to_string()],
+        });
+        setup.jira = Some(JiraTestRequest {
+            instance_url: "https://test.atlassian.net".to_string(),
+            email: Some("test@example.com".to_string()),
+            api_token: Some("test-token".to_string()),
+            client_id: None,
+            client_secret: None,
+            cloud_id: None,
+            access_token: None,
+        });
+
+        let result = build_wizard_input(&setup);
+        assert!(result.is_ok());
+        let input = result.unwrap();
+        assert_eq!(input.profile.display_name, "Test User");
+        assert_eq!(input.jira.instance_url, "https://test.atlassian.net");
+    }
+
+    #[test]
+    fn test_build_wizard_input_blocks_oauth() {
+        let mut setup = SetupState::default();
+        setup.profile = Some(ProfileRequest {
+            display_name: "Test User".to_string(),
+            jira_email: "test@example.com".to_string(),
+            ticket_states: vec!["Ready for QA".to_string()],
+        });
+        setup.jira = Some(JiraTestRequest {
+            instance_url: "https://test.atlassian.net".to_string(),
+            email: None,
+            api_token: None,
+            client_id: Some("test-client-id-12345".to_string()),
+            client_secret: Some("test-client-secret-12345".to_string()),
+            cloud_id: None,
+            access_token: None,
+        });
+
+        let result = build_wizard_input(&setup);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("OAuth authentication requires access token exchange"));
+    }
+
+    #[test]
+    fn test_build_wizard_input_rejects_invalid_oauth() {
+        let mut setup = SetupState::default();
+        setup.profile = Some(ProfileRequest {
+            display_name: "Test User".to_string(),
+            jira_email: "test@example.com".to_string(),
+            ticket_states: vec!["Ready for QA".to_string()],
+        });
+        setup.jira = Some(JiraTestRequest {
+            instance_url: "https://test.atlassian.net".to_string(),
+            email: None,
+            api_token: None,
+            client_id: Some("short".to_string()), // Too short
+            client_secret: Some("secret".to_string()), // Too short
+            cloud_id: None,
+            access_token: None,
+        });
+
+        let result = build_wizard_input(&setup);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        // OAuth is blocked entirely (requires access token), but validation still checks format
+        // The error should mention OAuth or access token
+        assert!(
+            err.to_string().contains("OAuth") || err.to_string().contains("access token"),
+            "Expected OAuth-related error, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_build_wizard_input_missing_profile() {
+        let mut setup = SetupState::default();
+        setup.jira = Some(JiraTestRequest {
+            instance_url: "https://test.atlassian.net".to_string(),
+            email: Some("test@example.com".to_string()),
+            api_token: Some("test-token".to_string()),
+            client_id: None,
+            client_secret: None,
+            cloud_id: None,
+            access_token: None,
+        });
+
+        let result = build_wizard_input(&setup);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Profile is required"));
+    }
+
+    #[test]
+    fn test_build_wizard_input_missing_jira() {
+        let mut setup = SetupState::default();
+        setup.profile = Some(ProfileRequest {
+            display_name: "Test User".to_string(),
+            jira_email: "test@example.com".to_string(),
+            ticket_states: vec!["Ready for QA".to_string()],
+        });
+
+        let result = build_wizard_input(&setup);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Jira configuration is required"));
     }
 }

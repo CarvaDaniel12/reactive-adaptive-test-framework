@@ -27,7 +27,7 @@ impl Default for HealthStore {
 
 impl HealthStore {
     /// Create a new health store with default 2-minute alert threshold.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             state: Arc::new(RwLock::new(HashMap::new())),
@@ -36,7 +36,7 @@ impl HealthStore {
     }
 
     /// Create a health store with custom alert threshold.
-    #[must_use] 
+    #[must_use]
     pub fn with_alert_threshold(minutes: i64) -> Self {
         Self {
             state: Arc::new(RwLock::new(HashMap::new())),
@@ -212,7 +212,10 @@ mod tests {
 
         // Recover
         store
-            .update(HealthCheckResult::online("jira", StdDuration::from_millis(50)))
+            .update(HealthCheckResult::online(
+                "jira",
+                StdDuration::from_millis(50),
+            ))
             .await;
         let health = store.get("jira").await.unwrap();
         assert!(health.downtime_start.is_none());
@@ -224,10 +227,16 @@ mod tests {
         let store = HealthStore::new();
 
         store
-            .update(HealthCheckResult::online("jira", StdDuration::from_millis(100)))
+            .update(HealthCheckResult::online(
+                "jira",
+                StdDuration::from_millis(100),
+            ))
             .await;
         store
-            .update(HealthCheckResult::online("postman", StdDuration::from_millis(200)))
+            .update(HealthCheckResult::online(
+                "postman",
+                StdDuration::from_millis(200),
+            ))
             .await;
         store
             .update(HealthCheckResult::offline("testmo", "Down"))
@@ -242,7 +251,10 @@ mod tests {
         let store = HealthStore::new();
 
         store
-            .update(HealthCheckResult::online("jira", StdDuration::from_millis(100)))
+            .update(HealthCheckResult::online(
+                "jira",
+                StdDuration::from_millis(100),
+            ))
             .await;
         assert!(!store.has_offline().await);
 
@@ -257,7 +269,10 @@ mod tests {
         let store = HealthStore::new();
 
         store
-            .update(HealthCheckResult::online("jira", StdDuration::from_millis(100)))
+            .update(HealthCheckResult::online(
+                "jira",
+                StdDuration::from_millis(100),
+            ))
             .await;
         store
             .update(HealthCheckResult::degraded(

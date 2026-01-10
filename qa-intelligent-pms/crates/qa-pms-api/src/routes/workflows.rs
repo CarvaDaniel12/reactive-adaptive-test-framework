@@ -9,6 +9,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use utoipa::ToSchema;
@@ -21,23 +22,15 @@ use qa_pms_workflow::{
     pause_workflow as db_pause_workflow, resume_workflow as db_resume_workflow,
     skip_step as db_skip_step, start_step, StepLink, TemplateSummary, WorkflowStep,
 };
+use qa_pms_time::aggregates::record_workflow_completion;
+use qa_pms_time::repository::get_workflow_sessions;
 
 use crate::app::AppState;
 use qa_pms_core::error::ApiError;
+use qa_pms_dashboard::SqlxResultExt;
 
 /// Result type alias for API handlers.
 type ApiResult<T> = Result<T, ApiError>;
-
-/// Helper trait to convert sqlx errors to `ApiError`.
-trait SqlxResultExt<T> {
-    fn map_db_err(self) -> Result<T, ApiError>;
-}
-
-impl<T> SqlxResultExt<T> for Result<T, sqlx::Error> {
-    fn map_db_err(self) -> Result<T, ApiError> {
-        self.map_err(|e| ApiError::Internal(e.into()))
-    }
-}
 
 /// Create the workflows router.
 pub fn router() -> Router<AppState> {
@@ -46,15 +39,27 @@ pub fn router() -> Router<AppState> {
         .route("/api/v1/workflows/templates/:id", get(get_template_by_id))
         .route("/api/v1/workflows", post(create_workflow))
         .route("/api/v1/workflows/:id", get(get_workflow))
-        .route("/api/v1/workflows/active/:ticket_id", get(get_active_workflow_for_ticket))
-        .route("/api/v1/workflows/:id/steps/:step_index/complete", post(complete_step))
-        .route("/api/v1/workflows/:id/steps/:step_index/skip", post(skip_step))
+        .route(
+            "/api/v1/workflows/active/:ticket_id",
+            get(get_active_workflow_for_ticket),
+        )
+        .route(
+            "/api/v1/workflows/:id/steps/:step_index/complete",
+            post(complete_step),
+        )
+        .route(
+            "/api/v1/workflows/:id/steps/:step_index/skip",
+            post(skip_step),
+        )
         .route("/api/v1/workflows/:id/pause", post(pause_workflow))
         .route("/api/v1/workflows/:id/resume", post(resume_workflow))
         .route("/api/v1/workflows/:id/complete", post(complete_workflow))
         .route("/api/v1/workflows/:id/summary", get(get_workflow_summary))
         .route("/api/v1/workflows/:id/cancel", post(cancel_workflow))
-        .route("/api/v1/workflows/user/active", get(get_user_active_workflows))
+        .route(
+            "/api/v1/workflows/user/active",
+            get(get_user_active_workflows),
+        )
 }
 
 // ============================================================================
@@ -278,7 +283,10 @@ pub struct UserActiveWorkflowsResponse {
 // ============================================================================
 
 /// Fetch template or return `NotFound` error.
-async fn fetch_template(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow::WorkflowTemplate> {
+async fn fetch_template(
+    state: &AppState,
+    id: Uuid,
+) -> ApiResult<qa_pms_workflow::WorkflowTemplate> {
     get_template(&state.db, id)
         .await
         .map_err(|e| ApiError::Internal(e.into()))?
@@ -286,7 +294,10 @@ async fn fetch_template(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow
 }
 
 /// Fetch workflow instance or return `NotFound` error.
-async fn fetch_instance(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow::WorkflowInstance> {
+async fn fetch_instance(
+    state: &AppState,
+    id: Uuid,
+) -> ApiResult<qa_pms_workflow::WorkflowInstance> {
     get_instance(&state.db, id)
         .await
         .map_err(|e| ApiError::Internal(e.into()))?
@@ -307,7 +318,9 @@ async fn fetch_instance(state: &AppState, id: Uuid) -> ApiResult<qa_pms_workflow
     ),
     tag = "Workflows"
 )]
-pub async fn list_templates(State(state): State<AppState>) -> ApiResult<Json<TemplatesListResponse>> {
+pub async fn list_templates(
+    State(state): State<AppState>,
+) -> ApiResult<Json<TemplatesListResponse>> {
     let templates = get_all_templates(&state.db).await.map_db_err()?;
     let responses: Vec<TemplateResponse> = templates
         .iter()
@@ -316,7 +329,9 @@ pub async fn list_templates(State(state): State<AppState>) -> ApiResult<Json<Tem
 
     info!(count = responses.len(), "Listed workflow templates");
 
-    Ok(Json(TemplatesListResponse { templates: responses }))
+    Ok(Json(TemplatesListResponse {
+        templates: responses,
+    }))
 }
 
 /// Get a workflow template by ID.
@@ -375,7 +390,7 @@ pub async fn create_workflow(
     Json(request): Json<CreateWorkflowRequest>,
 ) -> ApiResult<(StatusCode, Json<CreateWorkflowResponse>)> {
     let template = fetch_template(&state, request.template_id).await?;
-    
+
     let instance = create_instance(
         &state.db,
         request.template_id,
@@ -393,18 +408,21 @@ pub async fn create_workflow(
     let steps = template.steps();
     let total_steps = steps.len();
     let template_name = template.name.clone();
-    
-    let first_step = steps.first().map_or(StepResponse {
-        index: 0,
-        name: "No steps".to_string(),
-        description: String::new(),
-        estimated_minutes: 0,
-    }, |s| StepResponse {
-        index: 0,
-        name: s.name.clone(),
-        description: s.description.clone(),
-        estimated_minutes: s.estimated_minutes,
-    });
+
+    let first_step = steps.first().map_or(
+        StepResponse {
+            index: 0,
+            name: "No steps".to_string(),
+            description: String::new(),
+            estimated_minutes: 0,
+        },
+        |s| StepResponse {
+            index: 0,
+            name: s.name.clone(),
+            description: s.description.clone(),
+            estimated_minutes: s.estimated_minutes,
+        },
+    );
 
     info!(
         workflow_id = %instance.id,
@@ -413,12 +431,15 @@ pub async fn create_workflow(
         "Created workflow instance"
     );
 
-    Ok((StatusCode::CREATED, Json(CreateWorkflowResponse {
-        id: instance.id,
-        template_name,
-        current_step: first_step,
-        total_steps,
-    })))
+    Ok((
+        StatusCode::CREATED,
+        Json(CreateWorkflowResponse {
+            id: instance.id,
+            template_name,
+            current_step: first_step,
+            total_steps,
+        }),
+    ))
 }
 
 /// Get workflow instance by ID.
@@ -443,7 +464,7 @@ pub async fn get_workflow(
 
     let estimated_minutes = template.total_estimated_minutes();
     let template_name = template.name.clone();
-    
+
     let steps: Vec<WorkflowStepWithStatus> = template
         .steps()
         .iter()
@@ -491,14 +512,17 @@ pub async fn get_active_workflow_for_ticket(
     State(state): State<AppState>,
     Path(ticket_id): Path<String>,
 ) -> ApiResult<Json<ActiveWorkflowResponse>> {
-    let instance = get_active_workflow(&state.db, &ticket_id).await.map_db_err()?;
+    let instance = get_active_workflow(&state.db, &ticket_id)
+        .await
+        .map_db_err()?;
 
     let response = if let Some(inst) = instance {
-        let template = get_template(&state.db, inst.template_id).await.map_db_err()?.unwrap_or_else(|| {
-            panic!("Template not found for instance")
-        });
+        let template = get_template(&state.db, inst.template_id)
+            .await
+            .map_db_err()?
+            .unwrap_or_else(|| panic!("Template not found for instance"));
         let total_steps = template.steps().len();
-        
+
         info!(ticket_id = %ticket_id, workflow_id = %inst.id, "Found active workflow");
 
         ActiveWorkflowResponse {
@@ -570,9 +594,15 @@ pub async fn complete_step(
         .collect();
 
     let notes_ref = request.notes.as_deref();
-    let links_ref = if links.is_empty() { None } else { Some(links.as_slice()) };
-    
-    db_complete_step(&state.db, path.id, path.step_index, notes_ref, links_ref).await.map_db_err()?;
+    let links_ref = if links.is_empty() {
+        None
+    } else {
+        Some(links.as_slice())
+    };
+
+    db_complete_step(&state.db, path.id, path.step_index, notes_ref, links_ref)
+        .await
+        .map_db_err()?;
 
     let next_step_index = path.step_index + 1;
     let workflow_completed = next_step_index >= total_steps;
@@ -580,12 +610,15 @@ pub async fn complete_step(
     let next_step = if workflow_completed {
         None
     } else {
-        template.steps().get(next_step_index as usize).map(|s| StepResponse {
-            index: next_step_index as usize,
-            name: s.name.clone(),
-            description: s.description.clone(),
-            estimated_minutes: s.estimated_minutes,
-        })
+        template
+            .steps()
+            .get(next_step_index as usize)
+            .map(|s| StepResponse {
+                index: next_step_index as usize,
+                name: s.name.clone(),
+                description: s.description.clone(),
+                estimated_minutes: s.estimated_minutes,
+            })
     };
 
     info!(workflow_id = %path.id, step_index = path.step_index, workflow_completed, "Completed workflow step");
@@ -593,7 +626,11 @@ pub async fn complete_step(
     Ok(Json(StepActionResponse {
         workflow_completed,
         next_step,
-        current_step_index: if workflow_completed { path.step_index } else { next_step_index },
+        current_step_index: if workflow_completed {
+            path.step_index
+        } else {
+            next_step_index
+        },
     }))
 }
 
@@ -625,7 +662,9 @@ pub async fn skip_step(
         return Err(ApiError::Validation("Invalid step index".to_string()));
     }
 
-    db_skip_step(&state.db, path.id, path.step_index).await.map_db_err()?;
+    db_skip_step(&state.db, path.id, path.step_index)
+        .await
+        .map_db_err()?;
 
     let next_step_index = path.step_index + 1;
     let workflow_completed = next_step_index >= total_steps;
@@ -633,12 +672,15 @@ pub async fn skip_step(
     let next_step = if workflow_completed {
         None
     } else {
-        template.steps().get(next_step_index as usize).map(|s| StepResponse {
-            index: next_step_index as usize,
-            name: s.name.clone(),
-            description: s.description.clone(),
-            estimated_minutes: s.estimated_minutes,
-        })
+        template
+            .steps()
+            .get(next_step_index as usize)
+            .map(|s| StepResponse {
+                index: next_step_index as usize,
+                name: s.name.clone(),
+                description: s.description.clone(),
+                estimated_minutes: s.estimated_minutes,
+            })
     };
 
     info!(workflow_id = %path.id, step_index = path.step_index, workflow_completed, "Skipped workflow step");
@@ -646,7 +688,11 @@ pub async fn skip_step(
     Ok(Json(StepActionResponse {
         workflow_completed,
         next_step,
-        current_step_index: if workflow_completed { path.step_index } else { next_step_index },
+        current_step_index: if workflow_completed {
+            path.step_index
+        } else {
+            next_step_index
+        },
     }))
 }
 
@@ -732,11 +778,98 @@ pub async fn complete_workflow(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> ApiResult<Json<WorkflowStatusResponse>> {
-    let _ = fetch_instance(&state, id).await?;
-    
+    let instance = fetch_instance(&state, id).await?;
+
     db_complete_workflow(&state.db, id).await.map_db_err()?;
 
     info!(workflow_id = %id, "Completed workflow");
+
+    // Trigger time aggregation in background (Story 6.7)
+    {
+        let pool = state.db.clone();
+        let template_id = instance.template_id;
+        let user_id_str = instance.user_id.clone();
+        tokio::spawn(async move {
+            let template = match get_template(&pool, template_id).await {
+                Ok(Some(t)) => t,
+                Ok(None) => {
+                    tracing::warn!(
+                        workflow_id = %id,
+                        template_id = %template_id,
+                        "Time aggregation skipped: workflow template not found"
+                    );
+                    return;
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        workflow_id = %id,
+                        template_id = %template_id,
+                        error = %e,
+                        "Time aggregation failed: could not fetch template"
+                    );
+                    return;
+                }
+            };
+
+            let sessions = match get_workflow_sessions(&pool, id).await {
+                Ok(s) => s,
+                Err(e) => {
+                    tracing::warn!(
+                        workflow_id = %id,
+                        error = %e,
+                        "Time aggregation failed: could not load workflow sessions"
+                    );
+                    return;
+                }
+            };
+
+            let mut actual_seconds: i32 = 0;
+            let mut step_times: Vec<(i32, i32)> = Vec::new();
+            for s in &sessions {
+                if s.total_seconds > 0 {
+                    actual_seconds += s.total_seconds;
+                    step_times.push((s.step_index, s.total_seconds));
+                }
+            }
+
+            let estimated_seconds: i32 = template
+                .steps()
+                .iter()
+                .map(|s| s.estimated_minutes.saturating_mul(60))
+                .sum();
+
+            let namespace = Uuid::new_v5(&Uuid::NAMESPACE_URL, b"qa-intelligent-pms:user");
+            let user_uuid = Uuid::new_v5(&namespace, user_id_str.as_bytes());
+
+            if let Err(e) = record_workflow_completion(
+                &pool,
+                id,
+                user_uuid,
+                template_id,
+                &template.ticket_type,
+                actual_seconds,
+                estimated_seconds,
+                &step_times,
+            )
+            .await
+            {
+                tracing::warn!(
+                    workflow_id = %id,
+                    user_id = %user_uuid,
+                    error = %e,
+                    "Time aggregation failed"
+                );
+            } else {
+                info!(
+                    workflow_id = %id,
+                    user_id = %user_uuid,
+                    actual_seconds,
+                    estimated_seconds,
+                    "Time aggregation stored"
+                );
+            }
+        });
+    }
 
     // Trigger pattern detection in background (Story 9.1, 9.2, 9.3)
     let pool = state.db.clone();
@@ -765,6 +898,136 @@ pub async fn complete_workflow(
             }
         }
     });
+
+    // Trigger anomaly detection in background (Story 31.9)
+    {
+        let pool = state.db.clone();
+        let instance_id = instance.id;
+        let template_id = instance.template_id;
+        let ticket_id = instance.ticket_id.clone();
+        let user_id = instance.user_id.clone();
+        let completed_at = instance.completed_at.unwrap_or_else(Utc::now);
+        let succeeded = matches!(instance.status.as_str(), "completed");
+
+        tokio::spawn(async move {
+            // Get workflow template for execution context (required for baseline)
+            let _template = match get_template(&pool, template_id).await {
+                Ok(Some(t)) => t,
+                Ok(None) => {
+                    tracing::warn!(
+                        workflow_id = %instance_id,
+                        template_id = %template_id,
+                        "Anomaly detection skipped: workflow template not found"
+                    );
+                    return;
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        workflow_id = %instance_id,
+                        template_id = %template_id,
+                        error = %e,
+                        "Anomaly detection failed: could not fetch template"
+                    );
+                    return;
+                }
+            };
+
+            // Get workflow sessions to calculate execution time
+            let sessions = match get_workflow_sessions(&pool, instance_id).await {
+                Ok(s) => s,
+                Err(e) => {
+                    tracing::warn!(
+                        workflow_id = %instance_id,
+                        error = %e,
+                        "Anomaly detection failed: could not load workflow sessions"
+                    );
+                    return;
+                }
+            };
+
+            let total_seconds: i32 = sessions
+                .iter()
+                .map(|s| s.total_seconds)
+                .sum::<i32>()
+                .max(0);
+
+            // Build execution data for anomaly detection
+            let execution = qa_pms_ai::WorkflowExecution {
+                instance_id,
+                ticket_id,
+                user_id,
+                template_id,
+                execution_time_seconds: total_seconds,
+                succeeded,
+                completed_at,
+            };
+
+            // Load historical baseline and run anomaly detection
+            // Load baseline from last 30 completed workflows with same template
+            let mut detector = match qa_pms_ai::AnomalyDetector::with_historical_baseline(
+                &pool,
+                Some(template_id),
+                30,
+            )
+            .await
+            {
+                Ok(detector) => detector,
+                Err(e) => {
+                    tracing::warn!(
+                        workflow_id = %instance_id,
+                        error = %e,
+                        "Failed to load historical baseline, using empty baseline"
+                    );
+                    qa_pms_ai::AnomalyDetector::new()
+                }
+            };
+
+            // Check for anomalies using historical baseline
+            let anomalies = detector.check_execution(&execution);
+
+            // Update baseline metrics after execution (for future detections)
+            // Note: The baseline update is in-memory only for this detector instance
+            // Historical baseline is recalculated each time from database
+            detector.update_baseline(&execution);
+
+            // Store detected anomalies and trigger alerts
+            if !anomalies.is_empty() {
+                info!(
+                    workflow_id = %execution.instance_id,
+                    anomalies_detected = anomalies.len(),
+                    "Anomaly detection completed"
+                );
+
+                let repo = qa_pms_ai::AnomalyRepository::new(pool.clone());
+
+                for anomaly in anomalies {
+                    // Store anomaly in database
+                    if let Err(e) = repo.create_anomaly(anomaly.clone()).await {
+                        tracing::warn!(
+                            anomaly_id = %anomaly.id,
+                            error = %e,
+                            "Failed to store anomaly"
+                        );
+                        continue;
+                    }
+
+                    // Send alert notification (create new service for each to avoid move issues)
+                    let mut alert_service = qa_pms_core::alerts::AnomalyAlertService::default();
+                    if let Err(e) = alert_service.notify(anomaly.to_alert()).await {
+                        tracing::warn!(
+                            error = %e,
+                            "Failed to send anomaly alert notification"
+                        );
+                    }
+                }
+            } else {
+                info!(
+                    workflow_id = %execution.instance_id,
+                    "No anomalies detected"
+                );
+            }
+        });
+    }
 
     Ok(Json(WorkflowStatusResponse {
         status: "completed".to_string(),
@@ -864,11 +1127,15 @@ pub async fn cancel_workflow(
     ),
     tag = "Workflows"
 )]
-pub async fn get_user_active_workflows(State(state): State<AppState>) -> ApiResult<Json<UserActiveWorkflowsResponse>> {
+pub async fn get_user_active_workflows(
+    State(state): State<AppState>,
+) -> ApiResult<Json<UserActiveWorkflowsResponse>> {
     // TODO: Get user_id from auth context
     let user_id = "current-user@example.com";
 
-    let instances = get_all_user_active_workflows(&state.db, user_id).await.map_db_err()?;
+    let instances = get_all_user_active_workflows(&state.db, user_id)
+        .await
+        .map_db_err()?;
 
     let mut workflows = Vec::with_capacity(instances.len());
     for inst in instances {

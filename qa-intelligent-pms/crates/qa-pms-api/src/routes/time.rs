@@ -16,39 +16,59 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use qa_pms_time::{
-    end_session, get_active_session, get_workflow_sessions, pause_session, resume_session,
-    start_session, TimeSession,
+    dismiss_alert as dismiss_gap_alert,
+    end_session,
+    get_active_session,
     // Story 6.7: Historical aggregates
-    get_historical_summary, get_trend_data, get_user_averages, get_undismissed_alerts,
-    dismiss_alert as dismiss_gap_alert, HistoricalSummary, TrendPoint, UserAverage, TimeGapAlert,
+    get_historical_summary,
+    get_trend_data,
+    get_undismissed_alerts,
+    get_user_averages,
+    get_workflow_sessions,
+    pause_session,
+    resume_session,
+    start_session,
+    HistoricalSummary,
+    TimeGapAlert,
+    TimeSession,
+    TrendPoint,
+    UserAverage,
 };
 
 use crate::app::AppState;
 use qa_pms_core::error::ApiError;
+use qa_pms_dashboard::SqlxResultExt;
 
 /// Result type alias for API handlers.
 type ApiResult<T> = Result<T, ApiError>;
 
-/// Helper trait to convert sqlx errors to `ApiError`.
-trait SqlxResultExt<T> {
-    fn map_db_err(self) -> Result<T, ApiError>;
-}
-
-impl<T> SqlxResultExt<T> for Result<T, sqlx::Error> {
-    fn map_db_err(self) -> Result<T, ApiError> {
-        self.map_err(|e| ApiError::Internal(e.into()))
-    }
-}
-
 /// Create the time tracking router.
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/v1/time/sessions/:workflow_id/start/:step_index", post(start_time_session))
-        .route("/api/v1/time/sessions/:session_id/end", post(end_time_session))
-        .route("/api/v1/time/sessions/:session_id/pause", post(pause_time_session))
-        .route("/api/v1/time/sessions/:session_id/resume", post(resume_time_session))
-        .route("/api/v1/time/sessions/:workflow_id/active", get(get_active_time_session))
-        .route("/api/v1/time/sessions/:workflow_id", get(get_all_time_sessions))
+        .route(
+            "/api/v1/time/sessions/:workflow_id/start/:step_index",
+            post(start_time_session),
+        )
+        .route(
+            "/api/v1/time/sessions/:session_id/end",
+            post(end_time_session),
+        )
+        .route(
+            "/api/v1/time/sessions/:session_id/pause",
+            post(pause_time_session),
+        )
+        .route(
+            "/api/v1/time/sessions/:session_id/resume",
+            post(resume_time_session),
+        )
+        .route(
+            "/api/v1/time/sessions/:workflow_id/active",
+            get(get_active_time_session),
+        )
+        .route(
+            "/api/v1/time/sessions/:workflow_id",
+            get(get_all_time_sessions),
+        )
         // Story 6.7: Historical time data endpoints
         .route("/api/v1/time/history/:user_id", get(get_historical_stats))
         .route("/api/v1/time/history/:user_id/trend", get(get_time_trend))
@@ -126,7 +146,10 @@ pub async fn start_time_session(
 
     info!(workflow_id = %workflow_id, step_index, "Started time session");
 
-    Ok((StatusCode::CREATED, Json(TimeSessionResponse::from(session))))
+    Ok((
+        StatusCode::CREATED,
+        Json(TimeSessionResponse::from(session)),
+    ))
 }
 
 /// End a time session.
@@ -146,9 +169,7 @@ pub async fn end_time_session(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
 ) -> ApiResult<Json<TimeSessionResponse>> {
-    let session = end_session(&state.db, session_id)
-        .await
-        .map_db_err()?;
+    let session = end_session(&state.db, session_id).await.map_db_err()?;
 
     info!(session_id = %session_id, total_seconds = session.total_seconds, "Ended time session");
 
@@ -172,9 +193,7 @@ pub async fn pause_time_session(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
 ) -> ApiResult<Json<serde_json::Value>> {
-    pause_session(&state.db, session_id)
-        .await
-        .map_db_err()?;
+    pause_session(&state.db, session_id).await.map_db_err()?;
 
     info!(session_id = %session_id, "Paused time session");
 
@@ -198,9 +217,7 @@ pub async fn resume_time_session(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
 ) -> ApiResult<Json<serde_json::Value>> {
-    resume_session(&state.db, session_id)
-        .await
-        .map_db_err()?;
+    resume_session(&state.db, session_id).await.map_db_err()?;
 
     info!(session_id = %session_id, "Resumed time session");
 
@@ -509,12 +526,13 @@ pub async fn get_averages(
     State(state): State<AppState>,
     Path(user_id): Path<Uuid>,
 ) -> ApiResult<Json<UserAveragesResponse>> {
-    let averages = get_user_averages(&state.db, user_id)
-        .await
-        .map_db_err()?;
+    let averages = get_user_averages(&state.db, user_id).await.map_db_err()?;
 
     Ok(Json(UserAveragesResponse {
-        averages: averages.into_iter().map(UserAverageResponse::from).collect(),
+        averages: averages
+            .into_iter()
+            .map(UserAverageResponse::from)
+            .collect(),
     }))
 }
 
@@ -561,9 +579,7 @@ pub async fn dismiss_alert(
     State(state): State<AppState>,
     Path(alert_id): Path<Uuid>,
 ) -> ApiResult<Json<serde_json::Value>> {
-    dismiss_gap_alert(&state.db, alert_id)
-        .await
-        .map_db_err()?;
+    dismiss_gap_alert(&state.db, alert_id).await.map_db_err()?;
 
     info!(alert_id = %alert_id, "Dismissed gap alert");
 

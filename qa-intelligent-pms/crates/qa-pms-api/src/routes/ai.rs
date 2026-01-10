@@ -19,9 +19,9 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use qa_pms_ai::{
-    AIClient, ChatContext, ChatInput, ChatMessage, ChatService,
-    ConnectionTestResult, GherkinAnalyzer, GherkinInput,
-    ProviderModels, ProviderType, SemanticSearchInput, SemanticSearchService,
+    AIClient, ChatContext, ChatInput, ChatMessage, ChatService, ConnectionTestResult,
+    GherkinAnalyzer, GherkinInput, ProviderModels, ProviderType, SemanticSearchInput,
+    SemanticSearchService,
 };
 use qa_pms_config::Encryptor;
 use qa_pms_core::ApiError;
@@ -34,6 +34,15 @@ type ApiResult<T> = Result<T, ApiError>;
 /// Minimum API key length for validation
 const MIN_API_KEY_LENGTH: usize = 20;
 
+/// Global AI configuration ID (until per-user auth is implemented).
+///
+/// Note: `user_id NULL` doesn't conflict under a UNIQUE constraint, so we use a deterministic UUID
+/// to enforce singleton semantics reliably.
+const GLOBAL_AI_USER_ID: Uuid = Uuid::from_u128(0);
+
+pub mod anomalies;
+pub mod test_generation;
+
 /// Create the AI router.
 ///
 /// TODO: Add rate limiting when `tower_governor/axum` version compatibility is resolved
@@ -41,6 +50,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         // Configuration
         .route("/status", get(get_ai_status))
+        .route("/config", get(get_ai_config))
         .route("/providers", get(get_providers))
         .route("/configure", post(configure_ai))
         .route("/test", post(test_connection))
@@ -52,6 +62,10 @@ pub fn router() -> Router<AppState> {
         .route("/semantic-search", post(semantic_search))
         // Gherkin analysis
         .route("/gherkin", post(analyze_gherkin))
+        // Anomaly detection (Story 31.9)
+        .merge(anomalies::router())
+        // Test generation (Story 31.1)
+        .merge(test_generation::router())
 }
 
 // ==================== Request/Response Types ====================
@@ -82,6 +96,19 @@ pub struct AIStatusResponse {
     pub model: Option<String>,
     /// Status message
     pub message: String,
+}
+
+/// Response for AI config (no API key is ever returned).
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AIConfigResponse {
+    pub enabled: bool,
+    pub provider: String,
+    pub model_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub custom_base_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validated_at: Option<String>,
 }
 
 /// Response for providers list.
@@ -290,8 +317,9 @@ pub struct SuccessResponse {
 pub async fn get_ai_status(State(state): State<AppState>) -> ApiResult<Json<AIStatusResponse>> {
     // Check if AI is configured in database
     let config: Option<(bool, String, String)> = sqlx::query_as(
-        "SELECT enabled, provider, model_id FROM ai_configs WHERE user_id IS NULL LIMIT 1",
+        "SELECT enabled, provider, model_id FROM ai_configs WHERE user_id = $1 LIMIT 1",
     )
+    .bind(GLOBAL_AI_USER_ID)
     .fetch_optional(&state.db)
     .await
     .map_err(|e| ApiError::Internal(e.into()))?;
@@ -307,8 +335,8 @@ pub async fn get_ai_status(State(state): State<AppState>) -> ApiResult<Json<AISt
         } else {
             AIStatusResponse {
                 available: false,
-                provider: None,
-                model: None,
+                provider: Some(provider),
+                model: Some(model),
                 message: "AI is disabled. Enable it in Settings.".to_string(),
             }
         }
@@ -323,6 +351,43 @@ pub async fn get_ai_status(State(state): State<AppState>) -> ApiResult<Json<AISt
     };
 
     Ok(Json(status))
+}
+
+/// Get current AI configuration (without API key).
+#[utoipa::path(
+    get,
+    path = "/api/v1/ai/config",
+    responses(
+        (status = 200, description = "AI configuration", body = AIConfigResponse),
+        (status = 404, description = "Not configured")
+    ),
+    tag = "AI"
+)]
+pub async fn get_ai_config(State(state): State<AppState>) -> ApiResult<Json<AIConfigResponse>> {
+    let row: Option<(bool, String, String, Option<String>, Option<chrono::DateTime<chrono::Utc>>)> =
+        sqlx::query_as(
+            r"
+            SELECT enabled, provider, model_id, custom_base_url, validated_at
+            FROM ai_configs
+            WHERE user_id = $1
+            LIMIT 1
+            ",
+        )
+        .bind(GLOBAL_AI_USER_ID)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|e| ApiError::Internal(e.into()))?;
+
+    let (enabled, provider, model_id, custom_base_url, validated_at) = row
+        .ok_or_else(|| ApiError::NotFound("AI not configured".to_string()))?;
+
+    Ok(Json(AIConfigResponse {
+        enabled,
+        provider,
+        model_id,
+        custom_base_url,
+        validated_at: validated_at.map(|t| t.to_rfc3339()),
+    }))
 }
 
 /// Get available AI providers.
@@ -399,10 +464,16 @@ pub async fn configure_ai(
     validate_api_key(&req.api_key, provider)?;
 
     // Validate by testing connection
-    let client = create_client(provider, &req.api_key, &req.model_id, req.custom_base_url.clone())?;
-    let test_result = client.test_connection().await.map_err(|e| {
-        ApiError::Validation(format!("Connection test failed: {e}"))
-    })?;
+    let client = create_client(
+        provider,
+        &req.api_key,
+        &req.model_id,
+        req.custom_base_url.clone(),
+    )?;
+    let test_result = client
+        .test_connection()
+        .await
+        .map_err(|e| ApiError::Validation(format!("Connection test failed: {e}")))?;
 
     if !test_result.success {
         return Err(ApiError::Validation(format!(
@@ -413,9 +484,9 @@ pub async fn configure_ai(
 
     // CR-HIGH-001: Encrypt API key before storage
     let encryptor = get_encryption_key(&state)?;
-    let encrypted_key = encryptor.encrypt(&req.api_key).map_err(|e| {
-        ApiError::Internal(anyhow::anyhow!("Failed to encrypt API key: {e}"))
-    })?;
+    let encrypted_key = encryptor
+        .encrypt(&req.api_key)
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to encrypt API key: {e}")))?;
 
     info!(provider = %req.provider, model = %req.model_id, "Storing encrypted AI configuration");
 
@@ -423,7 +494,7 @@ pub async fn configure_ai(
     sqlx::query(
         r"
         INSERT INTO ai_configs (user_id, enabled, provider, model_id, api_key_encrypted, custom_base_url, validated_at)
-        VALUES (NULL, TRUE, $1, $2, $3, $4, NOW())
+        VALUES ($5, TRUE, $1, $2, $3, $4, NOW())
         ON CONFLICT (user_id) DO UPDATE SET
             enabled = TRUE,
             provider = $1,
@@ -438,6 +509,7 @@ pub async fn configure_ai(
     .bind(&req.model_id)
     .bind(&encrypted_key)
     .bind(&req.custom_base_url)
+    .bind(GLOBAL_AI_USER_ID)
     .execute(&state.db)
     .await
     .map_err(|e| ApiError::Internal(e.into()))?;
@@ -463,9 +535,10 @@ pub async fn test_connection(
     let provider = parse_provider(&req.provider)?;
     let client = create_client(provider, &req.api_key, &req.model_id, req.custom_base_url)?;
 
-    let result = client.test_connection().await.map_err(|e| {
-        ApiError::Validation(format!("Connection test failed: {e}"))
-    })?;
+    let result = client
+        .test_connection()
+        .await
+        .map_err(|e| ApiError::Validation(format!("Connection test failed: {e}")))?;
 
     Ok(Json(result))
 }
@@ -480,7 +553,8 @@ pub async fn test_connection(
     tag = "AI"
 )]
 pub async fn disable_ai(State(state): State<AppState>) -> ApiResult<Json<SuccessResponse>> {
-    sqlx::query("UPDATE ai_configs SET enabled = FALSE, updated_at = NOW() WHERE user_id IS NULL")
+    sqlx::query("UPDATE ai_configs SET enabled = FALSE, updated_at = NOW() WHERE user_id = $1")
+        .bind(GLOBAL_AI_USER_ID)
         .execute(&state.db)
         .await
         .map_err(|e| ApiError::Internal(e.into()))?;
@@ -491,11 +565,14 @@ pub async fn disable_ai(State(state): State<AppState>) -> ApiResult<Json<Success
 }
 
 /// Get decrypted API key from database.
-async fn get_decrypted_api_key(state: &AppState) -> Result<(String, String, String, Option<String>), ApiError> {
+async fn get_decrypted_api_key(
+    state: &AppState,
+) -> Result<(String, String, String, Option<String>), ApiError> {
     // Get AI configuration including encrypted key
     let config: Option<(String, String, Option<String>, Option<String>)> = sqlx::query_as(
-        "SELECT provider, model_id, api_key_encrypted, custom_base_url FROM ai_configs WHERE user_id IS NULL AND enabled = TRUE LIMIT 1",
+        "SELECT provider, model_id, api_key_encrypted, custom_base_url FROM ai_configs WHERE user_id = $1 AND enabled = TRUE LIMIT 1",
     )
+    .bind(GLOBAL_AI_USER_ID)
     .fetch_optional(&state.db)
     .await
     .map_err(|e| ApiError::Internal(e.into()))?;
@@ -510,7 +587,8 @@ async fn get_decrypted_api_key(state: &AppState) -> Result<(String, String, Stri
         encryptor
             .decrypt(&encrypted)
             .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {e}")))?
-            .expose_secret().clone()
+            .expose_secret()
+            .clone()
     } else {
         // Fallback to env var for backwards compatibility
         std::env::var("AI_API_KEY").unwrap_or_default()
@@ -562,7 +640,8 @@ pub async fn chat(
                 _ => qa_pms_ai::MessageRole::User,
             },
             content: m.content,
-            timestamp: chrono::DateTime::parse_from_rfc3339(&m.timestamp).map_or_else(|_| chrono::Utc::now(), |dt| dt.with_timezone(&chrono::Utc)),
+            timestamp: chrono::DateTime::parse_from_rfc3339(&m.timestamp)
+                .map_or_else(|_| chrono::Utc::now(), |dt| dt.with_timezone(&chrono::Utc)),
         })
         .collect();
 
@@ -591,9 +670,10 @@ pub async fn chat(
         stream: false,
     };
 
-    let response = chat_service.chat(input).await.map_err(|e| {
-        ApiError::Internal(anyhow::anyhow!("Chat failed: {e}"))
-    })?;
+    let response = chat_service
+        .chat(input)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("Chat failed: {e}")))?;
 
     Ok(Json(ChatResponseDto {
         message: ChatMessageDto {
@@ -774,9 +854,9 @@ pub async fn analyze_gherkin(
 fn parse_provider(s: &str) -> Result<ProviderType, ApiError> {
     match s.to_lowercase().as_str() {
         "anthropic" => Ok(ProviderType::Anthropic),
-        "openai" => Ok(ProviderType::OpenAi),
+        "openai" | "open_ai" => Ok(ProviderType::OpenAi),
         "deepseek" => Ok(ProviderType::Deepseek),
-        "zai" | "z.ai" => Ok(ProviderType::Zai),
+        "zai" | "z.ai" | "z_ai" => Ok(ProviderType::Zai),
         "custom" => Ok(ProviderType::Custom),
         _ => Err(ApiError::Validation(format!("Unknown provider: {s}"))),
     }

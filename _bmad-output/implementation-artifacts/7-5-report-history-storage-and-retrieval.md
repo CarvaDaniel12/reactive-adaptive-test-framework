@@ -47,7 +47,7 @@ So that I can reference previous testing work.
 - [ ] Task 1: Create GET /api/v1/reports endpoint with pagination
 - [ ] Task 2: Add search and filter parameters
 - [ ] Task 3: Create ReportHistoryPage component
-- [ ] Task 4: Create ReportListItem with hover preview
+- [x] Task 4: Create ReportListItem with hover preview
 - [ ] Task 5: Implement date range filter
 - [ ] Task 6: Create report detail page route
 

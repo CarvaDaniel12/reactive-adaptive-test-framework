@@ -94,7 +94,10 @@ impl HealthCheck for TestmoHealthCheck {
                         &format!("Request timeout (>{REQUEST_TIMEOUT_SECS}s)"),
                     )
                 } else if e.is_connect() {
-                    HealthCheckResult::offline("testmo", "Connection failed - check URL and network")
+                    HealthCheckResult::offline(
+                        "testmo",
+                        "Connection failed - check URL and network",
+                    )
                 } else {
                     HealthCheckResult::offline("testmo", &e.to_string())
                 }

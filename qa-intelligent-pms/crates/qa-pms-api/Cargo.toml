@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 qa-pms-core = { workspace = true, features = ["axum"] }
 qa-pms-config = { workspace = true }
+qa-pms-dashboard = { workspace = true }
 qa-pms-jira = { workspace = true }
 qa-pms-postman = { workspace = true }
 qa-pms-testmo = { workspace = true }

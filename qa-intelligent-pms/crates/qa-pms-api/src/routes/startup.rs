@@ -6,6 +6,7 @@ use axum::{extract::State, routing::get, Json, Router};
 
 use crate::app::AppState;
 use crate::startup::StartupValidationReport;
+use crate::user_config_health::build_startup_validator_from_user_config;
 
 /// Startup routes.
 pub fn router() -> Router<AppState> {
@@ -25,6 +26,9 @@ pub fn router() -> Router<AppState> {
     )
 )]
 pub async fn validate_startup(State(state): State<AppState>) -> Json<StartupValidationReport> {
-    let report = state.startup_validator.validate().await;
+    // Build validator from the per-user config file on each request so changes
+    // from the setup wizard are immediately reflected without server restart.
+    let validator = build_startup_validator_from_user_config(&state.settings);
+    let report = validator.validate().await;
     Json(report)
 }

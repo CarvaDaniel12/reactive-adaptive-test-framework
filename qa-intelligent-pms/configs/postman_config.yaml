@@ -1,6 +1,0 @@
-postman:
-  api_key: "${POSTMAN_API_KEY}"
-  workspace_id: "f17f099b-6a03-442f-8c8e-8ac905447030"  # ATENCAO: Substitua pelo Workspace ID real
-  default_collection_name: "Testes Gerados"
-  base_url_variable: "{{base_url}}"
-  timeout: 30

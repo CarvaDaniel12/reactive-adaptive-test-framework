@@ -3,8 +3,7 @@
  * Supports period-based filtering and automatic refresh.
  */
 import { useQuery } from "@tanstack/react-query";
-import type { Period } from "@/components/dashboard";
-import type { DashboardKPIs, TrendDataPoint, ActivityItem } from "@/components/dashboard";
+import type { Period, DashboardKPIs, TrendDataPoint, ActivityItem } from "@/components/dashboard";
 
 export interface DashboardData {
   kpis: DashboardKPIs;
@@ -12,9 +11,16 @@ export interface DashboardData {
   recentActivity: ActivityItem[];
 }
 
+export type { DashboardKPIs };
+
 interface DashboardResponse {
   kpis: {
     tickets_completed: { value: number; change: number; trend: string };
+    tickets_breakdown_by_type?: Array<{
+      ticket_type: string;
+      count: number;
+      percentage: number;
+    }>;
     avg_time_per_ticket: { value: number; change: number; trend: string };
     efficiency: { value: number; change: number; trend: string };
     total_hours: { value: number; change: number; trend: string };
@@ -47,6 +53,7 @@ async function fetchDashboard(period: Period): Promise<DashboardData> {
         change: data.kpis.tickets_completed.change,
         trend: data.kpis.tickets_completed.trend as "up" | "down" | "neutral",
       },
+      ticketsBreakdownByType: data.kpis.tickets_breakdown_by_type || [],
       avgTimePerTicket: {
         value: data.kpis.avg_time_per_ticket.value,
         change: data.kpis.avg_time_per_ticket.change,

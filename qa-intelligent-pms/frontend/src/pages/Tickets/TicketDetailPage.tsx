@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { RelatedTests } from "@/components/search";
 import { TemplateSelectionDialog } from "@/components/workflow";
-import { TestGenerator } from "@/components/ai";
+import { TestGenerator, BugRiskScore } from "@/components/ai";
 import { useActiveWorkflow, useCreateWorkflow, useToast } from "@/hooks";
 import type { WorkflowTemplate } from "@/hooks/useWorkflow";
 import { TicketMetadata } from "./TicketMetadata";
@@ -205,6 +205,9 @@ export function TicketDetailPage() {
         <div className="flex items-center gap-3 flex-wrap">
           {/* Generate Tests Button (Task 5.2) */}
           <TestGenerator ticketKey={ticket.key} ticketTitle={ticket.title} />
+          
+          {/* Analyze Risk Button (Task 8.7) */}
+          <BugRiskScore ticketKey={ticket.key} ticketTitle={ticket.title} />
           
           {/* Start/Resume Workflow Button */}
           <button

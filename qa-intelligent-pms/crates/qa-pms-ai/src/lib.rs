@@ -17,6 +17,7 @@
 
 pub mod anomaly_detector;
 pub mod anomaly_repository;
+pub mod bug_predictor;
 pub mod chat;
 pub mod error;
 pub mod gherkin;
@@ -32,6 +33,7 @@ pub use anomaly_detector::{
 pub use anomaly_repository::{
     AnomalyCountByDate, AnomalyRepository, SeverityDistribution, WorkflowExecutionData,
 };
+pub use bug_predictor::{BugPredictor, BugRiskScore, RiskFactor, RiskLevel};
 pub use chat::ChatService;
 pub use error::AIError;
 pub use gherkin::GherkinAnalyzer;

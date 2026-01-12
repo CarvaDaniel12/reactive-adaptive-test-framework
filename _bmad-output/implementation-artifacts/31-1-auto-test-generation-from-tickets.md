@@ -1,6 +1,6 @@
 # Story 31.1: Auto-Test Generation from Tickets
 
-Status: in-progress
+Status: review
 
 Epic: 31 - AI-Enhanced Automation
 Priority: P0 (Critical)

@@ -11,15 +11,17 @@
  * - 8.6: Dashboard real-time refresh with indicator
  */
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   PeriodSelector,
   KPICards,
   TrendChart,
   RecentActivity,
+  IntegrationHealthWidget,
   type Period,
 } from "@/components/dashboard";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useLayoutStore } from "@/stores/layoutStore";
 
 const VALID_PERIODS: Period[] = ["7d", "30d", "90d", "1y"];
 
@@ -29,12 +31,22 @@ function isValidPeriod(value: string | null): value is Period {
 
 export function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const { setSidebarCollapsed } = useLayoutStore();
   
   // Get period from URL or default to 30d
   const urlPeriod = searchParams.get("period");
   const period: Period = isValidPeriod(urlPeriod) ? urlPeriod : "30d";
   
   const { data, isLoading, refetch, isFetching, dataUpdatedAt } = useDashboardData(period);
+
+  // Story 8.1 AC #5: Dashboard mode (expanded sidebar)
+  // Auto-expand sidebar when on dashboard route
+  useEffect(() => {
+    if (location.pathname === "/" || location.pathname.startsWith("/dashboard")) {
+      setSidebarCollapsed(false);
+    }
+  }, [location.pathname, setSidebarCollapsed]);
 
   // Update URL when period changes
   const handlePeriodChange = (newPeriod: Period) => {
@@ -102,6 +114,9 @@ export function DashboardPage() {
 
       {/* KPI Cards - Stories 8.2, 8.3 */}
       <KPICards data={data?.kpis} isLoading={isLoading} />
+
+      {/* Integration Health Widget - Story 22.6 */}
+      <IntegrationHealthWidget />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

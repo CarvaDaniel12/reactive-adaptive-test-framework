@@ -3,7 +3,7 @@
 //! Story 31.1: Auto-Test Generation from Tickets
 
 use axum::{
-    extract::{Path, State},
+    extract::State,
     routing::post,
     Json, Router,
 };
@@ -339,20 +339,24 @@ async fn create_ai_client(state: &AppState) -> Result<qa_pms_ai::AIClient, ApiEr
         ApiError::ServiceUnavailable("AI not configured. Please configure AI in Settings.".into())
     })?;
 
-    // Decrypt API key
-    let api_key = if let Some(encrypted) = encrypted_key {
-        let encryptor = get_encryption_key(state)?;
-        encryptor
-            .decrypt(&encrypted)
-            .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {e}")))?
-            .expose_secret()
-            .clone()
-    } else {
-        std::env::var("AI_API_KEY").unwrap_or_default()
-    };
+    // Decrypt API key - must be configured via Settings (wizard)
+    let encrypted = encrypted_key.ok_or_else(|| {
+        ApiError::ServiceUnavailable(
+            "AI API key not configured. Please configure AI in Settings.".into()
+        )
+    })?;
+
+    let encryptor = get_encryption_key(state)?;
+    let api_key = encryptor
+        .decrypt(&encrypted)
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {e}")))?
+        .expose_secret()
+        .clone();
 
     if api_key.is_empty() {
-        return Err(ApiError::ServiceUnavailable("AI API key not configured".into()));
+        return Err(ApiError::ServiceUnavailable(
+            "AI API key is empty. Please reconfigure AI in Settings.".into()
+        ));
     }
 
     // Parse provider

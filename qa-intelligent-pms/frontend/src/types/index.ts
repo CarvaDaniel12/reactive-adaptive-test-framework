@@ -144,6 +144,62 @@ export interface GenerateTestsResponse {
   ticketKey: string;
 }
 
+// Bug Prediction types (Story 31.2)
+export type RiskLevel = "low" | "medium" | "high" | "critical";
+
+export interface RiskFactor {
+  factor: string;
+  impact: number;
+  description: string;
+}
+
+export interface BugRiskScore {
+  ticketKey: string;
+  riskScore: number;
+  riskLevel: RiskLevel;
+  riskFactors: RiskFactor[];
+  predictedBugs: string[];
+  confidence: number;
+}
+
+export interface PredictBugRiskRequest {
+  ticketKey: string;
+}
+
+export interface PredictReleaseRiskRequest {
+  releaseVersion: string;
+  ticketKeys: string[];
+}
+
+export interface TicketRiskEntry {
+  ticketKey: string;
+  riskScore: number;
+  riskLevel: string;
+  riskFactorsCount: number;
+  predictedBugsCount: number;
+}
+
+export interface RiskLevelCounts {
+  low: number;
+  medium: number;
+  high: number;
+  critical: number;
+}
+
+export interface ReleaseRiskSummary {
+  totalTickets: number;
+  averageRiskScore: number;
+  byRiskLevel: RiskLevelCounts;
+  commonRiskFactors: string[];
+  commonBugTypes: string[];
+}
+
+export interface ReleaseRiskResponse {
+  releaseVersion: string;
+  ticketRisks: TicketRiskEntry[];
+  summary: ReleaseRiskSummary;
+}
+
 // AI Configuration types (Story 13.1)
 // Note: Backend uses snake_case serialization, so OpenAi becomes "open_ai"
 export type ProviderType = "anthropic" | "open_ai" | "deepseek" | "zai" | "custom";

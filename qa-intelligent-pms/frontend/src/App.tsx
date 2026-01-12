@@ -5,6 +5,8 @@ import { ToastProvider } from "./components/ui/ToastProvider";
 import { StartupCheck } from "./components/startup";
 import { Home } from "./pages/Home";
 import { DashboardPage } from "./pages/Dashboard";
+import { TicketsCompletedDetailPage } from "./pages/Dashboard/TicketsCompletedDetailPage";
+import { IntegrationDetailPage } from "./pages/Dashboard/IntegrationDetailPage";
 import {
   SetupWizardLayout,
   SetupGuard,
@@ -86,6 +88,8 @@ function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="home" element={<Home />} />
+          <Route path="dashboard/tickets-completed" element={<TicketsCompletedDetailPage />} />
+          <Route path="dashboard/integrations/:integrationId" element={<IntegrationDetailPage />} />
           <Route path="tickets" element={<TicketsPage />} />
           <Route path="tickets/:key" element={<TicketDetailPage />} />
           <Route path="workflows" element={<WorkflowsListPage />} />

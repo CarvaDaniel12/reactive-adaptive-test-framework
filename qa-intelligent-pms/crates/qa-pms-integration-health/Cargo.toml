@@ -1,0 +1,42 @@
+[package]
+name = "qa-pms-integration-health"
+description = "Integration health monitoring for PMS integrations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# API Documentation
+utoipa = { workspace = true }
+
+# Time
+chrono = { workspace = true, features = ["serde"] }
+
+# Error Handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# UUID
+uuid = { workspace = true, features = ["v4", "serde"] }
+
+# Database (for sqlx::Type derive)
+sqlx = { workspace = true }
+
+# Core types
+qa-pms-core = { workspace = true }
+qa-pms-dashboard = { workspace = true }
+
+# Decimal for database DECIMAL type
+rust_decimal = { version = "1.33", features = ["serde"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[lints]
+workspace = true

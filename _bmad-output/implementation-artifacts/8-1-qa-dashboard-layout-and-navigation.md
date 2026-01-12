@@ -49,6 +49,7 @@ So that I can see my performance metrics.
 - [x] Task 7: Implement responsive grid layout
 - [x] Task 8: Create useDashboardData hook with React Query
 - [x] Task 9: Add Dashboard API endpoint (Rust backend)
+- [x] Task 10: Implement Dashboard mode (auto-expand sidebar) - AC #5 (completed 2026-01-10)
 
 ## Dev Notes
 

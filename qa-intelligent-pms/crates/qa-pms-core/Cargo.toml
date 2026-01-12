@@ -29,6 +29,9 @@ utoipa = { workspace = true, optional = true }
 # Database repository implementation
 sqlx = { workspace = true }
 
+# Caching
+moka = { workspace = true }
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util", "macros"] }
 

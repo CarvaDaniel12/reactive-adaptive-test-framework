@@ -24,6 +24,7 @@ qa-pms-patterns = { workspace = true }
 qa-pms-splunk = { workspace = true }
 qa-pms-support = { workspace = true }
 qa-pms-ai = { workspace = true }
+qa-pms-integration-health = { workspace = true }
 
 # Async utilities
 async-trait = { workspace = true }
@@ -33,6 +34,7 @@ futures = { workspace = true }
 axum = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
+axum-prometheus = { workspace = true }
 # TODO: Add rate limiting when axum version compatibility is resolved
 # tower_governor = { version = "0.8", features = ["axum"] }
 
@@ -71,6 +73,7 @@ utoipa = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util", "macros"] }
+http-body-util = "0.1"
 
 [lints]
 workspace = true

@@ -16,7 +16,7 @@
 #   - skipped: Optional/conditional workflow that was skipped
 
 generated: "2026-01-01"
-last_updated: "2026-01-10T23:00:00Z"
+last_updated: "2026-01-10T16:00:00Z"
 project: "estrategia preventiva-reativa"
 project_type: "brownfield"
 selected_track: "enterprise"
@@ -377,6 +377,41 @@ workflow_status:
         - All AI stories MUST use Context7 before implementation
         - ML model (31.2) requires Context7 for Rust ML libraries (linfa)
         - AI integration stories require Context7 for prompt engineering patterns
+    - id: "epic-22-pms-integration-health"
+      status: "ready-for-dev"
+      agent: "sm"
+      started: "2026-01-10"
+      completed: "2026-01-10"
+      note: |
+        ═════════════════════════════════════════════════
+        EPIC 22: PMS INTEGRATION HEALTH MONITORING MODULE
+        ═════════════════════════════════════════════════
+        Foundation for PMS integration observability
+
+        Priority: 🔴 P0
+        Total Stories: 7 (22.1-22.7)
+        Estimated Effort: 11 days
+        Stories Created: 7/7 (100%)
+        Stories Ready-for-Dev: 7/7 (100%)
+
+        ✅ All Stories Created (2026-01-10):
+        - 22.1 - Integration Health Database Schema ✅
+        - 22.2 - Integration Health Types and Error Handling ✅
+        - 22.3 - Integration Health Repository ✅
+        - 22.4 - Integration Health Service ✅
+        - 22.5 - Integration Health API Endpoints ✅
+        - 22.6 - Integration Health Dashboard Widget ✅
+        - 22.7 - Integration Detail Page ✅
+
+        Sprint Status: ready-for-dev (7/7 stories)
+        All stories documented with complete BMAD structure (including Tasks section)
+        
+        Dependencies: Epic 8 (QA Dashboard) - Complete ✅
+
+        ⚠️ MANDATORY: Context7 usage requirement:
+        - All stories MUST use Context7 before implementation
+        - Database schema (22.1) requires Context7 for SQLx patterns
+        - API endpoints (22.5) require Context7 for Axum route patterns
 
         ✅ Epic 1: DONE (10/10) - Project Foundation
            - Rust workspace with 14 crates
@@ -557,8 +592,11 @@ workflow_status:
 # - Epic 14: Rust Improvements - All 8 stories documented (ready-for-dev)
 # - Epic 15: Authentication & Authorization - 11/12 stories documented (ready-for-dev)
 # - Epic 21: Developer Experience - All 9 stories documented (ready-for-dev)
+# - Epic 22: PMS Integration Health Monitoring - All 7 stories documented (ready-for-dev)
 # - Epic 31: AI-Enhanced Automation - All 10 stories documented (ready-for-dev)
 # - Epics 16-20: Framework Improvements - High-level planned
+# - Epic 23: Revenue Impact Calculator - Planned (depends on Epic 22)
+# - Epic 24: Test-Integration Correlation - Planned (depends on Epic 22)
 #
 # Implementation Status:
 # - Backend: 14 Rust crates, all compiling
@@ -578,11 +616,14 @@ workflow_status:
 # Epics 15-31 Summary:
 # ✅ Epic 15: Authentication & Authorization (🔴 CRITICAL - 11/12 stories documented, 7.5 days)
 # ✅ Epic 21: Developer Experience (🟡 HIGH VALUE - 9/9 stories documented, 19 days)
+# ✅ Epic 22: PMS Integration Health Monitoring (🔴 P0 - 7/7 stories documented, 11 days)
 # ✅ Epic 31: AI-Enhanced Automation (🟡 HIGH VALUE - 10/10 stories documented, 29 days)
 # - Epic 16: Reports Enhancement (🟡 HIGH - 3 stories, 1 day) - PLANNED
 # - Epic 17: Audit Logging (🟡 HIGH - 7 stories, 5 days) - PLANNED
 # - Epic 18: UX Improvements (🟢 MEDIUM - 12 stories, 7 days) - PLANNED
 # - Epic 19: Advanced Features (🟢 MEDIUM - 12 stories, 8 days) - PLANNED
+# - Epic 23: Revenue Impact Calculator (🔴 P0 - 5 stories, 7 days) - PLANNED (depends on Epic 22)
+# - Epic 24: Test-Integration Correlation (🟡 P1 - 5 stories, 7 days) - PLANNED (depends on Epic 22)
 # - Epic 20: Documentation & Process (🟢 MEDIUM - 12 stories, 6 days) - PLANNED
 #
 # Framework Improvements Total:

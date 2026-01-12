@@ -36,12 +36,12 @@ So that I can track my productivity.
 
 ## Tasks
 
-- [ ] Task 1: Create tickets completed API endpoint
-- [ ] Task 2: Calculate period comparison
-- [ ] Task 3: Implement breakdown by ticket type
-- [ ] Task 4: Create TicketsCompletedDetail component
-- [ ] Task 5: Add click-through to detail view
-- [ ] Task 6: Optimize query for <2s response
+- [x] Task 1: Create tickets completed API endpoint (integrated in dashboard endpoint)
+- [x] Task 2: Calculate period comparison (implemented in calculate_kpis)
+- [x] Task 3: Implement breakdown by ticket type (AC #4 - completed 2026-01-10)
+- [x] Task 4: Create TicketsCompletedDetail component (AC #6 - completed 2026-01-10)
+- [x] Task 5: Add click-through to detail view (AC #6 - completed 2026-01-10)
+- [x] Task 6: Optimize query for <2s response (uses time_daily_aggregates, verified)
 
 ## Dev Notes
 

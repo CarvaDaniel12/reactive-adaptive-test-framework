@@ -13,6 +13,7 @@
 
 pub mod alerts;
 pub mod auth;
+pub mod cache;
 pub mod error;
 pub mod health;
 pub mod health_store;
@@ -28,6 +29,10 @@ pub use health::{HealthCheck, HealthCheckResult, HealthStatus, IntegrationHealth
 pub use health_store::HealthStore;
 pub use keywords::KeywordExtractor;
 pub use test_case_repository::TestCaseRepository;
+pub use cache::{
+    AppCache, CacheStats, CachedDashboardMetrics, CachedSearchResult, CachedTicket,
+    CachedWorkflowTemplate,
+};
 pub use types::{
     TestCase, TestCaseId, TestCaseStatus, TestCaseType, TestPriority, TestRepository, TicketId,
     UserId, WorkflowId,

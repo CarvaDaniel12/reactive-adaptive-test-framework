@@ -14,7 +14,7 @@ use qa_pms_core::error::ApiError;
 use qa_pms_dashboard::{default_period, parse_period, SqlxResultExt};
 
 // Re-export shared types for OpenAPI schema generation
-pub use qa_pms_dashboard::{ActivityItem, KPIMetric, TrendDataPoint};
+pub use qa_pms_dashboard::{ActivityItem, KPIMetric, TrendDataPoint, TypeBreakdown};
 
 type ApiResult<T> = Result<T, ApiError>;
 
@@ -43,6 +43,9 @@ pub struct DashboardResponse {
 #[derive(Debug, Serialize, ToSchema)]
 pub struct DashboardKPIs {
     pub tickets_completed: KPIMetric,
+    /// Breakdown of tickets by type (Story 8.2 AC #4)
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub tickets_breakdown_by_type: Vec<TypeBreakdown>,
     pub avg_time_per_ticket: KPIMetric,
     pub efficiency: KPIMetric,
     pub total_hours: KPIMetric,
@@ -89,11 +92,15 @@ async fn calculate_kpis(pool: &PgPool, days: i64) -> Result<DashboardKPIs, ApiEr
     // Previous period metrics for comparison
     let previous = get_period_metrics(pool, prev_period_start, period_start).await?;
 
+    // Story 8.2 AC #4: Get breakdown by ticket type
+    let breakdown_by_type = get_tickets_breakdown_by_type(pool, period_start, now).await?;
+
     Ok(DashboardKPIs {
         tickets_completed: KPIMetric::from_values(
             current.tickets_completed as f64,
             previous.tickets_completed as f64,
         ),
+        tickets_breakdown_by_type: breakdown_by_type,
         avg_time_per_ticket: KPIMetric::from_values_inverted(
             current.avg_time_seconds,
             previous.avg_time_seconds,
@@ -294,6 +301,67 @@ async fn get_trend_data(pool: &PgPool, days: i64) -> Result<Vec<TrendDataPoint>,
                 tickets as i32,
                 hours.unwrap_or(0.0),
             )
+        })
+        .collect())
+}
+
+/// Get breakdown of completed tickets by ticket type (Story 8.2 AC #4).
+async fn get_tickets_breakdown_by_type(
+    pool: &PgPool,
+    start: chrono::DateTime<Utc>,
+    end: chrono::DateTime<Utc>,
+) -> Result<Vec<TypeBreakdown>, ApiError> {
+    // Get total count for percentage calculation
+    let total_count: i64 = sqlx::query_scalar(
+        r"
+        SELECT COUNT(*) 
+        FROM workflow_instances wi
+        WHERE wi.status = 'completed'
+          AND wi.completed_at >= $1
+          AND wi.completed_at < $2
+        ",
+    )
+    .bind(start)
+    .bind(end)
+    .fetch_one(pool)
+    .await
+    .map_internal("Failed to fetch total tickets count")?;
+
+    // If no tickets, return empty breakdown
+    if total_count == 0 {
+        return Ok(Vec::new());
+    }
+
+    // Get breakdown by type
+    let rows: Vec<(String, i64)> = sqlx::query_as(
+        r"
+        SELECT 
+            wt.ticket_type,
+            COUNT(*) as count
+        FROM workflow_instances wi
+        JOIN workflow_templates wt ON wi.template_id = wt.id
+        WHERE wi.status = 'completed'
+          AND wi.completed_at >= $1
+          AND wi.completed_at < $2
+        GROUP BY wt.ticket_type
+        ORDER BY count DESC
+        ",
+    )
+    .bind(start)
+    .bind(end)
+    .fetch_all(pool)
+    .await
+    .map_internal("Failed to fetch tickets breakdown by type")?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(ticket_type, count)| {
+            let percentage = (count as f64 / total_count as f64) * 100.0;
+            TypeBreakdown {
+                ticket_type,
+                count,
+                percentage,
+            }
         })
         .collect())
 }

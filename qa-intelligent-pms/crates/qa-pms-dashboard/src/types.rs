@@ -118,6 +118,20 @@ impl ActivityItem {
     }
 }
 
+/// Breakdown of tickets by type for KPI cards.
+///
+/// Story 8.2 AC #4: Breakdown by ticket type (hover for details)
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeBreakdown {
+    /// Ticket type (e.g., "bug", "feature", "regression")
+    pub ticket_type: String,
+    /// Count of tickets of this type
+    pub count: i64,
+    /// Percentage of total tickets
+    pub percentage: f64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

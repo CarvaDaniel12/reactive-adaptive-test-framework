@@ -8,11 +8,13 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use axum::Router;
 use qa_pms_core::health::HealthCheck;
-use qa_pms_core::HealthStore;
+use qa_pms_core::{AppCache, HealthStore};
 use qa_pms_testmo::TestmoClient;
 use secrecy::ExposeSecret;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use axum::routing::get;
+use axum_prometheus::PrometheusMetricLayer;
 use tower_http::{
     compression::CompressionLayer,
     cors::{Any, CorsLayer},
@@ -43,6 +45,8 @@ pub struct AppState {
     pub testmo_client: Option<Arc<TestmoClient>>,
     /// Testmo project ID for test runs
     pub testmo_project_id: Option<i64>,
+    /// In-memory cache for frequently accessed data
+    pub cache: Arc<AppCache>,
 }
 
 /// Create the Axum application with all routes and middleware.
@@ -96,6 +100,9 @@ pub async fn create_app(settings: Settings) -> Result<(Router, Option<HealthSche
     // Create Testmo client if configured
     let (testmo_client, testmo_project_id) = create_testmo_client(&settings);
 
+    // Create cache instance
+    let cache = Arc::new(AppCache::new());
+
     // Create shared state
     let state = AppState {
         db,
@@ -104,10 +111,21 @@ pub async fn create_app(settings: Settings) -> Result<(Router, Option<HealthSche
         health_store,
         testmo_client,
         testmo_project_id,
+        cache,
     };
+
+    // Create Prometheus metrics layer
+    // Note: Using PrometheusMetricLayer::pair() for now (default config)
+    // TODO: Add prefix and ignore patterns when builder API is available
+    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
     // Build the router
     let app = Router::new()
+        // Metrics endpoint (must be before other routes)
+        .route("/metrics", get(move || {
+            let handle = metric_handle.clone();
+            async move { handle.render() }
+        }))
         .merge(routes::alerts::router())
         .merge(routes::dashboard::router())
         .merge(routes::pm_dashboard::router())
@@ -123,10 +141,13 @@ pub async fn create_app(settings: Settings) -> Result<(Router, Option<HealthSche
         .merge(routes::splunk::router())
         .nest("/api/v1/support", routes::support::router())
         .nest("/api/v1/ai", routes::ai::router())
+        .merge(routes::integrations::router())
         .merge(routes::api_docs())
         .with_state(state)
         .layer(
             tower::ServiceBuilder::new()
+                // Prometheus metrics (outermost to capture all requests)
+                .layer(prometheus_layer)
                 // Request ID middleware MUST be first for correlation
                 .layer(axum::middleware::from_fn(request_id_middleware))
                 // Tracing for all requests (can use request_id from span)

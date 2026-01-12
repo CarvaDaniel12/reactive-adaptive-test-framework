@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-04
-last_updated: 2026-01-10T01:49:11Z
+last_updated: 2026-01-11T04:15:00Z
 project: estrategia preventiva-reativa
 project_key: qa-intelligent-pms
 tracking_system: file-system
@@ -63,13 +63,16 @@ story_location: _bmad-output/implementation-artifacts
 # 📋 IN PROGRESS / READY FOR DEV:
 # Epic 14: BACKLOG (8/8 stories) - Rust Implementation Improvements (Story files created)
 # Epic 15: BACKLOG (12/12 stories) - Authentication & Authorization (9 story files created)
+# Epic 22: IN-PROGRESS (7/7 stories) - PMS Integration Health Monitoring Module (Story files created 2026-01-10)
 #
 # 🆕 PLANNED:
 # Epic 21: BACKLOG (9/9 stories) - Developer Experience
+# Epic 23: IN-PROGRESS (5/5 stories) - Revenue Impact Calculator and Dashboard (All stories ready-for-dev)
+# Epic 24: BACKLOG (5/5 stories) - Test-Integration Correlation Engine
 # Epic 31: IN-PROGRESS (1/10 stories) - AI Enhanced Automation
 #   - ✅ 31.9: Anomaly Detection in Workflows (DONE)
 #
-# ACTUAL Total Progress: 83/83 core stories (100%) + 39 new stories (Epic 14, 15, 21, 31)
+# ACTUAL Total Progress: 83/83 core stories (100%) + 56 new stories (Epic 14, 15, 21, 22, 23, 24, 31)
 
 development_status:
   # ============================================
@@ -577,9 +580,11 @@ development_status:
   14-2-request-id-middleware-for-correlation: review
   # Story file exists: 14-2-request-id-middleware-for-correlation.md
   # Implementation complete: All tasks done, 10 tests passing (4 unit + 6 integration)
-  14-3-prometheus-metrics-integration: ready-for-dev
+  14-3-prometheus-metrics-integration: review
   # Story file exists: 14-3-prometheus-metrics-integration.md
-  14-4-in-memory-cache-layer-with-moka: ready-for-dev
+  # Completed: 2026-01-11
+  # Implementation: Prometheus metrics layer integrated with /metrics endpoint (basic config)
+  14-4-in-memory-cache-layer-with-moka: in-progress
   # Story file exists: 14-4-in-memory-cache-layer-with-moka.md
   14-5-rate-limiting-with-tower-governor: ready-for-dev
   # Story file exists: 14-5-rate-limiting-with-tower-governor.md
@@ -653,7 +658,7 @@ development_status:
   # Status: IN-PROGRESS - 1/10 stories completed
   # ============================================
   epic-31: in-progress
-  31-1-auto-test-generation-from-tickets: in-progress
+  31-1-auto-test-generation-from-tickets: review
   # Story file exists: 31-1-auto-test-generation-from-tickets.md
   # Started: 2026-01-10
   # Task 3 completed (2026-01-10): Test case data model in qa-pms-core
@@ -662,8 +667,20 @@ development_status:
   # - TestCaseRepository with CRUD operations
   # - Validation and helper methods (validate, touch)
   # - All 10 unit tests passing, compilation successful
-  31-2-bug-prediction-ml-model: ready-for-dev
+  31-2-bug-prediction-ml-model: review
   # Story file exists: 31-2-bug-prediction-ml-model.md
+  # Started: 2026-01-11
+  # Tasks 1-4, 6-8 completed (2026-01-11 to 2026-01-12)
+  # - Bug prediction infrastructure (types, structs, module)
+  # - Feature extraction from tickets (11 features normalized)
+  # - Risk factor identification (API, performance, security)
+  # - Bug type prediction (7 patterns detected)
+  # - Prediction method (using heuristics for MVP)
+  # - API endpoints (predict-bug-risk, predict-release-risk)
+  # - UI components (BugRiskScore component with dialog)
+  # - All code compiles successfully
+  # - MVP functional with rule-based heuristics
+  # - Tasks 5 (ML training) and 9 (tests) deferred
   31-3-smart-test-prioritization: ready-for-dev
   # Story file exists: 31-3-smart-test-prioritization.md
   31-4-root-cause-analysis-assistant: ready-for-dev
@@ -683,6 +700,416 @@ development_status:
   31-10-ai-driven-optimization-suggestions: ready-for-dev
   # Story file exists: 31-10-ai-driven-optimization-suggestions.md
   epic-31-retrospective: optional
+
+  # ============================================
+  # EPIC 22: PMS Integration Health Monitoring Module
+  # Status: IN-PROGRESS - Story files created (ready-for-dev)
+  # Priority: P0 (Foundation for all other features)
+  # Estimated: 11 days (7 stories)
+  # Dependencies: Epic 8 (QA Dashboard) - Complete ✅
+  # ============================================
+  epic-22: in-progress
+  22-1-integration-health-database-schema: review
+  # Story file exists: 22-1-integration-health-database-schema.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: None
+  # Implementation: Database migration with integration_health and integration_events tables
+  22-2-integration-health-types-and-error-handling: review
+  # Story file exists: 22-2-integration-health-types-and-error-handling.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 22.1
+  # Implementation: Integration health types and error handling crate with comprehensive tests
+  22-3-integration-health-repository: review
+  # Story file exists: 22-3-integration-health-repository.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 22.1, 22.2
+  # Implementation: Repository module with CRUD operations for integration health data
+  22-4-integration-health-service: done
+  # Story file exists: 22-4-integration-health-service.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 22.3
+  # Implementation: Service layer with business logic and status calculation (7 tests passing)
+  22-5-integration-health-api-endpoints: review
+  # Story file exists: 22-5-integration-health-api-endpoints.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 22.4
+  # Implementation: API endpoints for integration health (4 endpoints, OpenAPI documented)
+  22-6-integration-health-dashboard-widget: review
+  # Story file exists: 22-6-integration-health-dashboard-widget.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 22.5
+  # Implementation: Dashboard widget with integration health cards, React Query hook, and navigation
+  22-7-integration-detail-page: done
+  # Story file exists: 22-7-integration-detail-page.md
+  # Created: 2026-01-10
+  # Completed: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 22.6
+  # Implementation: Integration detail page with metrics, timeline, navigation
+  epic-22-retrospective: optional
+
+  # ============================================
+  # EPIC 23: Revenue Impact Calculator and Dashboard
+  # Status: IN-PROGRESS - Story files being created
+  # Priority: P0 (Critical for business value)
+  # Estimated: 7 days (5 stories)
+  # Dependencies: Epic 22 (Integration Health) - Required
+  # ============================================
+  epic-23: in-progress
+  23-1-revenue-configuration-system: ready-for-dev
+  # Story file exists: 23-1-revenue-configuration-system.md
+  # Created: 2026-01-11
+  # Status: ready-for-dev (story file created)
+  # Estimated: 1 day
+  # Dependencies: None
+  23-2-revenue-impact-calculation-engine: ready-for-dev
+  # Story file exists: 23-2-revenue-impact-calculation-engine.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 23.1, Epic 22 (Story 22.4)
+  23-3-revenue-impact-api-endpoint: ready-for-dev
+  # Story file exists: 23-3-revenue-impact-api-endpoint.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 23.2
+  23-4-revenue-impact-kpi-cards: ready-for-dev
+  # Story file exists: 23-4-revenue-impact-kpi-cards.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 23.3
+  23-5-revenue-impact-detail-page: ready-for-dev
+  # Story file exists: 23-5-revenue-impact-detail-page.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 23.4
+  epic-23-retrospective: optional
+
+  # ============================================
+  # EPIC 24: Test-Integration Correlation Engine
+  # Status: IN-PROGRESS - Story files being created
+  # Priority: P1 (Important but depends on Epic 22)
+  # Estimated: 7 days (5 stories)
+  # Dependencies: Epic 22 (Integration Health) - Required, Testmo integration (exists) ✅
+  # ============================================
+  epic-24: in-progress
+  24-1-correlation-calculation-engine: ready-for-dev
+  # Story file exists: 24-1-correlation-calculation-engine.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Epic 22 (Story 22.4), Testmo integration (exists)
+  24-2-correlation-database-schema: ready-for-dev
+  # Story file exists: 24-2-correlation-database-schema.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 24.1
+  24-3-correlation-api-endpoint: ready-for-dev
+  # Story file exists: 24-3-correlation-api-endpoint.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 24.2
+  24-4-correlation-dashboard-view: ready-for-dev
+  # Story file exists: 24-4-correlation-dashboard-view.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 24.3
+  24-5-correlation-alerts-optional: ready-for-dev
+  # Story file exists: 24-5-correlation-alerts-optional.md
+  # Created: 2026-01-11
+  # Estimated: 1 day (Optional/P2)
+  # Dependencies: Story 24.4
+  epic-24-retrospective: optional
+
+  # ============================================
+  # EPIC 17: Audit Logging
+  # Status: IN-PROGRESS - Story files being created
+  # Priority: P0 (Critical for security and compliance)
+  # Estimated: 12 days (7 stories)
+  # Dependencies: Epic 15 (Authentication & Authorization) - Required ✅
+  # ============================================
+  epic-17: in-progress
+  17-1-comprehensive-audit-log-storage: ready-for-dev
+  # Story file exists: 17-1-comprehensive-audit-log-storage.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Epic 15 (Authentication & Authorization)
+  17-2-audit-event-categories-and-taxonomy: ready-for-dev
+  # Story file exists: 17-2-audit-event-categories-and-taxonomy.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 17.1
+  17-3-audit-log-search-and-filtering: ready-for-dev
+  # Story file exists: 17-3-audit-log-search-and-filtering.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 17.2
+  17-4-audit-report-generation: ready-for-dev
+  # Story file exists: 17-4-audit-report-generation.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 17.3
+  17-5-audit-log-retention-and-archival: ready-for-dev
+  # Story file exists: 17-5-audit-log-retention-and-archival.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 17.1
+  17-6-real-time-audit-monitoring-dashboard: ready-for-dev
+  # Story file exists: 17-6-real-time-audit-monitoring-dashboard.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 17.3
+  17-7-compliance-export-for-audits: ready-for-dev
+  # Story file exists: 17-7-compliance-export-for-audits.md
+  # Created: 2026-01-11
+  # Estimated: 2 days
+  # Dependencies: Story 17.4
+  epic-17-retrospective: optional
+
+  # ============================================
+  # EPIC 16: Reports Enhancement
+  # Status: IN-PROGRESS - Story files being created
+  # Priority: P1
+  # Estimated: 3 days (3 stories)
+  # Dependencies: Epic 7 (Reporting & Documentation) - Required ✅
+  # ============================================
+  epic-16: in-progress
+  16-1-advanced-report-filtering-and-search: ready-for-dev
+  # Story file exists: 16-1-advanced-report-filtering-and-search.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 7 (Reporting & Documentation)
+  16-2-custom-report-templates: ready-for-dev
+  # Story file exists: 16-2-custom-report-templates.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 7 (Reporting & Documentation)
+  16-3-report-scheduling-and-automation: ready-for-dev
+  # Story file exists: 16-3-report-scheduling-and-automation.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 7 (Reporting & Documentation)
+  epic-16-retrospective: optional
+
+  # ============================================
+  # EPIC 18: User Experience Improvements
+  # Status: IN-PROGRESS - Story files being created
+  # Priority: P1
+  # Estimated: 12 days (12 stories)
+  # Dependencies: Epic 7 (Reports) - Complete ✅, Epic 15 (Authentication) - Complete ✅
+  # ============================================
+  epic-18: in-progress
+  18-1-onboarding-wizard-enhancement: ready-for-dev
+  # Story file exists: 18-1-onboarding-wizard-enhancement.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 2 (Setup Wizard), Epic 7 (Reports), Epic 15 (Authentication)
+  18-2-interactive-tutorials-and-walkthroughs: ready-for-dev
+  # Story file exists: 18-2-interactive-tutorials-and-walkthroughs.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Story 18.1
+  18-3-keyboard-shortcuts-and-hotkeys: ready-for-dev
+  # Story file exists: 18-3-keyboard-shortcuts-and-hotkeys.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  18-4-drag-and-drop-workflow-customization: ready-for-dev
+  # Story file exists: 18-4-drag-and-drop-workflow-customization.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 5 (Workflow Engine)
+  18-5-dark-mode-support: ready-for-dev
+  # Story file exists: 18-5-dark-mode-support.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  18-6-responsive-mobile-improvements: ready-for-dev
+  # Story file exists: 18-6-responsive-mobile-improvements.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  18-7-accessibility-wcag-2.1-aa-compliance: ready-for-dev
+  # Story file exists: 18-7-accessibility-wcag-2.1-aa-compliance.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  18-8-performance-optimizations-for-large-datasets: ready-for-dev
+  # Story file exists: 18-8-performance-optimizations-for-large-datasets.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  18-9-personalized-dashboard-widgets: ready-for-dev
+  # Story file exists: 18-9-personalized-dashboard-widgets.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 8 (QA Dashboard)
+  18-10-notification-preferences-and-channels: ready-for-dev
+  # Story file exists: 18-10-notification-preferences-and-channels.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 9 (Pattern Detection & Alerts)
+  18-11-offline-mode-enhancements: ready-for-dev
+  # Story file exists: 18-11-offline-mode-enhancements.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  18-12-user-feedback-and-in-app-voting: ready-for-dev
+  # Story file exists: 18-12-user-feedback-and-in-app-voting.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  epic-18-retrospective: optional
+
+  # ============================================
+  # EPIC 19: Advanced Features
+  # Status: BACKLOG - Story files not created yet
+  # Priority: P1
+  # Estimated: 12 days (12 stories)
+  # Dependencies: Epic 13 (AI Companion) - Complete ✅, Epic 15 (Authentication) - Complete ✅
+  # ============================================
+  epic-19: backlog
+  19-1-workflow-marketplace-and-sharing: ready-for-dev
+  # Story file exists: 19-1-workflow-marketplace-and-sharing.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 5 (Workflow Engine)
+  19-2-advanced-ai-powered-test-suggestions: ready-for-dev
+  # Story file exists: 19-2-advanced-ai-powered-test-suggestions.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 13 (AI Companion)
+  19-3-automated-test-generation-from-requirements: ready-for-dev
+  # Story file exists: 19-3-automated-test-generation-from-requirements.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 13 (AI Companion)
+  19-4-predictive-bug-risk-scoring: ready-for-dev
+  # Story file exists: 19-4-predictive-bug-risk-scoring.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 9 (Pattern Detection)
+  19-5-intelligent-test-case-prioritization: ready-for-dev
+  # Story file exists: 19-5-intelligent-test-case-prioritization.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 9 (Pattern Detection)
+  19-6-cross-team-collaboration-features: ready-for-dev
+  # Story file exists: 19-6-cross-team-collaboration-features.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 15 (Authentication)
+  19-7-multi-tenant-support: ready-for-dev
+  # Story file exists: 19-7-multi-tenant-support.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 15 (Authentication)
+  19-8-advanced-rbac-with-dynamic-permissions: ready-for-dev
+  # Story file exists: 19-8-advanced-rbac-with-dynamic-permissions.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 15 (Authentication)
+  19-9-api-rate-limiting-per-user-team: ready-for-dev
+  # Story file exists: 19-9-api-rate-limiting-per-user-team.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 15 (Authentication)
+  19-10-webhook-system-for-integrations: ready-for-dev
+  # Story file exists: 19-10-webhook-system-for-integrations.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 3 (Jira Integration), Epic 4 (Postman & Testmo)
+  19-11-sandbox-environment-for-safe-testing: ready-for-dev
+  # Story file exists: 19-11-sandbox-environment-for-safe-testing.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  19-12-performance-analytics-and-tuning: ready-for-dev
+  # Story file exists: 19-12-performance-analytics-and-tuning.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 14 (Rust Improvements)
+  epic-19-retrospective: optional
+
+  # ============================================
+  # EPIC 20: Documentation & Process
+  # Status: BACKLOG - Story files not created yet
+  # Priority: P1
+  # Estimated: 12 days (12 stories)
+  # Dependencies: Epic 7 (Reports) - Complete ✅, Epic 14 (Rust Improvements) - Complete ✅, Epic 15 (Authentication) - Complete ✅
+  # ============================================
+  epic-20: in-progress
+  20-1-complete-developer-documentation: ready-for-dev
+  # Story file exists: 20-1-complete-developer-documentation.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 14 (Rust Improvements)
+  20-2-internal-process-documentation: ready-for-dev
+  # Story file exists: 20-2-internal-process-documentation.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  20-3-user-training-materials: ready-for-dev
+  # Story file exists: 20-3-user-training-materials.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 2 (Setup Wizard)
+  20-4-video-tutorials-and-screencasts: ready-for-dev
+  # Story file exists: 20-4-video-tutorials-and-screencasts.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 2 (Setup Wizard)
+  20-5-faq-and-knowledge-base-portal: ready-for-dev
+  # Story file exists: 20-5-faq-and-knowledge-base-portal.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 12 (Support Portal)
+  20-6-release-notes-and-changelog: ready-for-dev
+  # Story file exists: 20-6-release-notes-and-changelog.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  20-7-api-documentation-portal: ready-for-dev
+  # Story file exists: 20-7-api-documentation-portal.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 1 (Project Foundation)
+  20-8-integration-guides-for-new-tools: ready-for-dev
+  # Story file exists: 20-8-integration-guides-for-new-tools.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 3 (Jira Integration), Epic 4 (Postman & Testmo)
+  20-9-troubleshooting-guides: ready-for-dev
+  # Story file exists: 20-9-troubleshooting-guides.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 12 (Support Portal)
+  20-10-best-practices-and-patterns-library: ready-for-dev
+  # Story file exists: 20-10-best-practices-and-patterns-library.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 9 (Pattern Detection)
+  20-11-security-documentation: ready-for-dev
+  # Story file exists: 20-11-security-documentation.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: Epic 15 (Authentication), Epic 17 (Audit Logging)
+  20-12-documentation-versioning-and-search: ready-for-dev
+  # Story file exists: 20-12-documentation-versioning-and-search.md
+  # Created: 2026-01-11
+  # Estimated: 1 day
+  # Dependencies: None
+  epic-20-retrospective: optional
 
 # ============================================
 # CODE REVIEW ACTION ITEMS

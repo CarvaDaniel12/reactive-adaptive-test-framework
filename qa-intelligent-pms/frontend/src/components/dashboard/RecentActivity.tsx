@@ -3,6 +3,7 @@
  * Shows recent workflow completions and ticket updates.
  */
 import { formatDistanceToNow } from "date-fns";
+import { formatDuration } from "@/utils/time";
 
 export interface ActivityItem {
   id: string;
@@ -161,10 +162,3 @@ function getIconBackground(type: ActivityItem["type"]) {
   }
 }
 
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.round((seconds % 3600) / 60);
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}

@@ -37,4 +37,4 @@ pub mod types;
 pub use error::SqlxResultExt;
 pub use metrics::{calculate_change, calculate_trend, Trend};
 pub use period::{default_period, parse_period, period_boundaries, Period};
-pub use types::{ActivityItem, KPIMetric, TrendDataPoint};
+pub use types::{ActivityItem, KPIMetric, TrendDataPoint, TypeBreakdown};

@@ -3,17 +3,16 @@
  * Displays 4 KPI cards: Tickets Completed, Avg Time, Efficiency, Total Hours.
  * 
  * Stories implemented:
- * - 8.2: Tickets Completed KPI with trend
+ * - 8.2: Tickets Completed KPI with trend, breakdown by type, and click-through
  * - 8.3: Time Metrics KPIs with color coding for efficiency
  */
-import { KPICard, KPICardSkeleton, type Trend } from "./KPICard";
+import { useNavigate } from "react-router-dom";
+import { KPICard, KPICardSkeleton } from "./KPICard";
+import type { DashboardKPIs } from "./types";
+import { getEfficiencyColor, getEfficiencyDescription } from "./utils";
+import { formatDuration } from "@/utils/time";
 
-export interface DashboardKPIs {
-  ticketsCompleted: { value: number; change: number; trend: Trend };
-  avgTimePerTicket: { value: number; change: number; trend: Trend }; // seconds
-  efficiency: { value: number; change: number; trend: Trend }; // ratio (actual/estimated)
-  totalHours: { value: number; change: number; trend: Trend };
-}
+export type { DashboardKPIs };
 
 interface KPICardsProps {
   data?: DashboardKPIs;
@@ -21,6 +20,8 @@ interface KPICardsProps {
 }
 
 export function KPICards({ data, isLoading }: KPICardsProps) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -34,15 +35,22 @@ export function KPICards({ data, isLoading }: KPICardsProps) {
   const efficiencyValue = data?.efficiency.value ?? 1;
   const efficiencyColor = getEfficiencyColor(efficiencyValue);
 
+  // Story 8.2 AC #6: Click-through navigation to detail view
+  const handleTicketsClick = () => {
+    navigate("/dashboard/tickets-completed");
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Story 8.2: Tickets Completed */}
+      {/* Story 8.2: Tickets Completed with breakdown and click-through */}
       <KPICard
         title="Tickets Completed"
         value={data?.ticketsCompleted.value ?? 0}
         change={data?.ticketsCompleted.change ?? 0}
         trend={data?.ticketsCompleted.trend ?? "neutral"}
         icon={<CheckCircleIcon className="w-5 h-5" />}
+        breakdown={data?.ticketsBreakdownByType}
+        onClick={handleTicketsClick}
       />
       
       {/* Story 8.3: Average Time per Ticket */}
@@ -78,32 +86,7 @@ export function KPICards({ data, isLoading }: KPICardsProps) {
   );
 }
 
-/**
- * Get color class based on efficiency ratio.
- * Story 8.3: Color coding - 🟢 ≤1.0, 🟡 1.0-1.2, 🔴 >1.2
- * Note: Higher efficiency % is better (100% = on target)
- */
-function getEfficiencyColor(ratio: number): string {
-  if (ratio >= 1.0) return "text-emerald-600"; // 🟢 On or ahead of schedule
-  if (ratio >= 0.8) return "text-amber-600";   // 🟡 Slightly behind
-  return "text-red-600";                        // 🔴 Significantly behind
-}
-
-function getEfficiencyDescription(ratio: number): string {
-  if (ratio >= 1.0) return "On or ahead of schedule";
-  if (ratio >= 0.8) return "Slightly behind estimate";
-  return "Behind schedule";
-}
-
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.round((seconds % 3600) / 60);
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}
-
-// Icons
+// Dashboard-specific icons
 function CheckCircleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -135,3 +118,4 @@ function TimerIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+

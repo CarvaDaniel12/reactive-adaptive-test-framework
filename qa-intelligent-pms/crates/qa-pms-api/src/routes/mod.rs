@@ -11,6 +11,7 @@ pub mod ai;
 pub mod alerts;
 pub mod dashboard;
 pub mod health;
+pub mod integrations;
 pub mod pm_dashboard;
 pub mod reports;
 pub mod search;
@@ -125,6 +126,11 @@ pub mod workflows;
         ai::get_chat_suggestions,
         ai::semantic_search,
         ai::analyze_gherkin,
+        // Epic 22: Integration Health
+        integrations::get_integration_health,
+        integrations::get_integration_health_by_id,
+        integrations::store_integration_health,
+        integrations::get_integration_events,
     ),
     components(
         schemas(
@@ -268,6 +274,13 @@ pub mod workflows;
         qa_pms_ai::ModelInfo,
         qa_pms_ai::ConnectionTestResult,
         qa_pms_ai::ProviderType,
+        // Epic 22: Integration Health schemas
+        integrations::IntegrationHealthResponse,
+        integrations::IntegrationEventsResponse,
+        qa_pms_integration_health::IntegrationHealth,
+        qa_pms_integration_health::IntegrationEvent,
+        qa_pms_integration_health::IntegrationId,
+        qa_pms_integration_health::HealthStatus,
         )
     ),
     tags(
@@ -285,7 +298,8 @@ pub mod workflows;
         (name = "PM Dashboard", description = "PM observability dashboard endpoints"),
         (name = "Splunk", description = "Splunk query template and log endpoints"),
         (name = "Support", description = "Support portal and troubleshooting endpoints"),
-        (name = "AI", description = "AI companion endpoints (BYOK)")
+        (name = "AI", description = "AI companion endpoints (BYOK)"),
+        (name = "integrations", description = "Integration health monitoring endpoints")
     )
 )]
 pub struct ApiDoc;

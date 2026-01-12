@@ -41,6 +41,7 @@ const MIN_API_KEY_LENGTH: usize = 20;
 const GLOBAL_AI_USER_ID: Uuid = Uuid::from_u128(0);
 
 pub mod anomalies;
+pub mod bug_prediction;
 pub mod test_generation;
 
 /// Create the AI router.
@@ -66,6 +67,8 @@ pub fn router() -> Router<AppState> {
         .merge(anomalies::router())
         // Test generation (Story 31.1)
         .merge(test_generation::router())
+        // Bug prediction (Story 31.2)
+        .merge(bug_prediction::router())
 }
 
 // ==================== Request/Response Types ====================
@@ -581,22 +584,23 @@ async fn get_decrypted_api_key(
         ApiError::ServiceUnavailable("AI not configured. Please configure AI in Settings.".into())
     })?;
 
-    // Decrypt API key
-    let api_key = if let Some(encrypted) = encrypted_key {
-        let encryptor = get_encryption_key(state)?;
-        encryptor
-            .decrypt(&encrypted)
-            .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {e}")))?
-            .expose_secret()
-            .clone()
-    } else {
-        // Fallback to env var for backwards compatibility
-        std::env::var("AI_API_KEY").unwrap_or_default()
-    };
+    // Decrypt API key - must be configured via Settings (wizard)
+    let encrypted = encrypted_key.ok_or_else(|| {
+        ApiError::ServiceUnavailable(
+            "AI API key not configured. Please configure AI in Settings.".into()
+        )
+    })?;
+
+    let encryptor = get_encryption_key(state)?;
+    let api_key = encryptor
+        .decrypt(&encrypted)
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("Failed to decrypt API key: {e}")))?
+        .expose_secret()
+        .clone();
 
     if api_key.is_empty() {
         return Err(ApiError::ServiceUnavailable(
-            "AI API key not configured".into(),
+            "AI API key is empty. Please reconfigure AI in Settings.".into(),
         ));
     }
 

@@ -15,6 +15,7 @@ members = [
     "crates/qa-pms-ai",
     "crates/qa-pms-patterns",
     "crates/qa-pms-support",
+    "crates/qa-pms-integration-health",
 ]
 
 [workspace.package]
@@ -33,6 +34,10 @@ tokio = { version = "1.42", features = ["full"] }
 axum = "0.7"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace", "compression-gzip", "timeout"] }
+axum-prometheus = "0.7"
+
+# Caching
+moka = { version = "0.12", features = ["future"] }
 
 # Database
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "uuid", "rust_decimal"] }
@@ -90,6 +95,7 @@ qa-pms-dashboard = { path = "crates/qa-pms-dashboard" }
 qa-pms-ai = { path = "crates/qa-pms-ai" }
 qa-pms-patterns = { path = "crates/qa-pms-patterns" }
 qa-pms-support = { path = "crates/qa-pms-support" }
+qa-pms-integration-health = { path = "crates/qa-pms-integration-health" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -635,6 +635,9 @@ pub async fn transition_ticket(
             }
         })?;
 
+    // Invalidate ticket cache when ticket is updated
+    state.cache.invalidate_ticket(&key).await;
+
     // Invalidate test case cache when ticket is updated (Task 7.3)
     let _ = crate::routes::ai::test_generation::invalidate_test_case_cache(&state, &key).await;
 
